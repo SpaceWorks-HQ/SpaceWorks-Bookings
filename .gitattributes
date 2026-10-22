@@ -1,0 +1,14 @@
+# LF everywhere, so shell scripts and entrypoints mounted into Linux containers work from a Windows checkout.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
