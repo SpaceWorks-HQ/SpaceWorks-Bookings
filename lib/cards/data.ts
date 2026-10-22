@@ -1,0 +1,103 @@
+import "server-only";
+
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
+import { deriveStatus } from "@/lib/membership/lifecycle";
+import { formatValidUntil, memberDetails, verifyPath } from "./core";
+import { normalizeCardDesign, type CardDesign } from "./design/presets";
+import { managedImageUrl, memberPhotoUrl } from "./imageUrl";
+import type { CardInput } from "./render";
+import type { CardBranding, CardHolder } from "./types";
+
+/*
+ * Everything a card render needs, from the database: the organisation, its designs (plan design,
+ * else the organisation default, else the built-in default), the plan's printable fields, and the
+ * member's details with their current valid-until date.
+ */
+
+export const CARD_INCLUDE = {
+  plan: { select: { id: true, name: true } },
+  member: {
+    select: {
+      id: true, organisationId: true, name: true, photoUrl: true, fieldValues: true, anonymisedAt: true,
+      user: { select: { id: true, profileImageUrl: true } },
+      roles: { where: { isPrimary: true, role: { archivedAt: null } }, select: { role: { select: { name: true } } } },
+      terms: { select: { id: true, planId: true, status: true, startsAt: true, endsAt: true, graceUntil: true, paymentDueBy: true, renewedFromId: true, createdAt: true } },
+    },
+  },
+} satisfies Prisma.MemberCardInclude;
+
+export type CardRecord = Prisma.MemberCardGetPayload<{ include: typeof CARD_INCLUDE }>;
+
+export type CardOrgContext = {
+  organisation: { id: string; name: string; slug: string; logoUrl: string | null; accentColor: string | null; timezone: string; status: string };
+  designs: Array<{ planId: string | null; design: unknown; watermarkUrl: string | null; numberPrefix: string }>;
+  fields: Map<string, Array<{ key: string; label: string; type: string }>>;
+};
+
+/** The public base URL that card QR codes point at. */
+export function cardVerifyUrl(token: string) {
+  const base = (process.env.NEXT_PUBLIC_BASE_URL || process.env.AUTH_URL || "http://localhost:3000").replace(/\/$/, "");
+  return `${base}${verifyPath(token)}`;
+}
+
+export async function loadCardOrgContext(organisationId: string): Promise<CardOrgContext | null> {
+  const organisation = await prisma.organisation.findUnique({
+    where: { id: organisationId },
+    select: { id: true, name: true, slug: true, logoUrl: true, accentColor: true, timezone: true, status: true },
+  });
+  if (!organisation) return null;
+  const [designs, fields] = await Promise.all([
+    prisma.cardDesign.findMany({ where: { organisationId }, select: { planId: true, design: true, watermarkUrl: true, numberPrefix: true } }),
+    prisma.planField.findMany({ where: { organisationId, adminOnly: false }, orderBy: { sortOrder: "asc" }, select: { planId: true, key: true, label: true, type: true } }),
+  ]);
+  const byPlan = new Map<string, Array<{ key: string; label: string; type: string }>>();
+  for (const field of fields) byPlan.set(field.planId, [...(byPlan.get(field.planId) ?? []), field]);
+  return { organisation, designs, fields: byPlan };
+}
+
+export function brandingFor(ctx: CardOrgContext, watermarkUrl: string | null): CardBranding {
+  const organisationId = ctx.organisation.id;
+  return {
+    orgAccent: ctx.organisation.accentColor,
+    organisationLogoUrl: managedImageUrl(ctx.organisation.logoUrl, { kind: "organisation", organisationId, category: "organisation-logos" }),
+    watermarkUrl: managedImageUrl(watermarkUrl, { kind: "organisation", organisationId, category: "member-id-watermarks" }),
+  };
+}
+
+/** The design a plan's cards use: its own, else the organisation default, else the built-in one. */
+export function designFor(ctx: CardOrgContext, plan: { id: string; name: string }): CardInput & { design: CardDesign; source: "plan" | "organisation" | "default" } {
+  const own = ctx.designs.find((row) => row.planId === plan.id);
+  const fallback = ctx.designs.find((row) => row.planId === null);
+  const row = own ?? fallback;
+  const design = normalizeCardDesign(row?.design, { organisationName: ctx.organisation.name, planName: plan.name });
+  return { design, branding: brandingFor(ctx, row?.watermarkUrl ?? null), source: own ? "plan" : fallback ? "organisation" : "default" };
+}
+
+/** What a card prints about its member, read now: the valid-until date follows renewals. */
+export function holderFor(card: CardRecord, ctx: CardOrgContext, now = new Date()): CardHolder {
+  const chain = card.member.terms.filter((term) => term.planId === card.planId);
+  const current = deriveStatus(chain, now).current;
+  return {
+    memberId: card.memberId,
+    verifyToken: card.verifyToken,
+    verifyUrl: cardVerifyUrl(card.verifyToken),
+    displayName: card.member.name,
+    role: card.member.roles[0]?.role.name ?? null,
+    planName: card.plan.name,
+    details: memberDetails(ctx.fields.get(card.planId) ?? [], card.member.fieldValues),
+    photoUrl: memberPhotoUrl(card.member),
+    idNumber: card.cardNumber,
+    validUntil: current?.startsAt ? formatValidUntil(current.endsAt, ctx.organisation.timezone) : null,
+  };
+}
+
+/** One card ready to render, or null when it doesn't exist (or its member was erased). */
+export async function loadCardForRender(cardId: string) {
+  const card = await prisma.memberCard.findUnique({ where: { id: cardId }, include: CARD_INCLUDE });
+  if (!card || card.member.anonymisedAt) return null;
+  const ctx = await loadCardOrgContext(card.organisationId);
+  if (!ctx) return null;
+  const { design, branding } = designFor(ctx, card.plan);
+  return { card, ctx, input: { design, branding } satisfies CardInput, holder: holderFor(card, ctx) };
+}

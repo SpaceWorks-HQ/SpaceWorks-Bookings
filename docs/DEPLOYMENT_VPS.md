@@ -1,0 +1,161 @@
+# Deploying on a server (VPS)
+
+The bundled deployment runs the whole platform on one Linux server with Docker Compose, exactly like a
+standalone SpaceWorks install: the curl installer, `setup.sh`, `scripts/update.sh` and
+`scripts/spaceworks-compose.sh bundled`. Assume a dedicated server: the installer's Caddy takes ports 80 and 443.
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Organization/main/install.sh | bash
+```
+
+The installer checks the host (architecture, distribution, Docker, disk space, an existing install), asks which
+GitHub repository to follow, downloads the newest published `main` release into temporary storage and asks the
+deployment questions (see the README). Nothing changes until you confirm the summary. Then it installs missing
+packages (Docker Engine, the Compose plugin, curl, tar), copies the release to `/opt/spaceworks-organization`
+and runs `setup.sh`, which:
+
+1. writes the owner-only `.env` with every generated secret (`scripts/setup-write-environment.sh`);
+2. pulls the release images (or builds them with `bash setup.sh --build`);
+3. creates a private CA and service certificates for PostgreSQL, Redis and Silo in `tls/`
+   (`deploy/certificates.sh`, run inside the backend image so the host needs no openssl);
+4. starts the stack with `up --wait` and runs the operator checks (`--role ops`);
+5. installs the optional GitHub Actions runner.
+
+Options: `--repo owner/name` (or `SWO_REPOSITORY`), `SWO_DIR=/path` for another install directory, `--help`.
+
+## What runs
+
+`scripts/spaceworks-compose.sh bundled` always uses `docker-compose.prod.yml`, the install's `.env`, the
+project name `sworg`, and the overlays the settings select:
+
+| Setting in `.env` | Overlay | Effect |
+|---|---|---|
+| `SWO_LAYER='none'` | none | Caddy serves `http://<host>` on port 80 (plain HTTP, LAN or trial). |
+| `SWO_LAYER='tls'` | `docker/compose.tls.yml` | Caddy obtains Let's Encrypt certificates and also serves 443 (TCP and QUIC). |
+| `SWO_LAYER='proxy'` | `docker/compose.proxy.yml` | No Caddy; the app listens on `127.0.0.1:8080` for your proxy. |
+| `SWO_STORAGE='external'` | `docker/compose.external-storage.yml` | No Silo; files go to the `S3_*` bucket. |
+| `SWO_COMPOSE_BUILD_LAYER=1` (shell) | `docker/compose.build.yml` | Builds the backend image from the checkout. |
+
+| Service | Image | Role |
+|---|---|---|
+| `db` | `postgres:16-alpine` | TLS only (`hostnossl … reject`), owner role `sworg`, runtime role `sworg_app` with data rights only |
+| `redis` | `redis:7-alpine` | TLS only, password, append-only file |
+| `minio` | `pgsty/silo` | TLS only, private bucket `spaceworks-organization`, versioning on |
+| `createbuckets` | `pgsty/silo` | Creates the bucket and the `sworg-app` identity limited to it, then exits |
+| `migrate` | backend, `--role migrate` | `prisma migrate deploy` as the owner role, then exits |
+| `backend` | backend, `--role backend` | The app and API (Next.js) as `sworg_app`; `SCHEDULER_MODE=external` |
+| `scheduler` | backend, `--role scheduler` | One scheduler pass a minute: email outbox, membership sweep, retention and every job in `runOutboxScheduler` |
+| `backup`, `backup-storage` | `postgres:16-alpine`, `pgsty/silo` | Scheduled database dumps and bucket mirror into `backups/` |
+| `caddy` | `caddy:2-alpine` | The web edge; blocks `/api/internal/*`; overwrites `X-Real-IP` |
+| `ops` (profile `tools`) | backend, `--role ops` | Operator checks, run on demand |
+
+The data services sit on an internal network with no route to the internet. Only Caddy publishes ports.
+
+```bash
+scripts/spaceworks-compose.sh bundled ps
+scripts/spaceworks-compose.sh bundled logs -f backend scheduler
+scripts/spaceworks-compose.sh bundled run --rm ops      # TLS, roles, migrations, Redis, bucket, readiness
+```
+
+## Files on the server
+
+| Path | Contents |
+|---|---|
+| `/opt/spaceworks-organization/` | The installed release (compose files, `deploy/`, `scripts/`) |
+| `.env` | Every setting and secret (mode 600). Back it up encrypted, off the server. |
+| `tls/` | The private CA (`ca.key` never leaves this folder) and the service certificates |
+| `backups/` | Database dumps, the bucket mirror, settings archives, replaced host files |
+| `.spaceworks-version`, `.spaceworks-previous-version` | The running release and the one before it |
+
+## Backups and restore
+
+- **Scheduled:** the `backup` service dumps the database every `BACKUP_INTERVAL_HOURS` (24) to
+  `backups/scheduled-<time>.sql.gz` and keeps `BACKUP_RETENTION_DAYS` (14); `backup-storage` mirrors the bucket
+  to `backups/storage`.
+- **On demand:** `bash scripts/backup.sh` (also the installer's menu option 2) writes a dump, refreshes the
+  bucket mirror and archives `.env` and `tls/` to `backups/config-<time>.tar.gz`.
+- **Before every update:** `backups/pre-update-<time>.sql.gz`.
+
+Backups contain every secret. Copy them off the server, encrypted, for example
+`tar -czf - backups | gpg --symmetric > sworg-backups.tar.gz.gpg`.
+
+```bash
+bash scripts/restore.sh backups/scheduled-20261020T020000Z.sql.gz                 # database only
+bash scripts/restore.sh backups/manual-20261020T090000Z.sql.gz --with-storage     # and the files
+```
+
+Restore asks you to type `RESTORE`, takes a fresh `pre-restore` dump, stops the app, scheduler and edge,
+replaces the schema in one transaction, optionally copies the files back, and starts everything again;
+migrations bring an older dump up to the running release.
+
+**New server:** install with the same answers, stop the stack, put the old `.env` and `tls/` back from the
+settings archive, start it, then restore the dump (and `backups/storage` with `--with-storage`).
+
+## Super admins
+
+Super admins sign in with their email and password only. Their accounts and passwords are managed on the
+server, never by email and never in the app:
+
+```bash
+bash scripts/admin.sh create --email you@example.org          # make (or promote) a super admin; asks for a password
+bash scripts/admin.sh set-password --email you@example.org    # change a super admin's password; signs them out everywhere
+bash scripts/admin.sh reset-mfa --email you@example.org       # remove an authenticator from a super-admin account
+bash scripts/admin.sh revoke --email you@example.org          # take super-admin access away
+bash scripts/admin.sh list
+```
+
+The installer creates the first one from the email and password you give. On an upgrade from 0.6 or earlier,
+the existing `SUPER_ADMIN_EMAIL` account is kept as super admin automatically. Without Docker
+(`npm run admin -- …`) the same commands run against `DATABASE_URL`.
+
+## Updates and rollback
+
+```bash
+bash scripts/update.sh --force                                   # newest main release
+bash scripts/update.sh --force --version 0.7.0-main.42.a1b2c3d4e5f6
+bash scripts/update.sh --rollback                                # the release before the last update
+```
+
+The updater takes a lock (`flock`, or a PID lock on Git Bash; `--override-lock` clears a verified stale one),
+resolves a published, non-prerelease `main` release, downloads its source and hands over to that release's own
+updater. It dumps the database, checks the new image can be pulled, installs the release's host files (keeping
+the old ones in `backups/host-config-*`), pulls the images, runs migrations and waits for every service to be
+healthy, then runs the operator checks.
+
+- **Automatic rollback:** if the new release does not become healthy, the previous host files and images come
+  back with `--no-deps`, so older migrations never run against the newer schema.
+- **Manual rollback:** `--rollback` returns to the release recorded in `.spaceworks-previous-version`, again
+  without running migrations. Database changes stay; to return the data too, restore the pre-update dump the
+  command prints.
+
+The installer menu offers both (options 1 and 3), and the release workflow's `deploy` job runs
+`update.sh --force --version <release>` on a server with the runner (`scripts/install-runner.sh`).
+
+## Certificates
+
+The service certificates last 825 days. Renew them from the same CA, then recreate the data services:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" --entrypoint sh -v "$PWD/tls:/tls" -v "$PWD/deploy/certificates.sh:/c.sh:ro" \
+  "$(grep ^SWO_BACKEND_IMAGE= .env | cut -d"'" -f2):$(cat .spaceworks-version)" /c.sh --renew
+scripts/spaceworks-compose.sh bundled up -d --force-recreate db redis minio backend
+```
+
+Caddy renews the public certificates by itself.
+
+## Moving between modes
+
+- **Plain HTTP to automatic HTTPS:** point DNS at the server, then in `.env` set `SWO_LAYER='tls'`,
+  `SITE_ADDRESS='<domain>'`, `TLS_EMAIL='<you>'`, `PUBLIC_APP_BASE_URL='https://<domain>'` and remove
+  `ALLOW_PLAIN_HTTP`, then `scripts/spaceworks-compose.sh bundled up -d`.
+- **Website on Netlify:** set `DEPLOYMENT_MODE='backend'`, a 64-hex `FRONTEND_GATEWAY_SECRET` and
+  `PUBLIC_APP_BASE_URL` to the website's origin; see [DEPLOYMENT_NETLIFY.md](DEPLOYMENT_NETLIFY.md).
+
+## Troubleshooting
+
+- `scripts/spaceworks-compose.sh bundled logs migrate` shows a failed migration; the app never starts on a
+  half-migrated database.
+- The scheduler is healthy only after a successful pass; `logs scheduler` shows HTTP errors from the app.
+- `run --rm ops` names the failing check without printing any connection detail.

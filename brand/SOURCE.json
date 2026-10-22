@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/SpaceWorks-HQ/SpaceWorks-Design",
+  "commit": "c9bf94198d40a87c323f1879d0c02649027f74d0",
+  "fonts": [
+    "Gilroy-Light.woff2",
+    "Gilroy-ExtraBold.woff2",
+    "Unbounded-Variable.woff2"
+  ]
+}

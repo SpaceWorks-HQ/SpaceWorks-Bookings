@@ -1,0 +1,906 @@
+{
+  "readers": [
+    {
+      "module": "lib/views/app__account__layout",
+      "name": "loadAccountShell",
+      "id": "app__account__layout:loadAccountShell"
+    },
+    {
+      "module": "lib/views/app__account__memberships__orgSlug__page",
+      "name": "loadMembershipDetailView",
+      "id": "app__account__memberships__orgSlug__page:loadMembershipDetailView"
+    },
+    {
+      "module": "lib/views/app__account__organisations__page",
+      "name": "loadAccountOrganisationsView",
+      "id": "app__account__organisations__page:loadAccountOrganisationsView"
+    },
+    {
+      "module": "lib/views/app__account__page",
+      "name": "loadAccountWalletView",
+      "id": "app__account__page:loadAccountWalletView"
+    },
+    {
+      "module": "lib/views/app__account__pay__termId__page",
+      "name": "loadPayView",
+      "id": "app__account__pay__termId__page:loadPayView"
+    },
+    {
+      "module": "lib/views/app__account__payments__page",
+      "name": "loadAccountPaymentsView",
+      "id": "app__account__payments__page:loadAccountPaymentsView"
+    },
+    {
+      "module": "lib/views/app__account__privacy__page",
+      "name": "loadAccountPrivacyView",
+      "id": "app__account__privacy__page:loadAccountPrivacyView"
+    },
+    {
+      "module": "lib/views/app__account__profile__page",
+      "name": "loadAccountProfileView",
+      "id": "app__account__profile__page:loadAccountProfileView"
+    },
+    {
+      "module": "lib/views/app__account__security__page",
+      "name": "loadAccountSecurityView",
+      "id": "app__account__security__page:loadAccountSecurityView"
+    },
+    {
+      "module": "lib/views/app__auth__login__page",
+      "name": "loadLoginView",
+      "id": "app__auth__login__page:loadLoginView"
+    },
+    {
+      "module": "lib/views/app__dashboard__layout",
+      "name": "loadDashboardShell",
+      "id": "app__dashboard__layout:loadDashboardShell"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__accounts__page",
+      "name": "loadAccountsView",
+      "id": "app__dashboard__orgSlug__accounts__page:loadAccountsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__application__page",
+      "name": "loadOrgApplicationView",
+      "id": "app__dashboard__orgSlug__application__page:loadOrgApplicationView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__layout",
+      "name": "loadOrgSlugShell",
+      "id": "app__dashboard__orgSlug__layout:loadOrgSlugShell"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__members__memberId__page",
+      "name": "loadMemberView",
+      "id": "app__dashboard__orgSlug__members__memberId__page:loadMemberView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__members__memberId__payments",
+      "name": "loadMemberPayments",
+      "id": "app__dashboard__orgSlug__members__memberId__payments:loadMemberPayments"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__members__new__page",
+      "name": "loadAddMembersView",
+      "id": "app__dashboard__orgSlug__members__new__page:loadAddMembersView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__members__page",
+      "name": "loadOrgMembersDirectory",
+      "id": "app__dashboard__orgSlug__members__page:loadOrgMembersDirectory"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__page",
+      "name": "loadOrgOverviewView",
+      "id": "app__dashboard__orgSlug__page:loadOrgOverviewView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__payments__page",
+      "name": "loadPaymentsDirectory",
+      "id": "app__dashboard__orgSlug__payments__page:loadPaymentsDirectory"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__payments__paymentId__page",
+      "name": "loadPaymentView",
+      "id": "app__dashboard__orgSlug__payments__paymentId__page:loadPaymentView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__plans__page",
+      "name": "loadOrgPlansView",
+      "id": "app__dashboard__orgSlug__plans__page:loadOrgPlansView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__plans__planId__page",
+      "name": "loadNewPlanView",
+      "id": "app__dashboard__orgSlug__plans__planId__page:loadNewPlanView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__plans__planId__page",
+      "name": "loadPlanView",
+      "id": "app__dashboard__orgSlug__plans__planId__page:loadPlanView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__activity__page",
+      "name": "loadOrgReportsActivity",
+      "id": "app__dashboard__orgSlug__reports__activity__page:loadOrgReportsActivity"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__applications__page",
+      "name": "loadOrgReportsApplications",
+      "id": "app__dashboard__orgSlug__reports__applications__page:loadOrgReportsApplications"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__members__page",
+      "name": "loadOrgReportsMembers",
+      "id": "app__dashboard__orgSlug__reports__members__page:loadOrgReportsMembers"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__money__page",
+      "name": "loadOrgReportsMoney",
+      "id": "app__dashboard__orgSlug__reports__money__page:loadOrgReportsMoney"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__page",
+      "name": "loadOrgReportsOverview",
+      "id": "app__dashboard__orgSlug__reports__page:loadOrgReportsOverview"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__renewals__page",
+      "name": "loadOrgReportsRenewals",
+      "id": "app__dashboard__orgSlug__reports__renewals__page:loadOrgReportsRenewals"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__reports__tax__page",
+      "name": "loadOrgReportsTax",
+      "id": "app__dashboard__orgSlug__reports__tax__page:loadOrgReportsTax"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__cards__page",
+      "name": "loadOrgCardSettingsView",
+      "id": "app__dashboard__orgSlug__settings__cards__page:loadOrgCardSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__email__page",
+      "name": "loadOrgEmailSettingsView",
+      "id": "app__dashboard__orgSlug__settings__email__page:loadOrgEmailSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__money__page",
+      "name": "loadOrgMoneySettingsView",
+      "id": "app__dashboard__orgSlug__settings__money__page:loadOrgMoneySettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__notifications__page",
+      "name": "loadOrgNotificationsView",
+      "id": "app__dashboard__orgSlug__settings__notifications__page:loadOrgNotificationsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__page",
+      "name": "loadOrgSettingsView",
+      "id": "app__dashboard__orgSlug__settings__page:loadOrgSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__payments__page",
+      "name": "loadPaymentSettingsView",
+      "id": "app__dashboard__orgSlug__settings__payments__page:loadPaymentSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__public-page__page",
+      "name": "loadPublicPageEditorView",
+      "id": "app__dashboard__orgSlug__settings__public-page__page:loadPublicPageEditorView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__settings__structure__page",
+      "name": "loadOrgStructureView",
+      "id": "app__dashboard__orgSlug__settings__structure__page:loadOrgStructureView"
+    },
+    {
+      "module": "lib/views/app__dashboard__orgSlug__team__page",
+      "name": "loadOrgMembersView",
+      "id": "app__dashboard__orgSlug__team__page:loadOrgMembersView"
+    },
+    {
+      "module": "lib/views/app__dashboard__page",
+      "name": "loadDashboardView",
+      "id": "app__dashboard__page:loadDashboardView"
+    },
+    {
+      "module": "lib/views/app__join__org__token__page",
+      "name": "loadJoinOrganisationView",
+      "id": "app__join__org__token__page:loadJoinOrganisationView"
+    },
+    {
+      "module": "lib/views/app__o__orgSlug__join__planSlug__page",
+      "name": "loadJoinView",
+      "id": "app__o__orgSlug__join__planSlug__page:loadJoinView"
+    },
+    {
+      "module": "lib/views/app__o__orgSlug__layout",
+      "name": "loadPublicOrgLayout",
+      "id": "app__o__orgSlug__layout:loadPublicOrgLayout"
+    },
+    {
+      "module": "lib/views/app__o__orgSlug__page",
+      "name": "loadPublicOrgPage",
+      "id": "app__o__orgSlug__page:loadPublicOrgPage"
+    },
+    {
+      "module": "lib/views/app__organisations__page",
+      "name": "loadOrganisationsDirectory",
+      "id": "app__organisations__page:loadOrganisationsDirectory"
+    },
+    {
+      "module": "lib/views/app__pay__token__page",
+      "name": "loadPayLinkView",
+      "id": "app__pay__token__page:loadPayLinkView"
+    },
+    {
+      "module": "lib/views/app__sitemap",
+      "name": "loadSitemapOrganisations",
+      "id": "app__sitemap:loadSitemapOrganisations"
+    },
+    {
+      "module": "lib/views/app__start__page",
+      "name": "loadStartView",
+      "id": "app__start__page:loadStartView"
+    },
+    {
+      "module": "lib/views/app__super-admin__audit__page",
+      "name": "loadSuperAdminAuditView",
+      "id": "app__super-admin__audit__page:loadSuperAdminAuditView"
+    },
+    {
+      "module": "lib/views/app__super-admin__auth__page",
+      "name": "loadSuperAdminAuthView",
+      "id": "app__super-admin__auth__page:loadSuperAdminAuthView"
+    },
+    {
+      "module": "lib/views/app__super-admin__email__page",
+      "name": "loadSuperAdminEmailView",
+      "id": "app__super-admin__email__page:loadSuperAdminEmailView"
+    },
+    {
+      "module": "lib/views/app__super-admin__layout",
+      "name": "loadSuperAdminShell",
+      "id": "app__super-admin__layout:loadSuperAdminShell"
+    },
+    {
+      "module": "lib/views/app__super-admin__monitoring__page",
+      "name": "loadSuperAdminMonitoringView",
+      "id": "app__super-admin__monitoring__page:loadSuperAdminMonitoringView"
+    },
+    {
+      "module": "lib/views/app__super-admin__operations__page",
+      "name": "loadSuperAdminOperationsView",
+      "id": "app__super-admin__operations__page:loadSuperAdminOperationsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__orgs__new__page",
+      "name": "loadSuperAdminNewOrgView",
+      "id": "app__super-admin__orgs__new__page:loadSuperAdminNewOrgView"
+    },
+    {
+      "module": "lib/views/app__super-admin__orgs__orgId__page",
+      "name": "loadSuperAdminOrgDetailView",
+      "id": "app__super-admin__orgs__orgId__page:loadSuperAdminOrgDetailView"
+    },
+    {
+      "module": "lib/views/app__super-admin__orgs__page",
+      "name": "loadSuperAdminOrgsView",
+      "id": "app__super-admin__orgs__page:loadSuperAdminOrgsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__page",
+      "name": "loadSuperAdminOverviewView",
+      "id": "app__super-admin__page:loadSuperAdminOverviewView"
+    },
+    {
+      "module": "lib/views/app__super-admin__reports__page",
+      "name": "loadSuperAdminReportsView",
+      "id": "app__super-admin__reports__page:loadSuperAdminReportsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__security__page",
+      "name": "loadSuperAdminSecurityView",
+      "id": "app__super-admin__security__page:loadSuperAdminSecurityView"
+    },
+    {
+      "module": "lib/views/app__super-admin__settings__page",
+      "name": "loadSuperAdminSettingsView",
+      "id": "app__super-admin__settings__page:loadSuperAdminSettingsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__storage__page",
+      "name": "loadSuperAdminStorageView",
+      "id": "app__super-admin__storage__page:loadSuperAdminStorageView"
+    },
+    {
+      "module": "lib/views/app__super-admin__users__page",
+      "name": "loadSuperAdminUsersView",
+      "id": "app__super-admin__users__page:loadSuperAdminUsersView"
+    },
+    {
+      "module": "lib/views/app__super-admin__users__userId__page",
+      "name": "loadSuperAdminUserDetailView",
+      "id": "app__super-admin__users__userId__page:loadSuperAdminUserDetailView"
+    },
+    {
+      "module": "lib/views/app__verify__token__page",
+      "name": "loadVerifyView",
+      "id": "app__verify__token__page:loadVerifyView"
+    }
+  ],
+  "actions": [
+    {
+      "module": "app/actions/account-organisations",
+      "name": "leaveOrganisation",
+      "id": "account-organisations:leaveOrganisation"
+    },
+    {
+      "module": "app/actions/account",
+      "name": "updateAccountProfile",
+      "id": "account:updateAccountProfile"
+    },
+    {
+      "module": "app/actions/account",
+      "name": "updateAccountPassword",
+      "id": "account:updateAccountPassword"
+    },
+    {
+      "module": "app/actions/accounts",
+      "name": "addLedgerEntry",
+      "id": "accounts:addLedgerEntry"
+    },
+    {
+      "module": "app/actions/accounts",
+      "name": "voidLedgerEntry",
+      "id": "accounts:voidLedgerEntry"
+    },
+    {
+      "module": "app/actions/accounts",
+      "name": "setOpeningBalance",
+      "id": "accounts:setOpeningBalance"
+    },
+    {
+      "module": "app/actions/auth",
+      "name": "signUpWithPassword",
+      "id": "auth:signUpWithPassword"
+    },
+    {
+      "module": "app/actions/auth",
+      "name": "confirmEmailVerification",
+      "id": "auth:confirmEmailVerification"
+    },
+    {
+      "module": "app/actions/auth",
+      "name": "resendEmailVerification",
+      "id": "auth:resendEmailVerification"
+    },
+    {
+      "module": "app/actions/card-design",
+      "name": "saveCardDesign",
+      "id": "card-design:saveCardDesign"
+    },
+    {
+      "module": "app/actions/card-design",
+      "name": "revertToOrganisationCardDesign",
+      "id": "card-design:revertToOrganisationCardDesign"
+    },
+    {
+      "module": "app/actions/card-design",
+      "name": "uploadCardWatermark",
+      "id": "card-design:uploadCardWatermark"
+    },
+    {
+      "module": "app/actions/cards",
+      "name": "issueMemberCard",
+      "id": "cards:issueMemberCard"
+    },
+    {
+      "module": "app/actions/cards",
+      "name": "reissueMemberCard",
+      "id": "cards:reissueMemberCard"
+    },
+    {
+      "module": "app/actions/cards",
+      "name": "revokeMemberCard",
+      "id": "cards:revokeMemberCard"
+    },
+    {
+      "module": "app/actions/cards",
+      "name": "emailMemberCard",
+      "id": "cards:emailMemberCard"
+    },
+    {
+      "module": "app/actions/cards",
+      "name": "requestCardExport",
+      "id": "cards:requestCardExport"
+    },
+    {
+      "module": "app/actions/chat-channels",
+      "name": "saveChatChannel",
+      "id": "chat-channels:saveChatChannel"
+    },
+    {
+      "module": "app/actions/chat-channels",
+      "name": "deleteChatChannel",
+      "id": "chat-channels:deleteChatChannel"
+    },
+    {
+      "module": "app/actions/chat-channels",
+      "name": "testChatChannel",
+      "id": "chat-channels:testChatChannel"
+    },
+    {
+      "module": "app/actions/erasure",
+      "name": "decideErasureRequest",
+      "id": "erasure:decideErasureRequest"
+    },
+    {
+      "module": "app/actions/instance-settings",
+      "name": "setNewUserRegistrationEnabled",
+      "id": "instance-settings:setNewUserRegistrationEnabled"
+    },
+    {
+      "module": "app/actions/instance-settings",
+      "name": "setOrganisationApplicationsEnabled",
+      "id": "instance-settings:setOrganisationApplicationsEnabled"
+    },
+    {
+      "module": "app/actions/instance-settings",
+      "name": "saveInstanceServiceSettings",
+      "id": "instance-settings:saveInstanceServiceSettings"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "deliverInstanceOutbox",
+      "id": "instance:deliverInstanceOutbox"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "purgeExpiredVerificationTokens",
+      "id": "instance:purgeExpiredVerificationTokens"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "retryFailedOutboxMessages",
+      "id": "instance:retryFailedOutboxMessages"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "recordBackupRestoreVerification",
+      "id": "instance:recordBackupRestoreVerification"
+    },
+    {
+      "module": "app/actions/invite-acceptance",
+      "name": "acceptOrganisationInvite",
+      "id": "invite-acceptance:acceptOrganisationInvite"
+    },
+    {
+      "module": "app/actions/ip-blocks",
+      "name": "unblockAddress",
+      "id": "ip-blocks:unblockAddress"
+    },
+    {
+      "module": "app/actions/join",
+      "name": "submitJoin",
+      "id": "join:submitJoin"
+    },
+    {
+      "module": "app/actions/join",
+      "name": "createMemberInvite",
+      "id": "join:createMemberInvite"
+    },
+    {
+      "module": "app/actions/join",
+      "name": "revokeMemberInvite",
+      "id": "join:revokeMemberInvite"
+    },
+    {
+      "module": "app/actions/media",
+      "name": "uploadOrganisationLogo",
+      "id": "media:uploadOrganisationLogo"
+    },
+    {
+      "module": "app/actions/media",
+      "name": "uploadAccountProfileImage",
+      "id": "media:uploadAccountProfileImage"
+    },
+    {
+      "module": "app/actions/member-import",
+      "name": "previewMemberImport",
+      "id": "member-import:previewMemberImport"
+    },
+    {
+      "module": "app/actions/member-import",
+      "name": "commitMemberImport",
+      "id": "member-import:commitMemberImport"
+    },
+    {
+      "module": "app/actions/member-payments",
+      "name": "startMemberCheckout",
+      "id": "member-payments:startMemberCheckout"
+    },
+    {
+      "module": "app/actions/member-payments",
+      "name": "confirmMemberRazorpay",
+      "id": "member-payments:confirmMemberRazorpay"
+    },
+    {
+      "module": "app/actions/member-payments",
+      "name": "submitPaymentClaim",
+      "id": "member-payments:submitPaymentClaim"
+    },
+    {
+      "module": "app/actions/member-photo",
+      "name": "setMemberPhoto",
+      "id": "member-photo:setMemberPhoto"
+    },
+    {
+      "module": "app/actions/member-portal",
+      "name": "setMemberPortal",
+      "id": "member-portal:setMemberPortal"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "addMember",
+      "id": "members:addMember"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "updateMember",
+      "id": "members:updateMember"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "decideMemberships",
+      "id": "members:decideMemberships"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "renewMember",
+      "id": "members:renewMember"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "extendMembership",
+      "id": "members:extendMembership"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "assignMemberRoles",
+      "id": "members:assignMemberRoles"
+    },
+    {
+      "module": "app/actions/org-email",
+      "name": "saveOrgEmailSettings",
+      "id": "org-email:saveOrgEmailSettings"
+    },
+    {
+      "module": "app/actions/org-email",
+      "name": "sendOrgTestEmail",
+      "id": "org-email:sendOrgTestEmail"
+    },
+    {
+      "module": "app/actions/org-invites",
+      "name": "createOrgInvite",
+      "id": "org-invites:createOrgInvite"
+    },
+    {
+      "module": "app/actions/org-invites",
+      "name": "revokeOrgInvite",
+      "id": "org-invites:revokeOrgInvite"
+    },
+    {
+      "module": "app/actions/org",
+      "name": "updateOrganisation",
+      "id": "org:updateOrganisation"
+    },
+    {
+      "module": "app/actions/organisation-application",
+      "name": "checkOrganisationSlug",
+      "id": "organisation-application:checkOrganisationSlug"
+    },
+    {
+      "module": "app/actions/organisation-application",
+      "name": "submitOrganisationApplication",
+      "id": "organisation-application:submitOrganisationApplication"
+    },
+    {
+      "module": "app/actions/organisation-application",
+      "name": "resubmitOrganisationApplication",
+      "id": "organisation-application:resubmitOrganisationApplication"
+    },
+    {
+      "module": "app/actions/password-reset",
+      "name": "requestPasswordReset",
+      "id": "password-reset:requestPasswordReset"
+    },
+    {
+      "module": "app/actions/password-reset",
+      "name": "confirmPasswordReset",
+      "id": "password-reset:confirmPasswordReset"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "savePaymentGateway",
+      "id": "payment-settings:savePaymentGateway"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "testPaymentGateway",
+      "id": "payment-settings:testPaymentGateway"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "saveTaxSettings",
+      "id": "payment-settings:saveTaxSettings"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "saveOfflinePaymentSettings",
+      "id": "payment-settings:saveOfflinePaymentSettings"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "saveRefundPolicy",
+      "id": "payment-settings:saveRefundPolicy"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "recordPayment",
+      "id": "payments:recordPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "confirmPayment",
+      "id": "payments:confirmPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "rejectPayment",
+      "id": "payments:rejectPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "cancelOpenPayment",
+      "id": "payments:cancelOpenPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "waiveFee",
+      "id": "payments:waiveFee"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "releaseDocument",
+      "id": "payments:releaseDocument"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "clearFlag",
+      "id": "payments:clearFlag"
+    },
+    {
+      "module": "app/actions/plans",
+      "name": "createPlan",
+      "id": "plans:createPlan"
+    },
+    {
+      "module": "app/actions/plans",
+      "name": "updatePlan",
+      "id": "plans:updatePlan"
+    },
+    {
+      "module": "app/actions/plans",
+      "name": "setPlanArchived",
+      "id": "plans:setPlanArchived"
+    },
+    {
+      "module": "app/actions/plans",
+      "name": "savePlanFields",
+      "id": "plans:savePlanFields"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "renewMembership",
+      "id": "portal:renewMembership"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "withdrawTerm",
+      "id": "portal:withdrawTerm"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "leaveMembership",
+      "id": "portal:leaveMembership"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "requestMembershipRefund",
+      "id": "portal:requestMembershipRefund"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "withdrawMembershipRefund",
+      "id": "portal:withdrawMembershipRefund"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "updateMemberProfile",
+      "id": "portal:updateMemberProfile"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "withdrawConsent",
+      "id": "portal:withdrawConsent"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "requestDataErasure",
+      "id": "portal:requestDataErasure"
+    },
+    {
+      "module": "app/actions/portal",
+      "name": "withdrawDataErasure",
+      "id": "portal:withdrawDataErasure"
+    },
+    {
+      "module": "app/actions/public-page",
+      "name": "savePublicPageDraft",
+      "id": "public-page:savePublicPageDraft"
+    },
+    {
+      "module": "app/actions/public-page",
+      "name": "publishPublicPage",
+      "id": "public-page:publishPublicPage"
+    },
+    {
+      "module": "app/actions/public-page",
+      "name": "discardPublicPageDraft",
+      "id": "public-page:discardPublicPageDraft"
+    },
+    {
+      "module": "app/actions/public-page",
+      "name": "unpublishPublicPage",
+      "id": "public-page:unpublishPublicPage"
+    },
+    {
+      "module": "app/actions/public-page",
+      "name": "uploadPublicPageImage",
+      "id": "public-page:uploadPublicPageImage"
+    },
+    {
+      "module": "app/actions/refunds",
+      "name": "refundPayment",
+      "id": "refunds:refundPayment"
+    },
+    {
+      "module": "app/actions/refunds",
+      "name": "approveRefund",
+      "id": "refunds:approveRefund"
+    },
+    {
+      "module": "app/actions/refunds",
+      "name": "declineRefund",
+      "id": "refunds:declineRefund"
+    },
+    {
+      "module": "app/actions/report-digest",
+      "name": "setReportDigest",
+      "id": "report-digest:setReportDigest"
+    },
+    {
+      "module": "app/actions/reports",
+      "name": "sendRenewalReminders",
+      "id": "reports:sendRenewalReminders"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "beginMfaEnrollment",
+      "id": "security:beginMfaEnrollment"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "confirmMfaEnrollment",
+      "id": "security:confirmMfaEnrollment"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "disableMfa",
+      "id": "security:disableMfa"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "revokeAllSessions",
+      "id": "security:revokeAllSessions"
+    },
+    {
+      "module": "app/actions/sign-in-providers",
+      "name": "saveSignInProviders",
+      "id": "sign-in-providers:saveSignInProviders"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "setUnitLevels",
+      "id": "structure:setUnitLevels"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "createUnit",
+      "id": "structure:createUnit"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "renameUnit",
+      "id": "structure:renameUnit"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "setUnitArchived",
+      "id": "structure:setUnitArchived"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "createMemberRole",
+      "id": "structure:createMemberRole"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "updateMemberRole",
+      "id": "structure:updateMemberRole"
+    },
+    {
+      "module": "app/actions/structure",
+      "name": "updateOrganisationPreferences",
+      "id": "structure:updateOrganisationPreferences"
+    },
+    {
+      "module": "app/actions/super-admin-organisations",
+      "name": "reviewOrganisation",
+      "id": "super-admin-organisations:reviewOrganisation"
+    },
+    {
+      "module": "app/actions/super-admin-organisations",
+      "name": "setOrganisationLimits",
+      "id": "super-admin-organisations:setOrganisationLimits"
+    },
+    {
+      "module": "app/actions/super-admin-organisations",
+      "name": "createOrganisationForOwner",
+      "id": "super-admin-organisations:createOrganisationForOwner"
+    },
+    {
+      "module": "app/actions/super-admin-organisations",
+      "name": "resendOwnerInvite",
+      "id": "super-admin-organisations:resendOwnerInvite"
+    },
+    {
+      "module": "app/actions/super-admin-organisations",
+      "name": "setOrganisationVisibility",
+      "id": "super-admin-organisations:setOrganisationVisibility"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "updateTeamRole",
+      "id": "team:updateTeamRole"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "removeTeamMember",
+      "id": "team:removeTeamMember"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "deleteOrganisation",
+      "id": "team:deleteOrganisation"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "setTeamMemberUnit",
+      "id": "team:setTeamMemberUnit"
+    }
+  ]
+}
