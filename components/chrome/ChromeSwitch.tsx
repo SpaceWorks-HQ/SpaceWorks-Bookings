@@ -10,7 +10,7 @@ const SITE_PREFIXES = ["/about", "/privacy", "/terms", "/join/", "/makerspaces"]
 /** Pages that render their own complete chrome (app shell, kiosk, embed, split sign-in). */
 const OWN_CHROME_PREFIXES = ["/dashboard", "/account", "/super-admin", "/login", "/m/"];
 /** Auth flows: minimal header with the logo only. */
-const AUTH_PREFIXES = ["/reset-password", "/verify-email", "/start", "/verify/", "/pay/"];
+const AUTH_PREFIXES = ["/reset-password", "/verify-email", "/start"];
 
 /** "/x" matches "/x" and "/x/..."; "/x/" matches only "/x/..." (a section with sub-pages). */
 function matches(pathname: string, prefixes: string[]) {

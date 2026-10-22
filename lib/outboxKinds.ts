@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { sendPasswordResetEmail } from "@/lib/email/passwordReset";
 import { sendEmailVerificationEmail } from "@/lib/email/emailVerification";
+import { sendMagicLinkEmail } from "@/lib/email/magicLink";
 import { asAdminPayload, asInvitePayload, asNoticePayload, deliverAdminApplicationAlert, deliverMakerspaceNotice, deliverOwnerInvite } from "@/lib/email/makerspace";
 import { asPaymentNoticePayload, deliverPaymentNotice } from "@/lib/email/payments";
 import { asChatPayload, deliverChatNotice } from "@/lib/chat/notify";
@@ -82,6 +83,18 @@ const emailVerification: OutboxKindHandler = {
   },
 };
 
+const magicLink: OutboxKindHandler = {
+  capability: true,
+  shortLived: true,
+  async deliver(value, messageId) {
+    const p = asRecord(value);
+    if (!p || !isEmail(p.to) || !isSafeMessageUrl(p.url) || !isIsoDate(p.expiresAt)) throw new PermanentOutboxError();
+    if (isExpired(p.expiresAt as string)) return "dropped";
+    await sendMagicLinkEmail({ to: p.to as string, url: p.url as string, messageId });
+    return "sent";
+  },
+};
+
 const makerspaceNotice: OutboxKindHandler = {
   capability: false,
   async deliver(value, messageId) {
@@ -151,6 +164,7 @@ const chatNotice: OutboxKindHandler = {
 export const OUTBOX_KINDS = {
   "password-reset": passwordReset,
   "email-verification": emailVerification,
+  "magic-link": magicLink,
   "makerspace-notice": makerspaceNotice,
   "makerspace-application-alert": makerspaceApplicationAlert,
   "owner-invite": ownerInvite,

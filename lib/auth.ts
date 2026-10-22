@@ -1,6 +1,6 @@
 import "server-only";
 
-import NextAuth, { CredentialsSignin } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
@@ -10,6 +10,8 @@ import { consumeRecoveryCode, decryptMfaSecret, consumeMfaCode } from "@/lib/mfa
 import { consumeLoginCode, issueLoginCode, justVerified, recognisedDevice, rememberDevice } from "@/lib/loginSecurity";
 import { isIpBlocked, recordFailedLogin } from "@/lib/ipBlock";
 import { getClientIpFromHeaders } from "@/lib/rateLimit";
+import { AddressBlockedError, EmailCodeRequiredError, EmailVerificationRequiredError, MfaRequiredError } from "@/lib/authErrors";
+import { authorizeMagicLink } from "@/lib/magicLink";
 
 /**
  * The session cookie's name. Cookies ignore ports, so in development several servers on localhost (one per
@@ -33,29 +35,6 @@ const credentialsSchema = z.object({
   totp: z.string().trim().max(32).optional(),
   emailCode: z.string().trim().max(12).optional(),
 });
-
-/**
- * This code is returned only after the supplied password is valid. It lets the
- * sign-in screen show the second factor as a distinct step without exposing
- * whether an arbitrary email address has MFA enabled.
- */
-class MfaRequiredError extends CredentialsSignin {
-  code = "mfa_required";
-}
-
-class EmailVerificationRequiredError extends CredentialsSignin {
-  code = "email_verification_required";
-}
-
-/** A sign-in from a new browser on an account without an authenticator: a code has been emailed. */
-class EmailCodeRequiredError extends CredentialsSignin {
-  code = "email_code_required";
-}
-
-/** Too many failed sign-ins from this address: it is blocked for a while (lib/ipBlock.ts). */
-class AddressBlockedError extends CredentialsSignin {
-  code = "address_blocked";
-}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Credentials only (no SSO), so sessions are JWTs and there is no adapter.
@@ -138,6 +117,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           sessionVersion: user.sessionVersion,
         };
       },
+    }),
+    // The emailed one-time link (lib/magicLink.ts). Still asks for the authenticator when the account has one.
+    Credentials({
+      id: "magic-link",
+      name: "Emailed sign-in link",
+      credentials: { token: { label: "Token", type: "text" }, totp: { label: "Code", type: "text" } },
+      authorize: (raw, request) => authorizeMagicLink(raw, request),
     }),
   ],
   callbacks: {

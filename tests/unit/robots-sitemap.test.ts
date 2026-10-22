@@ -14,7 +14,7 @@ describe("robots and sitemap", () => {
     const result = robots();
     expect(result.sitemap).toBe("https://members.test/sitemap.xml");
     const rules = Array.isArray(result.rules) ? result.rules[0]! : result.rules;
-    expect(rules.disallow).toEqual(expect.arrayContaining(["/dashboard/", "/super-admin", "/account", "/join/", "/verify/", "/start"]));
+    expect(rules.disallow).toEqual(expect.arrayContaining(["/dashboard/", "/super-admin", "/account", "/join/", "/login/", "/start"]));
   });
 
   it("omits the sitemap line without a public address", () => {

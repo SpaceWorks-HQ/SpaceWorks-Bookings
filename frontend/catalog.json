@@ -283,6 +283,11 @@
       "id": "ip-blocks:unblockAddress"
     },
     {
+      "module": "app/actions/magic-link",
+      "name": "requestMagicLink",
+      "id": "magic-link:requestMagicLink"
+    },
+    {
       "module": "app/actions/makerspace-application",
       "name": "checkMakerspaceSlug",
       "id": "makerspace-application:checkMakerspaceSlug"

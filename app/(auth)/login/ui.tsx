@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { loginErrorMessage, MfaStep } from "@/components/auth/MfaStep";
+import { MagicLinkRequest } from "@/components/auth/MagicLinkRequest";
 import { Callout } from "@/components/ui/display";
 import { Field, Input, PasswordInput } from "@/components/ui/field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -261,6 +262,8 @@ export function LoginForm({ accountCreationEnabled }: { accountCreationEnabled: 
                 : "Sign in"}
           </Button>
         </form>
+
+        {isSignUp ? null : <MagicLinkRequest initialEmail={email} disabled={!!loading} />}
 
         {accountCreationEnabled ? (
           <button

@@ -10,20 +10,17 @@ export type Bucket =
   | "signup"
   | "emailVerification"
   | "passwordReset"
+  | "magicLink"
   | "application"
-  | "join"
   | "payment"
-  | "paymentClaim"
   | "webhook"
   | "upload"
   | "invite"
-  | "verifyCard"
   | "apiRead"
   | "apiWrite"
   | "dataExport"
   | "reportExport"
-  | "documentView"
-  | "cardRender";
+  | "documentView";
 
 const limits: Record<Bucket, { max: number; windowMs: number; }> = {
   global: { max: 300, windowMs: 60_000 },
@@ -34,28 +31,23 @@ const limits: Record<Bucket, { max: number; windowMs: number; }> = {
   signup: { max: 5, windowMs: 60 * 60_000 },
   emailVerification: { max: 5, windowMs: 60 * 60_000 },
   passwordReset: { max: 5, windowMs: 60 * 60_000 },
+  // Emailed sign-in links: per address and per IP (lib/magicLink.ts).
+  magicLink: { max: 5, windowMs: 60 * 60_000 },
   // Makerspace applications (/start): a handful per person per day is plenty.
   application: { max: 3, windowMs: 24 * 60 * 60_000 },
-  join: { max: 10, windowMs: 60 * 60_000 },
   payment: { max: 20, windowMs: 60 * 60_000 },
-  // A member's "I've paid" UTR claims.
-  paymentClaim: { max: 5, windowMs: 60 * 60_000 },
   // Gateway webhooks: their own generous bucket, exempt from the per-IP global limit.
   webhook: { max: 1200, windowMs: 60_000 },
   upload: { max: 12, windowMs: 60 * 60_000 },
   invite: { max: 30, windowMs: 60 * 60_000 },
-  // Public card checks. Doors and desks scan many cards from one address, so stay generous.
-  verifyCard: { max: 120, windowMs: 60_000 },
   apiRead: { max: 600, windowMs: 60_000 },
   apiWrite: { max: 60, windowMs: 60_000 },
   // A person's own data export: heavy and rarely needed.
   dataExport: { max: 5, windowMs: 60 * 60_000 },
-  // Report CSVs, GSTR-1 and the member register: a month-end run is several in a row.
+  // Report CSVs, GSTR-1 and finance exports: a month-end run is several in a row.
   reportExport: { max: 60, windowMs: 60 * 60_000 },
   // Receipt and credit-note PDFs, opened one by one from lists.
   documentView: { max: 300, windowMs: 60 * 60_000 },
-  // Member card PDF/PNG renders: CPU-heavy, so per person per hour.
-  cardRender: { max: 60, windowMs: 60 * 60_000 },
 };
 
 // Local fallback store

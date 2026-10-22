@@ -12,13 +12,6 @@ function tooMany() {
   );
 }
 
-function tooManyText() {
-  return new NextResponse("Too many requests. Try again later.", {
-    status: 429,
-    headers: { "Retry-After": "60", "Cache-Control": "no-store" },
-  });
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // The peer credential authenticates only the frontend service, never a user.
@@ -35,11 +28,6 @@ export async function proxy(request: NextRequest) {
   // before any action-specific subject/IP limits run in the action itself.
   if (request.method === "POST" && request.headers.has("next-action")) {
     if (!(await checkRateLimit(request, "action"))) return tooMany();
-  }
-
-  // Public card checks (QR scans at a door or desk).
-  if (pathname.startsWith("/verify/")) {
-    if (!(await checkRateLimit(request, "verifyCard"))) return tooManyText();
   }
 
   // Payment gateway webhooks: one generous bucket of their own, never the per-IP global limit, so

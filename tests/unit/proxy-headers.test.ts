@@ -38,14 +38,6 @@ describe("proxy rate limits", () => {
     expect(response.status).toBe(429);
   });
 
-  it("limits public card checks with plain text", async () => {
-    mocks.checkRateLimit.mockResolvedValue(false);
-    const response = await proxy(new NextRequest("https://members.example.test/verify/abcdefghijklmnopqrstuv"));
-    expect(buckets()).toEqual(["verifyCard"]);
-    expect(response.status).toBe(429);
-    expect(response.headers.get("content-type")).toContain("text/plain");
-  });
-
   it("keeps liveness independent of the limiter", async () => {
     await proxy(new NextRequest("https://members.example.test/api/health"));
     expect(mocks.checkRateLimit).not.toHaveBeenCalled();

@@ -56,41 +56,42 @@ import { retryFailedOutboxMessages as endpoint52 } from "@/app/actions/instance"
 import { recordBackupRestoreVerification as endpoint53 } from "@/app/actions/instance";
 import { acceptMakerspaceInvite as endpoint54 } from "@/app/actions/invite-acceptance";
 import { unblockAddress as endpoint55 } from "@/app/actions/ip-blocks";
-import { checkMakerspaceSlug as endpoint56 } from "@/app/actions/makerspace-application";
-import { submitMakerspaceApplication as endpoint57 } from "@/app/actions/makerspace-application";
-import { resubmitMakerspaceApplication as endpoint58 } from "@/app/actions/makerspace-application";
-import { saveMakerspaceEmailSettings as endpoint59 } from "@/app/actions/makerspace-email";
-import { sendMakerspaceTestEmail as endpoint60 } from "@/app/actions/makerspace-email";
-import { createMakerspaceInvite as endpoint61 } from "@/app/actions/makerspace-invites";
-import { revokeMakerspaceInvite as endpoint62 } from "@/app/actions/makerspace-invites";
-import { updateMakerspace as endpoint63 } from "@/app/actions/makerspace";
-import { uploadMakerspaceLogo as endpoint64 } from "@/app/actions/media";
-import { uploadAccountProfileImage as endpoint65 } from "@/app/actions/media";
-import { requestPasswordReset as endpoint66 } from "@/app/actions/password-reset";
-import { confirmPasswordReset as endpoint67 } from "@/app/actions/password-reset";
-import { savePaymentGateway as endpoint68 } from "@/app/actions/payment-settings";
-import { testPaymentGateway as endpoint69 } from "@/app/actions/payment-settings";
-import { saveTaxSettings as endpoint70 } from "@/app/actions/payment-settings";
-import { saveOfflinePaymentSettings as endpoint71 } from "@/app/actions/payment-settings";
-import { confirmPayment as endpoint72 } from "@/app/actions/payments";
-import { rejectPayment as endpoint73 } from "@/app/actions/payments";
-import { cancelOpenPayment as endpoint74 } from "@/app/actions/payments";
-import { releaseDocument as endpoint75 } from "@/app/actions/payments";
-import { clearFlag as endpoint76 } from "@/app/actions/payments";
-import { updateMakerspacePreferences as endpoint77 } from "@/app/actions/preferences";
-import { refundPayment as endpoint78 } from "@/app/actions/refunds";
-import { beginMfaEnrollment as endpoint79 } from "@/app/actions/security";
-import { confirmMfaEnrollment as endpoint80 } from "@/app/actions/security";
-import { disableMfa as endpoint81 } from "@/app/actions/security";
-import { revokeAllSessions as endpoint82 } from "@/app/actions/security";
-import { reviewMakerspace as endpoint83 } from "@/app/actions/super-admin-makerspaces";
-import { setMakerspaceLimits as endpoint84 } from "@/app/actions/super-admin-makerspaces";
-import { createMakerspaceForOwner as endpoint85 } from "@/app/actions/super-admin-makerspaces";
-import { resendOwnerInvite as endpoint86 } from "@/app/actions/super-admin-makerspaces";
-import { setMakerspaceVisibility as endpoint87 } from "@/app/actions/super-admin-makerspaces";
-import { updateTeamRole as endpoint88 } from "@/app/actions/team";
-import { removeTeamMember as endpoint89 } from "@/app/actions/team";
-import { deleteMakerspace as endpoint90 } from "@/app/actions/team";
+import { requestMagicLink as endpoint56 } from "@/app/actions/magic-link";
+import { checkMakerspaceSlug as endpoint57 } from "@/app/actions/makerspace-application";
+import { submitMakerspaceApplication as endpoint58 } from "@/app/actions/makerspace-application";
+import { resubmitMakerspaceApplication as endpoint59 } from "@/app/actions/makerspace-application";
+import { saveMakerspaceEmailSettings as endpoint60 } from "@/app/actions/makerspace-email";
+import { sendMakerspaceTestEmail as endpoint61 } from "@/app/actions/makerspace-email";
+import { createMakerspaceInvite as endpoint62 } from "@/app/actions/makerspace-invites";
+import { revokeMakerspaceInvite as endpoint63 } from "@/app/actions/makerspace-invites";
+import { updateMakerspace as endpoint64 } from "@/app/actions/makerspace";
+import { uploadMakerspaceLogo as endpoint65 } from "@/app/actions/media";
+import { uploadAccountProfileImage as endpoint66 } from "@/app/actions/media";
+import { requestPasswordReset as endpoint67 } from "@/app/actions/password-reset";
+import { confirmPasswordReset as endpoint68 } from "@/app/actions/password-reset";
+import { savePaymentGateway as endpoint69 } from "@/app/actions/payment-settings";
+import { testPaymentGateway as endpoint70 } from "@/app/actions/payment-settings";
+import { saveTaxSettings as endpoint71 } from "@/app/actions/payment-settings";
+import { saveOfflinePaymentSettings as endpoint72 } from "@/app/actions/payment-settings";
+import { confirmPayment as endpoint73 } from "@/app/actions/payments";
+import { rejectPayment as endpoint74 } from "@/app/actions/payments";
+import { cancelOpenPayment as endpoint75 } from "@/app/actions/payments";
+import { releaseDocument as endpoint76 } from "@/app/actions/payments";
+import { clearFlag as endpoint77 } from "@/app/actions/payments";
+import { updateMakerspacePreferences as endpoint78 } from "@/app/actions/preferences";
+import { refundPayment as endpoint79 } from "@/app/actions/refunds";
+import { beginMfaEnrollment as endpoint80 } from "@/app/actions/security";
+import { confirmMfaEnrollment as endpoint81 } from "@/app/actions/security";
+import { disableMfa as endpoint82 } from "@/app/actions/security";
+import { revokeAllSessions as endpoint83 } from "@/app/actions/security";
+import { reviewMakerspace as endpoint84 } from "@/app/actions/super-admin-makerspaces";
+import { setMakerspaceLimits as endpoint85 } from "@/app/actions/super-admin-makerspaces";
+import { createMakerspaceForOwner as endpoint86 } from "@/app/actions/super-admin-makerspaces";
+import { resendOwnerInvite as endpoint87 } from "@/app/actions/super-admin-makerspaces";
+import { setMakerspaceVisibility as endpoint88 } from "@/app/actions/super-admin-makerspaces";
+import { updateTeamRole as endpoint89 } from "@/app/actions/team";
+import { removeTeamMember as endpoint90 } from "@/app/actions/team";
+import { deleteMakerspace as endpoint91 } from "@/app/actions/team";
 
 export const viewReaders = Object.freeze({
   "app__account__layout:loadAccountShell": endpoint0,
@@ -151,39 +152,40 @@ export const backendActions = Object.freeze({
   "instance:recordBackupRestoreVerification": endpoint53,
   "invite-acceptance:acceptMakerspaceInvite": endpoint54,
   "ip-blocks:unblockAddress": endpoint55,
-  "makerspace-application:checkMakerspaceSlug": endpoint56,
-  "makerspace-application:submitMakerspaceApplication": endpoint57,
-  "makerspace-application:resubmitMakerspaceApplication": endpoint58,
-  "makerspace-email:saveMakerspaceEmailSettings": endpoint59,
-  "makerspace-email:sendMakerspaceTestEmail": endpoint60,
-  "makerspace-invites:createMakerspaceInvite": endpoint61,
-  "makerspace-invites:revokeMakerspaceInvite": endpoint62,
-  "makerspace:updateMakerspace": endpoint63,
-  "media:uploadMakerspaceLogo": endpoint64,
-  "media:uploadAccountProfileImage": endpoint65,
-  "password-reset:requestPasswordReset": endpoint66,
-  "password-reset:confirmPasswordReset": endpoint67,
-  "payment-settings:savePaymentGateway": endpoint68,
-  "payment-settings:testPaymentGateway": endpoint69,
-  "payment-settings:saveTaxSettings": endpoint70,
-  "payment-settings:saveOfflinePaymentSettings": endpoint71,
-  "payments:confirmPayment": endpoint72,
-  "payments:rejectPayment": endpoint73,
-  "payments:cancelOpenPayment": endpoint74,
-  "payments:releaseDocument": endpoint75,
-  "payments:clearFlag": endpoint76,
-  "preferences:updateMakerspacePreferences": endpoint77,
-  "refunds:refundPayment": endpoint78,
-  "security:beginMfaEnrollment": endpoint79,
-  "security:confirmMfaEnrollment": endpoint80,
-  "security:disableMfa": endpoint81,
-  "security:revokeAllSessions": endpoint82,
-  "super-admin-makerspaces:reviewMakerspace": endpoint83,
-  "super-admin-makerspaces:setMakerspaceLimits": endpoint84,
-  "super-admin-makerspaces:createMakerspaceForOwner": endpoint85,
-  "super-admin-makerspaces:resendOwnerInvite": endpoint86,
-  "super-admin-makerspaces:setMakerspaceVisibility": endpoint87,
-  "team:updateTeamRole": endpoint88,
-  "team:removeTeamMember": endpoint89,
-  "team:deleteMakerspace": endpoint90,
+  "magic-link:requestMagicLink": endpoint56,
+  "makerspace-application:checkMakerspaceSlug": endpoint57,
+  "makerspace-application:submitMakerspaceApplication": endpoint58,
+  "makerspace-application:resubmitMakerspaceApplication": endpoint59,
+  "makerspace-email:saveMakerspaceEmailSettings": endpoint60,
+  "makerspace-email:sendMakerspaceTestEmail": endpoint61,
+  "makerspace-invites:createMakerspaceInvite": endpoint62,
+  "makerspace-invites:revokeMakerspaceInvite": endpoint63,
+  "makerspace:updateMakerspace": endpoint64,
+  "media:uploadMakerspaceLogo": endpoint65,
+  "media:uploadAccountProfileImage": endpoint66,
+  "password-reset:requestPasswordReset": endpoint67,
+  "password-reset:confirmPasswordReset": endpoint68,
+  "payment-settings:savePaymentGateway": endpoint69,
+  "payment-settings:testPaymentGateway": endpoint70,
+  "payment-settings:saveTaxSettings": endpoint71,
+  "payment-settings:saveOfflinePaymentSettings": endpoint72,
+  "payments:confirmPayment": endpoint73,
+  "payments:rejectPayment": endpoint74,
+  "payments:cancelOpenPayment": endpoint75,
+  "payments:releaseDocument": endpoint76,
+  "payments:clearFlag": endpoint77,
+  "preferences:updateMakerspacePreferences": endpoint78,
+  "refunds:refundPayment": endpoint79,
+  "security:beginMfaEnrollment": endpoint80,
+  "security:confirmMfaEnrollment": endpoint81,
+  "security:disableMfa": endpoint82,
+  "security:revokeAllSessions": endpoint83,
+  "super-admin-makerspaces:reviewMakerspace": endpoint84,
+  "super-admin-makerspaces:setMakerspaceLimits": endpoint85,
+  "super-admin-makerspaces:createMakerspaceForOwner": endpoint86,
+  "super-admin-makerspaces:resendOwnerInvite": endpoint87,
+  "super-admin-makerspaces:setMakerspaceVisibility": endpoint88,
+  "team:updateTeamRole": endpoint89,
+  "team:removeTeamMember": endpoint90,
+  "team:deleteMakerspace": endpoint91,
 });

@@ -63,7 +63,7 @@ describe("authentication boundary", () => {
     mocks.find.mockResolvedValue(null);
     expect(await jwt({ token: { sub: "user_1", sessionVersion: 2 } })).toBeNull();
   });
-  it("offers no single sign-on providers", () => {
-    expect(config.providers.map((provider) => (provider as CredentialsConfig).id)).toEqual(["credentials"]);
+  it("offers password and emailed-link sign-in only, no single sign-on", () => {
+    expect(config.providers.map((provider) => (provider as CredentialsConfig).id)).toEqual(["credentials", "magic-link"]);
   });
 });
