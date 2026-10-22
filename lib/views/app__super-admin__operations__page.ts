@@ -2,7 +2,7 @@ import { requireSuperAdmin } from "@/lib/permissions";
 import { OutboxStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
-import { OUTBOX_SCHEDULER_HEARTBEAT_KEY } from "@/lib/operationalHeartbeat";
+import { OUTBOX_HEARTBEAT_KEY } from "@/lib/operationalHeartbeat";
 import { INSTANCE_SETTINGS_ID } from "@/lib/instanceSettings";
 export async function loadSuperAdminOperationsView() {
   await requireSuperAdmin();
@@ -25,7 +25,7 @@ export async function loadSuperAdminOperationsView() {
     }),
     heartbeat
       ? heartbeat.findUnique({
-        where: { key: OUTBOX_SCHEDULER_HEARTBEAT_KEY },
+        where: { key: OUTBOX_HEARTBEAT_KEY },
         select: {
           lastStartedAt: true,
           lastSucceededAt: true,

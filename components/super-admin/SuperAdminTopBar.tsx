@@ -19,6 +19,7 @@ const sections = [
   { label: "Audit log", href: "/super-admin/audit" },
   { label: "Monitoring", href: "/super-admin/monitoring" },
   { label: "Operations", href: "/super-admin/operations" },
+  { label: "Jobs", href: "/super-admin/jobs" },
   { label: "Security", href: "/super-admin/security" },
   { label: "Storage", href: "/super-admin/storage" },
   { label: "Settings", href: "/super-admin/settings" },

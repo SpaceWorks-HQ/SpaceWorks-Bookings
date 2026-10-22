@@ -29,7 +29,7 @@ const refundSchema = z.object({
 /**
  * Refund all or part of a paid payment. Offline refunds are
  * recorded as already handed back. Gateway refunds are sent to the provider after the refund row commits and
- * tracked to PROCESSED by its answer, its webhook or the scheduler; the credit note follows the money.
+ * tracked to PROCESSED by its answer, its webhook or the reconcile job; the credit note follows the money.
  */
 export async function refundPayment(input: unknown): Promise<ActionResult<{ status: Status }>> {
   const parsed = refundSchema.safeParse(input);

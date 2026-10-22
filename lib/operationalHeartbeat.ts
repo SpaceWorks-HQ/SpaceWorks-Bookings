@@ -3,62 +3,42 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { describeOperationalError } from "@/lib/redactSensitiveText";
 
-export const OUTBOX_SCHEDULER_HEARTBEAT_KEY = "outbox-scheduler";
+/** The one heartbeat row for background jobs: the worker's outbox deliveries and the scheduled heartbeat job. */
+export const OUTBOX_HEARTBEAT_KEY = "outbox-scheduler";
 
-// During a rolling deployment (or a Turbopack restart after a migration), an
-// older generated Prisma client can briefly be alive without this delegate.
-// Do not block mail delivery merely because its optional observability row
-// cannot be written yet.
-type OperationalHeartbeatDelegate = Pick<typeof prisma.operationalHeartbeat, "upsert">;
-
-function getHeartbeatDelegate(): OperationalHeartbeatDelegate | undefined {
-  return (prisma as unknown as { operationalHeartbeat?: OperationalHeartbeatDelegate })
-    .operationalHeartbeat;
-}
-
-export async function recordOutboxSchedulerStarted() {
-  const heartbeat = getHeartbeatDelegate();
-  if (!heartbeat) return;
-  await heartbeat.upsert({
-    where: { key: OUTBOX_SCHEDULER_HEARTBEAT_KEY },
-    create: { key: OUTBOX_SCHEDULER_HEARTBEAT_KEY, lastStartedAt: new Date() },
+/** Observability only: a heartbeat failure must never stop delivery. */
+export async function recordHeartbeatStarted(key: string) {
+  await prisma.operationalHeartbeat.upsert({
+    where: { key },
+    create: { key, lastStartedAt: new Date() },
     update: { lastStartedAt: new Date() },
   });
 }
 
-export async function recordOutboxSchedulerSuccess(result: { sent: number; failed: number }) {
-  const heartbeat = getHeartbeatDelegate();
-  if (!heartbeat) return;
+export async function recordHeartbeatSuccess(key: string, result: { sent?: number; failed?: number } = {}) {
   const now = new Date();
-  await heartbeat.upsert({
-    where: { key: OUTBOX_SCHEDULER_HEARTBEAT_KEY },
-    create: {
-      key: OUTBOX_SCHEDULER_HEARTBEAT_KEY,
-      lastStartedAt: now,
-      lastSucceededAt: now,
-      lastSent: result.sent,
-      lastFailed: result.failed,
-    },
-    update: {
-      lastSucceededAt: now,
-      lastSent: result.sent,
-      lastFailed: result.failed,
-      lastError: null,
-    },
+  await prisma.operationalHeartbeat.upsert({
+    where: { key },
+    create: { key, lastStartedAt: now, lastSucceededAt: now, lastSent: result.sent ?? 0, lastFailed: result.failed ?? 0 },
+    update: { lastSucceededAt: now, lastSent: result.sent ?? 0, lastFailed: result.failed ?? 0, lastError: null },
   });
 }
 
-export async function recordOutboxSchedulerFailure(error: unknown) {
-  const heartbeat = getHeartbeatDelegate();
-  if (!heartbeat) return;
+export async function recordHeartbeatFailure(key: string, error: unknown) {
   const message = describeOperationalError(error);
-  await heartbeat.upsert({
-    where: { key: OUTBOX_SCHEDULER_HEARTBEAT_KEY },
-    create: {
-      key: OUTBOX_SCHEDULER_HEARTBEAT_KEY,
-      lastStartedAt: new Date(),
-      lastError: message,
-    },
+  await prisma.operationalHeartbeat.upsert({
+    where: { key },
+    create: { key, lastStartedAt: new Date(), lastError: message },
     update: { lastError: message },
+  });
+}
+
+/** The scheduled heartbeat: worker and beat are running, whether or not there was mail to send. */
+export async function recordHeartbeatAlive(key: string) {
+  const now = new Date();
+  await prisma.operationalHeartbeat.upsert({
+    where: { key },
+    create: { key, lastStartedAt: now, lastSucceededAt: now },
+    update: { lastStartedAt: now, lastSucceededAt: now },
   });
 }

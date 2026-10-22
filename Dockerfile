@@ -5,7 +5,7 @@
 #
 # Two published images come from this file (see .github/workflows/release.yml):
 #   runner    -> ghcr.io/<owner>/spaceworks-bookings-backend   every backend role: the app and API,
-#                migrations, the scheduler and operator checks (scripts/docker-entrypoint.sh --role)
+#                migrations, the BullMQ worker and beat and operator checks (scripts/docker-entrypoint.sh --role)
 #   frontend  -> ghcr.io/<owner>/spaceworks-bookings-frontend  the website alone, for the split layout
 # Release images are the same for every installation: public origins are
 # placeholders (spaceworks-bookings-origin.invalid, -backend.invalid) that
@@ -64,7 +64,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # This stage starts fresh; avoid writing a compiler cache that the runner never uses.
 ENV SWB_DISABLE_BUILD_CACHE=1
 
-RUN npx prisma generate
+RUN npx prisma generate && npm run build:jobs
 # The key is consumed by Next.js while compiling Server Actions. Every image
 # replica must be built with one stable key and receive that same key at runtime.
 # A BuildKit secret (`--secret id=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,...`, or a
@@ -123,7 +123,7 @@ CMD ["--role", "frontend", "node", "frontend/server.js"]
 
 # Stage 3: Production runner (keep this the LAST stage: Render builds the final
 # stage because a Blueprint cannot select a build target). The same image runs
-# every backend role: migrations, the scheduler and the operator checks.
+# every backend role: migrations, the BullMQ worker and beat and the operator checks.
 FROM node:22-alpine AS runner
 WORKDIR /app
 
@@ -147,6 +147,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+# The BullMQ worker and beat bundles (scripts/build-jobs.mjs): `--role worker|beat node dist/<role>.js`.
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 
 # Prisma CLI for the migrate role and MIGRATE_ON_START=1 (root-owned, read-only).
 COPY --from=prisma-cli /opt/prisma-cli/node_modules /opt/prisma-cli/node_modules

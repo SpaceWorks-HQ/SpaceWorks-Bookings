@@ -34,6 +34,6 @@ configure_release_repository() {
 
 # The bundled services that serve requests, as this installation runs them.
 serving_services() {
-  SERVING_SERVICES=(backend scheduler)
+  SERVING_SERVICES=(backend worker beat)
   [[ "$(repository_env_value SWB_LAYER)" == proxy ]] || SERVING_SERVICES+=(caddy)
 }

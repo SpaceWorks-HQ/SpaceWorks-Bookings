@@ -10,7 +10,7 @@ run-name: Release ${{ github.ref_name }}@${{ github.sha }}
 #         latest, never a release, never a deploy.
 # Images (linux/amd64 and linux/arm64), the same for every installation:
 #   ghcr.io/<owner>/spaceworks-bookings-backend   every backend role (app and
-#       API, migrate, scheduler, ops) through scripts/docker-entrypoint.sh --role
+#       API, migrate, worker, beat, ops) through scripts/docker-entrypoint.sh --role
 #   ghcr.io/<owner>/spaceworks-bookings-frontend  the website alone, for the split
 # Public origins are placeholders the entrypoint replaces at start, and each
 # installation supplies its own NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at runtime.
@@ -246,7 +246,7 @@ jobs:
 
             Docker images (linux/amd64, linux/arm64):
 
-            - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-bookings-backend:${{ needs.prepare.outputs.version }}` (app and API, migrations, scheduler, operator checks)
+            - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-bookings-backend:${{ needs.prepare.outputs.version }}` (app and API, migrations, job worker and beat, operator checks)
             - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-bookings-frontend:${{ needs.prepare.outputs.version }}` (website only, for the split layout)
 
   promote-latest:

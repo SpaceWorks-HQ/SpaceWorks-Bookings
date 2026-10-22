@@ -26,72 +26,74 @@ import { loadSitemapMakerspaces as endpoint22 } from "@/lib/views/app__sitemap";
 import { loadStartView as endpoint23 } from "@/lib/views/app__start__page";
 import { loadSuperAdminAuditView as endpoint24 } from "@/lib/views/app__super-admin__audit__page";
 import { loadSuperAdminEmailView as endpoint25 } from "@/lib/views/app__super-admin__email__page";
-import { loadSuperAdminShell as endpoint26 } from "@/lib/views/app__super-admin__layout";
-import { loadSuperAdminMakerspaceDetailView as endpoint27 } from "@/lib/views/app__super-admin__makerspaces__makerspaceId__page";
-import { loadSuperAdminNewMakerspaceView as endpoint28 } from "@/lib/views/app__super-admin__makerspaces__new__page";
-import { loadSuperAdminOrgsView as endpoint29 } from "@/lib/views/app__super-admin__makerspaces__page";
-import { loadSuperAdminMonitoringView as endpoint30 } from "@/lib/views/app__super-admin__monitoring__page";
-import { loadSuperAdminOperationsView as endpoint31 } from "@/lib/views/app__super-admin__operations__page";
-import { loadSuperAdminOverviewView as endpoint32 } from "@/lib/views/app__super-admin__page";
-import { loadSuperAdminSecurityView as endpoint33 } from "@/lib/views/app__super-admin__security__page";
-import { loadSuperAdminSettingsView as endpoint34 } from "@/lib/views/app__super-admin__settings__page";
-import { loadSuperAdminStorageView as endpoint35 } from "@/lib/views/app__super-admin__storage__page";
-import { loadSuperAdminUsersView as endpoint36 } from "@/lib/views/app__super-admin__users__page";
-import { loadSuperAdminUserDetailView as endpoint37 } from "@/lib/views/app__super-admin__users__userId__page";
-import { leaveMakerspace as endpoint38 } from "@/app/actions/account-makerspaces";
-import { updateAccountProfile as endpoint39 } from "@/app/actions/account";
-import { updateAccountPassword as endpoint40 } from "@/app/actions/account";
-import { signUpWithPassword as endpoint41 } from "@/app/actions/auth";
-import { confirmEmailVerification as endpoint42 } from "@/app/actions/auth";
-import { resendEmailVerification as endpoint43 } from "@/app/actions/auth";
-import { saveChatChannel as endpoint44 } from "@/app/actions/chat-channels";
-import { deleteChatChannel as endpoint45 } from "@/app/actions/chat-channels";
-import { testChatChannel as endpoint46 } from "@/app/actions/chat-channels";
-import { setNewUserRegistrationEnabled as endpoint47 } from "@/app/actions/instance-settings";
-import { setMakerspaceApplicationsEnabled as endpoint48 } from "@/app/actions/instance-settings";
-import { saveInstanceServiceSettings as endpoint49 } from "@/app/actions/instance-settings";
-import { deliverInstanceOutbox as endpoint50 } from "@/app/actions/instance";
-import { purgeExpiredVerificationTokens as endpoint51 } from "@/app/actions/instance";
-import { retryFailedOutboxMessages as endpoint52 } from "@/app/actions/instance";
-import { recordBackupRestoreVerification as endpoint53 } from "@/app/actions/instance";
-import { acceptMakerspaceInvite as endpoint54 } from "@/app/actions/invite-acceptance";
-import { unblockAddress as endpoint55 } from "@/app/actions/ip-blocks";
-import { requestMagicLink as endpoint56 } from "@/app/actions/magic-link";
-import { checkMakerspaceSlug as endpoint57 } from "@/app/actions/makerspace-application";
-import { submitMakerspaceApplication as endpoint58 } from "@/app/actions/makerspace-application";
-import { resubmitMakerspaceApplication as endpoint59 } from "@/app/actions/makerspace-application";
-import { saveMakerspaceEmailSettings as endpoint60 } from "@/app/actions/makerspace-email";
-import { sendMakerspaceTestEmail as endpoint61 } from "@/app/actions/makerspace-email";
-import { createMakerspaceInvite as endpoint62 } from "@/app/actions/makerspace-invites";
-import { revokeMakerspaceInvite as endpoint63 } from "@/app/actions/makerspace-invites";
-import { updateMakerspace as endpoint64 } from "@/app/actions/makerspace";
-import { uploadMakerspaceLogo as endpoint65 } from "@/app/actions/media";
-import { uploadAccountProfileImage as endpoint66 } from "@/app/actions/media";
-import { requestPasswordReset as endpoint67 } from "@/app/actions/password-reset";
-import { confirmPasswordReset as endpoint68 } from "@/app/actions/password-reset";
-import { savePaymentGateway as endpoint69 } from "@/app/actions/payment-settings";
-import { testPaymentGateway as endpoint70 } from "@/app/actions/payment-settings";
-import { saveTaxSettings as endpoint71 } from "@/app/actions/payment-settings";
-import { saveOfflinePaymentSettings as endpoint72 } from "@/app/actions/payment-settings";
-import { confirmPayment as endpoint73 } from "@/app/actions/payments";
-import { rejectPayment as endpoint74 } from "@/app/actions/payments";
-import { cancelOpenPayment as endpoint75 } from "@/app/actions/payments";
-import { releaseDocument as endpoint76 } from "@/app/actions/payments";
-import { clearFlag as endpoint77 } from "@/app/actions/payments";
-import { updateMakerspacePreferences as endpoint78 } from "@/app/actions/preferences";
-import { refundPayment as endpoint79 } from "@/app/actions/refunds";
-import { beginMfaEnrollment as endpoint80 } from "@/app/actions/security";
-import { confirmMfaEnrollment as endpoint81 } from "@/app/actions/security";
-import { disableMfa as endpoint82 } from "@/app/actions/security";
-import { revokeAllSessions as endpoint83 } from "@/app/actions/security";
-import { reviewMakerspace as endpoint84 } from "@/app/actions/super-admin-makerspaces";
-import { setMakerspaceLimits as endpoint85 } from "@/app/actions/super-admin-makerspaces";
-import { createMakerspaceForOwner as endpoint86 } from "@/app/actions/super-admin-makerspaces";
-import { resendOwnerInvite as endpoint87 } from "@/app/actions/super-admin-makerspaces";
-import { setMakerspaceVisibility as endpoint88 } from "@/app/actions/super-admin-makerspaces";
-import { updateTeamRole as endpoint89 } from "@/app/actions/team";
-import { removeTeamMember as endpoint90 } from "@/app/actions/team";
-import { deleteMakerspace as endpoint91 } from "@/app/actions/team";
+import { loadSuperAdminJobsView as endpoint26 } from "@/lib/views/app__super-admin__jobs__page";
+import { loadSuperAdminShell as endpoint27 } from "@/lib/views/app__super-admin__layout";
+import { loadSuperAdminMakerspaceDetailView as endpoint28 } from "@/lib/views/app__super-admin__makerspaces__makerspaceId__page";
+import { loadSuperAdminNewMakerspaceView as endpoint29 } from "@/lib/views/app__super-admin__makerspaces__new__page";
+import { loadSuperAdminOrgsView as endpoint30 } from "@/lib/views/app__super-admin__makerspaces__page";
+import { loadSuperAdminMonitoringView as endpoint31 } from "@/lib/views/app__super-admin__monitoring__page";
+import { loadSuperAdminOperationsView as endpoint32 } from "@/lib/views/app__super-admin__operations__page";
+import { loadSuperAdminOverviewView as endpoint33 } from "@/lib/views/app__super-admin__page";
+import { loadSuperAdminSecurityView as endpoint34 } from "@/lib/views/app__super-admin__security__page";
+import { loadSuperAdminSettingsView as endpoint35 } from "@/lib/views/app__super-admin__settings__page";
+import { loadSuperAdminStorageView as endpoint36 } from "@/lib/views/app__super-admin__storage__page";
+import { loadSuperAdminUsersView as endpoint37 } from "@/lib/views/app__super-admin__users__page";
+import { loadSuperAdminUserDetailView as endpoint38 } from "@/lib/views/app__super-admin__users__userId__page";
+import { leaveMakerspace as endpoint39 } from "@/app/actions/account-makerspaces";
+import { updateAccountProfile as endpoint40 } from "@/app/actions/account";
+import { updateAccountPassword as endpoint41 } from "@/app/actions/account";
+import { signUpWithPassword as endpoint42 } from "@/app/actions/auth";
+import { confirmEmailVerification as endpoint43 } from "@/app/actions/auth";
+import { resendEmailVerification as endpoint44 } from "@/app/actions/auth";
+import { saveChatChannel as endpoint45 } from "@/app/actions/chat-channels";
+import { deleteChatChannel as endpoint46 } from "@/app/actions/chat-channels";
+import { testChatChannel as endpoint47 } from "@/app/actions/chat-channels";
+import { setNewUserRegistrationEnabled as endpoint48 } from "@/app/actions/instance-settings";
+import { setMakerspaceApplicationsEnabled as endpoint49 } from "@/app/actions/instance-settings";
+import { saveInstanceServiceSettings as endpoint50 } from "@/app/actions/instance-settings";
+import { deliverInstanceOutbox as endpoint51 } from "@/app/actions/instance";
+import { purgeExpiredVerificationTokens as endpoint52 } from "@/app/actions/instance";
+import { retryFailedOutboxMessages as endpoint53 } from "@/app/actions/instance";
+import { recordBackupRestoreVerification as endpoint54 } from "@/app/actions/instance";
+import { acceptMakerspaceInvite as endpoint55 } from "@/app/actions/invite-acceptance";
+import { unblockAddress as endpoint56 } from "@/app/actions/ip-blocks";
+import { manageJobsAction as endpoint57 } from "@/app/actions/jobs";
+import { requestMagicLink as endpoint58 } from "@/app/actions/magic-link";
+import { checkMakerspaceSlug as endpoint59 } from "@/app/actions/makerspace-application";
+import { submitMakerspaceApplication as endpoint60 } from "@/app/actions/makerspace-application";
+import { resubmitMakerspaceApplication as endpoint61 } from "@/app/actions/makerspace-application";
+import { saveMakerspaceEmailSettings as endpoint62 } from "@/app/actions/makerspace-email";
+import { sendMakerspaceTestEmail as endpoint63 } from "@/app/actions/makerspace-email";
+import { createMakerspaceInvite as endpoint64 } from "@/app/actions/makerspace-invites";
+import { revokeMakerspaceInvite as endpoint65 } from "@/app/actions/makerspace-invites";
+import { updateMakerspace as endpoint66 } from "@/app/actions/makerspace";
+import { uploadMakerspaceLogo as endpoint67 } from "@/app/actions/media";
+import { uploadAccountProfileImage as endpoint68 } from "@/app/actions/media";
+import { requestPasswordReset as endpoint69 } from "@/app/actions/password-reset";
+import { confirmPasswordReset as endpoint70 } from "@/app/actions/password-reset";
+import { savePaymentGateway as endpoint71 } from "@/app/actions/payment-settings";
+import { testPaymentGateway as endpoint72 } from "@/app/actions/payment-settings";
+import { saveTaxSettings as endpoint73 } from "@/app/actions/payment-settings";
+import { saveOfflinePaymentSettings as endpoint74 } from "@/app/actions/payment-settings";
+import { confirmPayment as endpoint75 } from "@/app/actions/payments";
+import { rejectPayment as endpoint76 } from "@/app/actions/payments";
+import { cancelOpenPayment as endpoint77 } from "@/app/actions/payments";
+import { releaseDocument as endpoint78 } from "@/app/actions/payments";
+import { clearFlag as endpoint79 } from "@/app/actions/payments";
+import { updateMakerspacePreferences as endpoint80 } from "@/app/actions/preferences";
+import { refundPayment as endpoint81 } from "@/app/actions/refunds";
+import { beginMfaEnrollment as endpoint82 } from "@/app/actions/security";
+import { confirmMfaEnrollment as endpoint83 } from "@/app/actions/security";
+import { disableMfa as endpoint84 } from "@/app/actions/security";
+import { revokeAllSessions as endpoint85 } from "@/app/actions/security";
+import { reviewMakerspace as endpoint86 } from "@/app/actions/super-admin-makerspaces";
+import { setMakerspaceLimits as endpoint87 } from "@/app/actions/super-admin-makerspaces";
+import { createMakerspaceForOwner as endpoint88 } from "@/app/actions/super-admin-makerspaces";
+import { resendOwnerInvite as endpoint89 } from "@/app/actions/super-admin-makerspaces";
+import { setMakerspaceVisibility as endpoint90 } from "@/app/actions/super-admin-makerspaces";
+import { updateTeamRole as endpoint91 } from "@/app/actions/team";
+import { removeTeamMember as endpoint92 } from "@/app/actions/team";
+import { deleteMakerspace as endpoint93 } from "@/app/actions/team";
 
 export const viewReaders = Object.freeze({
   "app__account__layout:loadAccountShell": endpoint0,
@@ -120,72 +122,74 @@ export const viewReaders = Object.freeze({
   "app__start__page:loadStartView": endpoint23,
   "app__super-admin__audit__page:loadSuperAdminAuditView": endpoint24,
   "app__super-admin__email__page:loadSuperAdminEmailView": endpoint25,
-  "app__super-admin__layout:loadSuperAdminShell": endpoint26,
-  "app__super-admin__makerspaces__makerspaceId__page:loadSuperAdminMakerspaceDetailView": endpoint27,
-  "app__super-admin__makerspaces__new__page:loadSuperAdminNewMakerspaceView": endpoint28,
-  "app__super-admin__makerspaces__page:loadSuperAdminOrgsView": endpoint29,
-  "app__super-admin__monitoring__page:loadSuperAdminMonitoringView": endpoint30,
-  "app__super-admin__operations__page:loadSuperAdminOperationsView": endpoint31,
-  "app__super-admin__page:loadSuperAdminOverviewView": endpoint32,
-  "app__super-admin__security__page:loadSuperAdminSecurityView": endpoint33,
-  "app__super-admin__settings__page:loadSuperAdminSettingsView": endpoint34,
-  "app__super-admin__storage__page:loadSuperAdminStorageView": endpoint35,
-  "app__super-admin__users__page:loadSuperAdminUsersView": endpoint36,
-  "app__super-admin__users__userId__page:loadSuperAdminUserDetailView": endpoint37,
+  "app__super-admin__jobs__page:loadSuperAdminJobsView": endpoint26,
+  "app__super-admin__layout:loadSuperAdminShell": endpoint27,
+  "app__super-admin__makerspaces__makerspaceId__page:loadSuperAdminMakerspaceDetailView": endpoint28,
+  "app__super-admin__makerspaces__new__page:loadSuperAdminNewMakerspaceView": endpoint29,
+  "app__super-admin__makerspaces__page:loadSuperAdminOrgsView": endpoint30,
+  "app__super-admin__monitoring__page:loadSuperAdminMonitoringView": endpoint31,
+  "app__super-admin__operations__page:loadSuperAdminOperationsView": endpoint32,
+  "app__super-admin__page:loadSuperAdminOverviewView": endpoint33,
+  "app__super-admin__security__page:loadSuperAdminSecurityView": endpoint34,
+  "app__super-admin__settings__page:loadSuperAdminSettingsView": endpoint35,
+  "app__super-admin__storage__page:loadSuperAdminStorageView": endpoint36,
+  "app__super-admin__users__page:loadSuperAdminUsersView": endpoint37,
+  "app__super-admin__users__userId__page:loadSuperAdminUserDetailView": endpoint38,
 });
 export const backendActions = Object.freeze({
-  "account-makerspaces:leaveMakerspace": endpoint38,
-  "account:updateAccountProfile": endpoint39,
-  "account:updateAccountPassword": endpoint40,
-  "auth:signUpWithPassword": endpoint41,
-  "auth:confirmEmailVerification": endpoint42,
-  "auth:resendEmailVerification": endpoint43,
-  "chat-channels:saveChatChannel": endpoint44,
-  "chat-channels:deleteChatChannel": endpoint45,
-  "chat-channels:testChatChannel": endpoint46,
-  "instance-settings:setNewUserRegistrationEnabled": endpoint47,
-  "instance-settings:setMakerspaceApplicationsEnabled": endpoint48,
-  "instance-settings:saveInstanceServiceSettings": endpoint49,
-  "instance:deliverInstanceOutbox": endpoint50,
-  "instance:purgeExpiredVerificationTokens": endpoint51,
-  "instance:retryFailedOutboxMessages": endpoint52,
-  "instance:recordBackupRestoreVerification": endpoint53,
-  "invite-acceptance:acceptMakerspaceInvite": endpoint54,
-  "ip-blocks:unblockAddress": endpoint55,
-  "magic-link:requestMagicLink": endpoint56,
-  "makerspace-application:checkMakerspaceSlug": endpoint57,
-  "makerspace-application:submitMakerspaceApplication": endpoint58,
-  "makerspace-application:resubmitMakerspaceApplication": endpoint59,
-  "makerspace-email:saveMakerspaceEmailSettings": endpoint60,
-  "makerspace-email:sendMakerspaceTestEmail": endpoint61,
-  "makerspace-invites:createMakerspaceInvite": endpoint62,
-  "makerspace-invites:revokeMakerspaceInvite": endpoint63,
-  "makerspace:updateMakerspace": endpoint64,
-  "media:uploadMakerspaceLogo": endpoint65,
-  "media:uploadAccountProfileImage": endpoint66,
-  "password-reset:requestPasswordReset": endpoint67,
-  "password-reset:confirmPasswordReset": endpoint68,
-  "payment-settings:savePaymentGateway": endpoint69,
-  "payment-settings:testPaymentGateway": endpoint70,
-  "payment-settings:saveTaxSettings": endpoint71,
-  "payment-settings:saveOfflinePaymentSettings": endpoint72,
-  "payments:confirmPayment": endpoint73,
-  "payments:rejectPayment": endpoint74,
-  "payments:cancelOpenPayment": endpoint75,
-  "payments:releaseDocument": endpoint76,
-  "payments:clearFlag": endpoint77,
-  "preferences:updateMakerspacePreferences": endpoint78,
-  "refunds:refundPayment": endpoint79,
-  "security:beginMfaEnrollment": endpoint80,
-  "security:confirmMfaEnrollment": endpoint81,
-  "security:disableMfa": endpoint82,
-  "security:revokeAllSessions": endpoint83,
-  "super-admin-makerspaces:reviewMakerspace": endpoint84,
-  "super-admin-makerspaces:setMakerspaceLimits": endpoint85,
-  "super-admin-makerspaces:createMakerspaceForOwner": endpoint86,
-  "super-admin-makerspaces:resendOwnerInvite": endpoint87,
-  "super-admin-makerspaces:setMakerspaceVisibility": endpoint88,
-  "team:updateTeamRole": endpoint89,
-  "team:removeTeamMember": endpoint90,
-  "team:deleteMakerspace": endpoint91,
+  "account-makerspaces:leaveMakerspace": endpoint39,
+  "account:updateAccountProfile": endpoint40,
+  "account:updateAccountPassword": endpoint41,
+  "auth:signUpWithPassword": endpoint42,
+  "auth:confirmEmailVerification": endpoint43,
+  "auth:resendEmailVerification": endpoint44,
+  "chat-channels:saveChatChannel": endpoint45,
+  "chat-channels:deleteChatChannel": endpoint46,
+  "chat-channels:testChatChannel": endpoint47,
+  "instance-settings:setNewUserRegistrationEnabled": endpoint48,
+  "instance-settings:setMakerspaceApplicationsEnabled": endpoint49,
+  "instance-settings:saveInstanceServiceSettings": endpoint50,
+  "instance:deliverInstanceOutbox": endpoint51,
+  "instance:purgeExpiredVerificationTokens": endpoint52,
+  "instance:retryFailedOutboxMessages": endpoint53,
+  "instance:recordBackupRestoreVerification": endpoint54,
+  "invite-acceptance:acceptMakerspaceInvite": endpoint55,
+  "ip-blocks:unblockAddress": endpoint56,
+  "jobs:manageJobsAction": endpoint57,
+  "magic-link:requestMagicLink": endpoint58,
+  "makerspace-application:checkMakerspaceSlug": endpoint59,
+  "makerspace-application:submitMakerspaceApplication": endpoint60,
+  "makerspace-application:resubmitMakerspaceApplication": endpoint61,
+  "makerspace-email:saveMakerspaceEmailSettings": endpoint62,
+  "makerspace-email:sendMakerspaceTestEmail": endpoint63,
+  "makerspace-invites:createMakerspaceInvite": endpoint64,
+  "makerspace-invites:revokeMakerspaceInvite": endpoint65,
+  "makerspace:updateMakerspace": endpoint66,
+  "media:uploadMakerspaceLogo": endpoint67,
+  "media:uploadAccountProfileImage": endpoint68,
+  "password-reset:requestPasswordReset": endpoint69,
+  "password-reset:confirmPasswordReset": endpoint70,
+  "payment-settings:savePaymentGateway": endpoint71,
+  "payment-settings:testPaymentGateway": endpoint72,
+  "payment-settings:saveTaxSettings": endpoint73,
+  "payment-settings:saveOfflinePaymentSettings": endpoint74,
+  "payments:confirmPayment": endpoint75,
+  "payments:rejectPayment": endpoint76,
+  "payments:cancelOpenPayment": endpoint77,
+  "payments:releaseDocument": endpoint78,
+  "payments:clearFlag": endpoint79,
+  "preferences:updateMakerspacePreferences": endpoint80,
+  "refunds:refundPayment": endpoint81,
+  "security:beginMfaEnrollment": endpoint82,
+  "security:confirmMfaEnrollment": endpoint83,
+  "security:disableMfa": endpoint84,
+  "security:revokeAllSessions": endpoint85,
+  "super-admin-makerspaces:reviewMakerspace": endpoint86,
+  "super-admin-makerspaces:setMakerspaceLimits": endpoint87,
+  "super-admin-makerspaces:createMakerspaceForOwner": endpoint88,
+  "super-admin-makerspaces:resendOwnerInvite": endpoint89,
+  "super-admin-makerspaces:setMakerspaceVisibility": endpoint90,
+  "team:updateTeamRole": endpoint91,
+  "team:removeTeamMember": endpoint92,
+  "team:deleteMakerspace": endpoint93,
 });

@@ -104,10 +104,10 @@ setup_summary() {
   echo '  Sign-in options: email + password, or an emailed sign-in link (no single sign-on)'
   printf '  GitHub repository: %s; install GitHub Actions runner: %s\n' "$SWB_REPOSITORY" "$INSTALL_RUNNER"
   echo "  migrate builds the database tables. It runs once and stops. It's required."
-  echo "  scheduler sends email, runs the membership sweep and clears expired data, once a minute."
+  echo "  worker and beat run background jobs: email delivery, payment checks and clearing expired data."
   local services='PostgreSQL 16 (TLS), Redis 7 (TLS)'
   [[ "$STORAGE" != 1 ]] || services+=', Silo storage (TLS, bucket initializer)'
-  services+=', app, scheduler'
+  services+=', app, worker, beat'
   [[ "$HTTPS_MODE" == 3 ]] || services+=', Caddy web edge'
   echo "  Will run: $services; one-shot migrations."
   case "$HTTPS_MODE" in

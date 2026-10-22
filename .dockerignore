@@ -34,3 +34,5 @@ frontend/lib
 frontend/public
 frontend/.next
 frontend/node_modules
+# Built in the image by npm run build:jobs.
+dist

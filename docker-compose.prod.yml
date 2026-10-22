@@ -18,7 +18,6 @@ x-app-env: &app-env
   ALLOW_PLAIN_HTTP: ${ALLOW_PLAIN_HTTP:-0}
   DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-monolith}
   FRONTEND_GATEWAY_SECRET: ${FRONTEND_GATEWAY_SECRET:-}
-  SCHEDULER_MODE: external
   DATABASE_URL: *runtime-database-url
   DIRECT_URL: *runtime-database-url
   REDIS_URL: rediss://default:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
@@ -33,10 +32,6 @@ x-app-env: &app-env
   PWNED_PASSWORDS_CHECK: ${PWNED_PASSWORDS_CHECK:-1}
   TRUSTED_PROXY_IP_HEADER: x-real-ip
   NEXT_PUBLIC_HOSTED_BY: ${NEXT_PUBLIC_HOSTED_BY:-}
-  AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
-  AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
-  AUTH_GITHUB_ID: ${AUTH_GITHUB_ID:-}
-  AUTH_GITHUB_SECRET: ${AUTH_GITHUB_SECRET:-}
   EMAIL_FROM: ${EMAIL_FROM:?set EMAIL_FROM}
   SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST}
   SMTP_PORT: ${SMTP_PORT:-587}
@@ -44,6 +39,11 @@ x-app-env: &app-env
   SMTP_USER: ${SMTP_USER:?set SMTP_USER}
   SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD}
   OUTBOX_RETENTION_DAYS: ${OUTBOX_RETENTION_DAYS:-30}
+  JOBS_QUEUE_PREFIX: ${JOBS_QUEUE_PREFIX:-swb:jobs}
+  JOBS_HEALTH_PORT: "3460"
+  JOBS_INPROCESS: "false"
+  QUEUE_OUTBOX_CONCURRENCY: ${QUEUE_OUTBOX_CONCURRENCY:-5}
+  QUEUE_SCHEDULED_CONCURRENCY: ${QUEUE_SCHEDULED_CONCURRENCY:-2}
   S3_BUCKET: ${S3_BUCKET:-spaceworks-bookings}
   S3_REGION: ${S3_REGION:-us-east-1}
   S3_ENDPOINT: ${S3_ENDPOINT:-https://minio:9000}
@@ -144,23 +144,40 @@ services:
       createbuckets: {condition: service_completed_successfully}
       migrate: {condition: service_completed_successfully}
     networks: [edge, data]
-  # One scheduler pass a minute: outbox, membership sweep, retention and the jobs
-  # registered in lib/outboxWorker.ts (runOutboxScheduler).
-  scheduler:
+  # BullMQ background jobs (lib/queue, lib/scheduled): the worker runs queued jobs, beat keeps the job
+  # schedules in Redis. Both serve /health on JOBS_HEALTH_PORT inside the container.
+  worker:
     image: *backend-image
+    command: ["--role", "worker", "node", "dist/worker.js"]
     restart: *default-restart
     logging: *default-logging
-    command: ["--role", "scheduler", "node", "docker/ops/scheduler.mjs"]
-    environment:
-      CRON_SECRET: ${CRON_SECRET:?set CRON_SECRET}
-    healthcheck:
-      test: ["CMD", "node", "docker/ops/scheduler.mjs", "--healthcheck"]
+    stop_grace_period: 10m
+    environment: *app-env
+    volumes: [*tls-ca]
+    healthcheck: &jobs-health
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3460/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 20s
-    depends_on: {backend: {condition: service_healthy}}
-    networks: [edge]
+      start_period: 30s
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    networks: [edge, data]
+  beat:
+    image: *backend-image
+    command: ["--role", "beat", "node", "dist/beat.js"]
+    restart: *default-restart
+    logging: *default-logging
+    stop_grace_period: 1m
+    environment: *app-env
+    volumes: [*tls-ca]
+    healthcheck: *jobs-health
+    depends_on:
+      redis: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    networks: [edge, data]
   caddy:
     image: caddy:2-alpine
     restart: *default-restart

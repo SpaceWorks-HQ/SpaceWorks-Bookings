@@ -36,17 +36,18 @@ function retryDelayMs(kind: string, attempts: number) {
   return Math.min(maximumDelay, exponentialDelay);
 }
 
-/** Deliver a small batch. Run this from the scheduler, never a request path. */
-export async function deliverOutboxBatch(limit = 20) {
+/** Deliver a small batch, or only the given rows. Run this from the worker, never a request path. */
+export async function deliverOutboxBatch(limit = 20, scope: { ids?: string[] } = {}) {
+  const scoped = scope.ids ? { id: { in: scope.ids } } : {};
   // A worker may be interrupted after claiming a message. Return a stale claim to the retry queue
   // before processing new work so messages cannot be lost.
   await prisma.outboxMessage.updateMany({
-    where: { status: OutboxStatus.PROCESSING, lockedAt: { lt: new Date(Date.now() - 15 * 60_000) } },
+    where: { ...scoped, status: OutboxStatus.PROCESSING, lockedAt: { lt: new Date(Date.now() - 15 * 60_000) } },
     data: { status: OutboxStatus.PENDING, lockedAt: null },
   });
 
   const messages = await prisma.outboxMessage.findMany({
-    where: { status: OutboxStatus.PENDING, availableAt: { lte: new Date() } },
+    where: { ...scoped, status: OutboxStatus.PENDING, availableAt: { lte: new Date() } },
     orderBy: { createdAt: "asc" },
     take: Math.min(Math.max(limit, 1), 100),
   });

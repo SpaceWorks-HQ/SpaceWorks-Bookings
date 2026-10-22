@@ -48,7 +48,7 @@ export default async function SuperAdminOperationsPage() {
         <AdminPanel title="Service prerequisites">
           <div className="flex flex-col items-start gap-2">
             <StatusChip ok={prerequisites.redis} ready="Redis configured" missing="Redis missing — production writes will fail closed" />
-            <StatusChip ok={prerequisites.scheduler} ready="Outbox scheduler secret configured" missing="Outbox scheduler secret missing" />
+            <StatusChip ok={prerequisites.scheduler} ready="Cron secret configured (external triggers)" missing="Cron secret missing (only needed for external triggers)" />
             <StatusChip ok={prerequisites.readiness} ready="Readiness probe protected" missing="Readiness probe secret missing" />
             <StatusChip ok={prerequisites.smtp} ready="Transactional email configured" missing="Transactional email not configured" />
           </div>
@@ -64,16 +64,16 @@ export default async function SuperAdminOperationsPage() {
             <Chip tone={expiredTokens > 0 ? "warning" : "success"}>{`${expiredTokens} expired verification token${expiredTokens === 1 ? "" : "s"}`}</Chip>
           </div>
           <div className="flex flex-wrap gap-2">
-            <StatusChip ok={schedulerFresh} ready="Outbox scheduler healthy" missing="Outbox scheduler stale or unknown" />
-            {schedulerHeartbeat ? <Chip tone="outline">{`Last batch: ${schedulerHeartbeat.lastSent} sent, ${schedulerHeartbeat.lastFailed} failed`}</Chip> : null}
+            <StatusChip ok={schedulerFresh} ready="Background jobs healthy" missing="Background jobs stale or unknown" />
+            {schedulerHeartbeat ? <Chip tone="outline">{`Last delivery: ${schedulerHeartbeat.lastSent} sent, ${schedulerHeartbeat.lastFailed} failed`}</Chip> : null}
           </div>
           <p className="text-sm text-ink-secondary">
-            Last scheduler success: {schedulerHeartbeat?.lastSucceededAt ? `${schedulerHeartbeat.lastSucceededAt.toLocaleString()} (${ageLabel(schedulerHeartbeat.lastSucceededAt)})` : "not recorded"}.
+            Last background job: {schedulerHeartbeat?.lastSucceededAt ? `${schedulerHeartbeat.lastSucceededAt.toLocaleString()} (${ageLabel(schedulerHeartbeat.lastSucceededAt)})` : "not recorded"}.
           </p>
           <p className="text-sm text-ink-secondary">
-            Last scheduler start: {schedulerHeartbeat?.lastStartedAt ? `${schedulerHeartbeat.lastStartedAt.toLocaleString()} (${ageLabel(schedulerHeartbeat.lastStartedAt)})` : "not recorded"}.
+            Last job started: {schedulerHeartbeat?.lastStartedAt ? `${schedulerHeartbeat.lastStartedAt.toLocaleString()} (${ageLabel(schedulerHeartbeat.lastStartedAt)})` : "not recorded"}.
           </p>
-          {schedulerHeartbeat?.lastError ? <p className="text-sm text-danger-fg">Last scheduler error: {safeErrorSummary(schedulerHeartbeat.lastError)}</p> : null}
+          {schedulerHeartbeat?.lastError ? <p className="text-sm text-danger-fg">Last job error: {safeErrorSummary(schedulerHeartbeat.lastError)}</p> : null}
           <p className="text-sm text-ink-secondary">Oldest queued message: {oldestPending ? `${oldestPending.createdAt.toLocaleString()} (${ageLabel(oldestPending.createdAt)})` : "none"}.</p>
           <div className="mt-1 border-t border-line pt-4">
             <InstanceOperationsControls />

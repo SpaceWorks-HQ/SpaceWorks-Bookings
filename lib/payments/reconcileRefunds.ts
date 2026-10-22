@@ -9,23 +9,14 @@ const MINUTE = 60_000;
 /** Give the provider's answer and webhook a head start, then keep asking for a month (bank refunds are slow). */
 const CHECK_AFTER_MS = 10 * MINUTE;
 const CHECK_FOR_MS = 30 * 24 * 60 * MINUTE;
-const RUN_EVERY_MS = 5 * MINUTE;
 const BATCH = 50;
-
-function state() {
-  return globalThis as typeof globalThis & { __swbookRefundReconcileAt?: number };
-}
 
 /**
  * Ask Razorpay or Stripe about gateway refunds still PENDING, so a missed webhook or a timeout never leaves one
  * hanging. Refunds checked longest ago go first. Only the provider's answer settles or fails a refund; one it
  * can't find, or can't be asked about, stays pending (and the Payments page flags it after a day).
  */
-export async function reconcileGatewayRefunds(now = new Date(), force = false) {
-  const runtime = state();
-  if (!force && runtime.__swbookRefundReconcileAt && now.getTime() - runtime.__swbookRefundReconcileAt < RUN_EVERY_MS) return { checked: 0, settled: 0, skipped: true };
-  runtime.__swbookRefundReconcileAt = now.getTime();
-
+export async function reconcileGatewayRefunds(now = new Date()) {
   const pending = await prisma.refund.findMany({
     where: {
       status: "PENDING",
@@ -61,5 +52,5 @@ export async function reconcileGatewayRefunds(now = new Date(), force = false) {
       console.error("[refunds reconcile] one refund could not be checked");
     }
   }
-  return { checked: pending.length, settled, skipped: false };
+  return { checked: pending.length, settled };
 }

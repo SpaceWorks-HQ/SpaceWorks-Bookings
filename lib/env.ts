@@ -72,8 +72,13 @@ export const envSchema = z.object({
   BACKUP_LAST_SUCCESS_AT: z.preprocess((value) => value === "" ? undefined : value, z.string().datetime().optional()),
   BACKUP_RETENTION_DAYS: z.coerce.number().int().positive().max(3650).optional(),
   OUTBOX_RETENTION_DAYS: z.coerce.number().int().positive().max(365).optional(),
-  // external: a scheduler container or cron calls POST /api/internal/outbox instead of the in-process worker.
-  SCHEDULER_MODE: z.enum(["in-process", "external"]).optional(),
+  // BullMQ worker and beat (lib/queue/*). The prefix keeps several installs (or test runs) apart in one Redis.
+  JOBS_QUEUE_PREFIX: z.string().regex(/^[A-Za-z0-9:_-]{1,64}$/, "letters, digits, colons, hyphens and underscores only").optional(),
+  JOBS_HEALTH_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+  QUEUE_OUTBOX_CONCURRENCY: z.coerce.number().int().min(1).max(64).optional(),
+  QUEUE_SCHEDULED_CONCURRENCY: z.coerce.number().int().min(1).max(64).optional(),
+  // Development only: run the jobs inside the web process when there is no Redis.
+  JOBS_INPROCESS: z.enum(["true", "false"]).optional(),
   // 1 allows an http:// public origin, for a LAN or trial install behind plain HTTP. Never on the internet.
   ALLOW_PLAIN_HTTP: z.enum(["0", "1"]).optional(),
 });

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ scheduler: vi.fn(), query: vi.fn() }));
-vi.mock("@/lib/outboxWorker", () => ({ runOutboxScheduler: mocks.scheduler }));
+vi.mock("@/lib/queue/enqueue", () => ({ enqueueDueOutbox: mocks.scheduler }));
 vi.mock("@/lib/db", () => ({ prisma: { $queryRaw: mocks.query } }));
 vi.mock("@/lib/apiMonitor", () => ({ withApiMonitoring: (_route: string, handler: unknown) => handler }));
 
@@ -18,7 +18,7 @@ describe("protected operational routes", () => {
     vi.clearAllMocks();
     process.env.CRON_SECRET = cronSecret;
     process.env.HEALTHCHECK_SECRET = healthSecret;
-    mocks.scheduler.mockResolvedValue({ sent: 1, failed: 0, purged: {} });
+    mocks.scheduler.mockResolvedValue({ enqueued: 1 });
     mocks.query.mockResolvedValue([{ "?column?": 1 }]);
   });
 
@@ -39,7 +39,7 @@ describe("protected operational routes", () => {
     expect(mocks.scheduler).not.toHaveBeenCalled();
   });
 
-  it("runs the scheduler with an exact bearer and returns a generic protected failure", async () => {
+  it("enqueues with an exact bearer and returns a generic protected failure", async () => {
     const request = () => new Request("https://members.test/api/internal/outbox", { method: "POST", headers: { authorization: `Bearer ${cronSecret}` } });
     const success = await runOutbox(request());
     expect(success.status).toBe(200);
@@ -47,8 +47,8 @@ describe("protected operational routes", () => {
 
     mocks.scheduler.mockRejectedValue(new Error("smtp://user:password@private-host"));
     const failure = await runOutbox(request());
-    expect(failure.status).toBe(500);
-    expect(await failure.json()).toEqual({ ok: false, error: "Scheduler run failed." });
+    expect(failure.status).toBe(503);
+    expect(JSON.stringify(await failure.json())).not.toContain("password");
   });
 
   it("does not touch PostgreSQL until the readiness bearer is valid", async () => {

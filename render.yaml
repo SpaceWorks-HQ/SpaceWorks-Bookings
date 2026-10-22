@@ -70,8 +70,15 @@ envVarGroups:
         sync: false
       - key: S3_FORCE_PATH_STYLE
         value: "1"
-      - key: SCHEDULER_MODE
-        value: external
+      # BullMQ (lib/queue): the worker and beat services below share this Redis with the web service.
+      - key: JOBS_QUEUE_PREFIX
+        value: "swb:jobs"
+      - key: JOBS_HEALTH_PORT
+        value: "3460"
+      - key: QUEUE_OUTBOX_CONCURRENCY
+        value: "5"
+      - key: QUEUE_SCHEDULED_CONCURRENCY
+        value: "2"
 
 services:
   - type: web
@@ -86,16 +93,24 @@ services:
       - key: MIGRATE_ON_START
         value: "1"
 
-  # The scheduler: one pass a minute against the web service's internal endpoint.
+  # Background jobs. Free web plans cannot run workers; on those, point an external cron at
+  # POST /api/internal/outbox and /api/internal/jobs (Authorization: Bearer $CRON_SECRET) every minute.
   - type: worker
-    name: swbook-scheduler
+    name: swbook-worker
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: --role scheduler node docker/ops/scheduler.mjs
+    dockerCommand: --role worker node dist/worker.js
     envVars:
       - fromGroup: swbook-prod
-      # https://<your web service host>/api/internal/outbox
-      - key: SWB_SCHEDULER_TARGET
-        sync: false
+
+  - type: worker
+    name: swbook-beat
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: --role beat node dist/beat.js
+    envVars:
+      - fromGroup: swbook-prod

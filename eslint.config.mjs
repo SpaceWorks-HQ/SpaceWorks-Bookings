@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // BullMQ worker and beat bundles (npm run build:jobs).
+    "dist/**",
     "coverage/**",
     "playwright-report/**",
     "test-results/**",

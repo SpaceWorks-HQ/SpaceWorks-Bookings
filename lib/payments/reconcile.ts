@@ -7,12 +7,7 @@ const MINUTE = 60_000;
 /** Give webhooks a head start before polling, and keep asking for a week (late captures still settle). */
 const POLL_AFTER_MS = 5 * MINUTE;
 const POLL_FOR_MS = 7 * 24 * 60 * MINUTE;
-const RUN_EVERY_MS = 5 * MINUTE;
 const BATCH = 50;
-
-function state() {
-  return globalThis as typeof globalThis & { __swbookReconcileAt?: number };
-}
 
 async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date) {
   if (now.getTime() - payment.createdAt.getTime() <= POLL_FOR_MS) return;
@@ -26,11 +21,7 @@ async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date)
  * open after a week are closed as FAILED, even when the provider can't be reached; a capture that arrives
  * later is still receipted and flagged by the webhook path.
  */
-export async function reconcileGatewayPayments(now = new Date(), force = false) {
-  const runtime = state();
-  if (!force && runtime.__swbookReconcileAt && now.getTime() - runtime.__swbookReconcileAt < RUN_EVERY_MS) return { checked: 0, settled: 0, skipped: true };
-  runtime.__swbookReconcileAt = now.getTime();
-
+export async function reconcileGatewayPayments(now = new Date()) {
   const open = await prisma.payment.findMany({
     where: {
       status: "PENDING",
@@ -55,5 +46,5 @@ export async function reconcileGatewayPayments(now = new Date(), force = false) 
       await closeIfStale(payment, now).catch(() => undefined);
     }
   }
-  return { checked: open.length, settled, skipped: false };
+  return { checked: open.length, settled };
 }

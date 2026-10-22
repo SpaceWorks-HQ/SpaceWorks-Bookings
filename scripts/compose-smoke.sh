@@ -3,7 +3,7 @@
 # Disposable end-to-end check of the bundled stack, used by CI and before releases:
 # writes a configuration exactly as setup.sh does (plain HTTP, bundled Silo), makes
 # the private CA, starts every service through scripts/spaceworks-compose.sh, runs
-# the operator checks, proves the scheduler and edge, backs up and restores the
+# the operator checks, proves the job worker, beat and edge, backs up and restores the
 # database, then removes the stack, its volumes and its files.
 #   SWB_IMAGE_TAG=<tag> bash scripts/compose-smoke.sh     use already built/pulled images
 #   SWB_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh   build from this checkout
@@ -58,19 +58,22 @@ say 'Migrations ran:'
 "${COMPOSE[@]}" logs migrate | grep -E 'migrations|No pending' | tail -n 3
 "${COMPOSE[@]}" run --rm ops
 
-say 'The web edge serves the app and hides the scheduler endpoint.'
+say 'The web edge serves the app and hides the job trigger endpoints.'
 curl --fail --silent --show-error --header 'Host: swbook.localhost' "http://127.0.0.1:$port/api/health" >/dev/null
 status="$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST --header 'Host: swbook.localhost' "http://127.0.0.1:$port/api/internal/outbox")"
 [[ "$status" == 404 ]] || die "The edge exposed /api/internal/outbox (HTTP $status)."
 
-say 'Waiting for the scheduler to complete a pass.'
-for _ in $(seq 1 30); do
-  health="$(docker inspect --format '{{.State.Health.Status}}' "$("${COMPOSE[@]}" ps -q scheduler)")"
-  [[ "$health" == healthy ]] && break
-  sleep 5
+say 'Waiting for the job worker and beat to report healthy.'
+for role in worker beat; do
+  health=''
+  for _ in $(seq 1 30); do
+    health="$(docker inspect --format '{{.State.Health.Status}}' "$("${COMPOSE[@]}" ps -q "$role")")"
+    [[ "$health" == healthy ]] && break
+    sleep 5
+  done
+  [[ "$health" == healthy ]] || die "The $role never became healthy."
+  "${COMPOSE[@]}" logs "$role" | tail -n 3
 done
-[[ "$health" == healthy ]] || die 'The scheduler never completed a pass.'
-"${COMPOSE[@]}" logs scheduler | tail -n 3
 
 say 'Backing up and restoring the database.'
 SWB_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/backup.sh" --prefix smoke

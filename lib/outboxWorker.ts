@@ -1,74 +1,48 @@
 import "server-only";
 
-import { deliverOutboxBatch } from "@/lib/outbox";
-import {
-  recordOutboxSchedulerFailure,
-  recordOutboxSchedulerStarted,
-  recordOutboxSchedulerSuccess,
-} from "@/lib/operationalHeartbeat";
-import { purgeExpiredOperationalData } from "@/lib/retention";
-import { reconcileGatewayPayments } from "@/lib/payments/reconcile";
-import { reconcileGatewayRefunds } from "@/lib/payments/reconcileRefunds";
+import { OUTBOX_HEARTBEAT_KEY, recordHeartbeatFailure, recordHeartbeatStarted, recordHeartbeatSuccess } from "@/lib/operationalHeartbeat";
+import { runScheduledJobs } from "@/lib/scheduled";
 
-const OUTBOX_WORKER_INTERVAL_MS = 60_000;
+const INTERVAL_MS = 60_000;
+const WORKER_KEY = Symbol.for("swb.inProcessJobs");
 
-type OutboxWorkerState = {
-  started?: boolean;
-  running?: boolean;
-  timer?: ReturnType<typeof setInterval>;
-};
+type WorkerState = { started: boolean; running: boolean; timer?: ReturnType<typeof setInterval> };
 
-function workerState() {
-  return globalThis as typeof globalThis & { __sweOutboxWorker?: OutboxWorkerState };
-}
-
-/**
- * Runs one complete delivery/retention pass and records its operational state.
- */
-export async function runOutboxScheduler() {
-  // Heartbeat persistence is observability, not part of the delivery commit.
-  // A heartbeat-table issue must not stop otherwise healthy queue processing.
-  await recordOutboxSchedulerStarted().catch(() => undefined);
+/** One pass of every registered job inline (outbox delivered directly), with its heartbeat. */
+export async function runInProcessJobs() {
+  await recordHeartbeatStarted(OUTBOX_HEARTBEAT_KEY).catch(() => undefined);
   try {
-    await reconcileGatewayPayments().catch(() => console.error("[payments reconcile] run failed"));
-    await reconcileGatewayRefunds().catch(() => console.error("[refunds reconcile] run failed"));
-    const result = await deliverOutboxBatch();
-    const purged = await purgeExpiredOperationalData();
-    await recordOutboxSchedulerSuccess(result).catch(() => undefined);
-    return { ...result, purged };
+    const result = await runScheduledJobs();
+    await recordHeartbeatSuccess(OUTBOX_HEARTBEAT_KEY).catch(() => undefined);
+    return result;
   } catch (error) {
-    await recordOutboxSchedulerFailure(error).catch(() => undefined);
+    await recordHeartbeatFailure(OUTBOX_HEARTBEAT_KEY, error).catch(() => undefined);
     throw error;
   }
 }
 
 /**
- * Start one polling worker per Node.js process. Queue row claims make this safe
- * across replicas; the singleton guard avoids duplicate timers during dev HMR.
+ * Development without Redis only (`JOBS_INPROCESS=true`): poll every minute in the web process. Production
+ * always runs the BullMQ `worker` and `beat` processes. The globalThis guard avoids duplicate timers during HMR.
  */
-export function startOutboxWorker() {
-  const runtime = workerState();
-  if (runtime.__sweOutboxWorker?.started) return;
-
-  const state: OutboxWorkerState = { started: true, running: false };
-  runtime.__sweOutboxWorker = state;
-
+export function startInProcessJobs() {
+  if (process.env.NODE_ENV === "production" || process.env.REDIS_URL || process.env.JOBS_INPROCESS !== "true") return;
+  const g = globalThis as typeof globalThis & { [WORKER_KEY]?: WorkerState };
+  if (g[WORKER_KEY]?.started) return;
+  const state: WorkerState = { started: true, running: false };
+  g[WORKER_KEY] = state;
   const tick = async () => {
     if (state.running) return;
     state.running = true;
     try {
-      await runOutboxScheduler();
+      await runInProcessJobs();
     } catch {
-      // Failure metadata is persisted separately without exception text.
-      console.error("[outbox worker] scheduler run failed");
+      console.error("[jobs] in-process run failed");
     } finally {
       state.running = false;
     }
   };
-
   void tick();
-  state.timer = setInterval(() => {
-    void tick();
-  }, OUTBOX_WORKER_INTERVAL_MS);
+  state.timer = setInterval(() => void tick(), INTERVAL_MS);
   state.timer.unref?.();
 }

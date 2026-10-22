@@ -8,7 +8,7 @@ rollback_application_images() {
   export SWB_IMAGE_TAG="$previous_version"
   printf '%s\n' "$previous_version" > "$VERSION_FILE" || \
     say "WARNING: could not reset $VERSION_FILE to $previous_version."
-  "${COMPOSE[@]}" pull --quiet backend scheduler || \
+  "${COMPOSE[@]}" pull --quiet backend worker beat || \
     say "Could not refresh previous images; trying the host's cached copies."
   # --no-deps prevents old migrations from being applied to the forward schema.
   serving_services

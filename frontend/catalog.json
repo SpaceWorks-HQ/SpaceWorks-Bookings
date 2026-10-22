@@ -131,6 +131,11 @@
       "id": "app__super-admin__email__page:loadSuperAdminEmailView"
     },
     {
+      "module": "lib/views/app__super-admin__jobs__page",
+      "name": "loadSuperAdminJobsView",
+      "id": "app__super-admin__jobs__page:loadSuperAdminJobsView"
+    },
+    {
       "module": "lib/views/app__super-admin__layout",
       "name": "loadSuperAdminShell",
       "id": "app__super-admin__layout:loadSuperAdminShell"
@@ -281,6 +286,11 @@
       "module": "app/actions/ip-blocks",
       "name": "unblockAddress",
       "id": "ip-blocks:unblockAddress"
+    },
+    {
+      "module": "app/actions/jobs",
+      "name": "manageJobsAction",
+      "id": "jobs:manageJobsAction"
     },
     {
       "module": "app/actions/magic-link",

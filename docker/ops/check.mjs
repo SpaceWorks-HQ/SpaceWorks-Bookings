@@ -54,10 +54,19 @@ await check("app readiness (/api/health/db)", async () => {
   await response.body?.cancel();
   assert(response.ok);
 });
-await check("scheduler endpoint refuses requests without the secret", async () => {
-  const response = await fetch("http://backend:3000/api/internal/outbox", { method: "POST", signal: AbortSignal.timeout(10_000) });
-  await response.body?.cancel();
-  assert(response.status === 404);
+for (const role of ["worker", "beat"]) {
+  await check(`${role} is healthy (BullMQ heartbeat)`, async () => {
+    const response = await fetch(`http://${role}:3460/health`, { signal: AbortSignal.timeout(10_000) });
+    await response.body?.cancel();
+    assert(response.ok);
+  });
+}
+await check("job trigger endpoints refuse requests without the secret", async () => {
+  for (const path of ["/api/internal/outbox", "/api/internal/jobs"]) {
+    const response = await fetch(`http://backend:3000${path}`, { method: "POST", signal: AbortSignal.timeout(10_000) });
+    await response.body?.cancel();
+    assert(response.status === 404);
+  }
 });
 await check("SMTP relay is configured", async () => assert(process.env.SMTP_HOST && process.env.SMTP_HOST !== "CHANGE_ME"));
 

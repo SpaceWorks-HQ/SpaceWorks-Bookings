@@ -74,7 +74,7 @@ if [[ ! -s "$TLS_DIR/ca.crt" ]]; then
     "$SWB_BACKEND_IMAGE:${SWB_IMAGE_TAG:-latest}" /certificates.sh
 fi
 
-say "Starting PostgreSQL, Redis, storage, migrations, the app, the scheduler and the web edge..."
+say "Starting PostgreSQL, Redis, storage, migrations, the app, the job worker and beat and the web edge..."
 ${COMPOSE[@]+"${COMPOSE[@]}"} up -d --wait --wait-timeout 300 \
   || die "The stack did not become healthy. Check logs with: ${COMPOSE[*]} logs app migrate"
 say "Checking the running stack..."

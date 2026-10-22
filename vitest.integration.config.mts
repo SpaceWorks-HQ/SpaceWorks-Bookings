@@ -30,5 +30,7 @@ export default defineConfig({
     fileParallelism: false,
     sequence: { concurrent: false },
     testTimeout: 20_000,
+    // Rate limits and queues stay in memory unless a suite opts in with TEST_QUEUE_REDIS_URL.
+    env: { REDIS_URL: "" },
   },
 });
