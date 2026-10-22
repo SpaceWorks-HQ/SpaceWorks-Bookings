@@ -15,9 +15,9 @@ require_install_owner() {
       exit 1
     }
     # Preserve only the host configuration knobs, never ambient secrets.
-    for key in SWO_STATIC_ENV_FILE SWO_UPDATE_INSTALL_DIR SWO_COMPOSE_BUILD_LAYER SWO_COMPOSE_PROJECT \
-      SWO_REPOSITORY SWO_INSTALL_REPOSITORY_PINNED SWO_RUNNER_DIR \
-      SWO_IMAGE_TAG SWO_BACKEND_IMAGE SWO_FRONTEND_IMAGE; do
+    for key in SWB_STATIC_ENV_FILE SWB_UPDATE_INSTALL_DIR SWB_COMPOSE_BUILD_LAYER SWB_COMPOSE_PROJECT \
+      SWB_REPOSITORY SWB_INSTALL_REPOSITORY_PINNED SWB_RUNNER_DIR \
+      SWB_IMAGE_TAG SWB_BACKEND_IMAGE SWB_FRONTEND_IMAGE; do
       if [[ -n "${!key:-}" ]]; then forwarded+=("$key=${!key}"); fi
     done
     printf 'Root-owned install: continuing as root using sudo.\n'

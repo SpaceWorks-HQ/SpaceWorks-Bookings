@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { SiteHeader, BrandHomeLink } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 
-/** Space Works Organization public pages: site header + footer, centred content. */
-const SITE_PREFIXES = ["/about", "/privacy", "/terms", "/join/", "/organisations"];
+/** Space Works Bookings public pages: site header + footer, centred content. */
+const SITE_PREFIXES = ["/about", "/privacy", "/terms", "/join/", "/makerspaces"];
 /** Pages that render their own complete chrome (app shell, kiosk, embed, split sign-in). */
-const OWN_CHROME_PREFIXES = ["/dashboard", "/account", "/super-admin", "/login", "/o/"];
+const OWN_CHROME_PREFIXES = ["/dashboard", "/account", "/super-admin", "/login", "/m/"];
 /** Auth flows: minimal header with the logo only. */
 const AUTH_PREFIXES = ["/reset-password", "/verify-email", "/start", "/verify/", "/pay/"];
 
@@ -27,13 +27,13 @@ export function chromeFor(pathname: string): ChromeKind {
   if (matches(pathname, AUTH_PREFIXES)) return "auth";
   if (matches(pathname, OWN_CHROME_PREFIXES)) return "own";
   if (matches(pathname, SITE_PREFIXES)) return "site";
-  // Everything else renders its own layout (organisation pages under /o/ bring their own branding).
+  // Everything else renders its own layout (makerspace pages under /m/ bring their own branding).
   return "own";
 }
 
 /**
  * Chooses the chrome for a route without moving any route files. Server
- * layouts that need data (dashboard, organisation pages) render their own
+ * layouts that need data (dashboard, makerspace pages) render their own
  * chrome and are classed as "own" here.
  */
 export function ChromeSwitch({ children }: { children: ReactNode }) {

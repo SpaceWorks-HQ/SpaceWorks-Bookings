@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Explicit opt-in only. Run as the Space Works Organization install owner, with sudo for systemd.
+# Explicit opt-in only. Run as the Space Works Bookings install owner, with sudo for systemd.
 set -euo pipefail
 # Tokens must stay out of shell traces, argv, answer files and the runner's .env.
 set +x
@@ -27,21 +27,21 @@ owner="$(id -un)"
 privileged=()
 [[ "$(id -u)" == 0 ]] || privileged=(sudo)
 [[ ${#privileged[@]} == 0 ]] || command -v sudo >/dev/null 2>&1 || die 'systemd service installation requires sudo.'
-RUNNER_DIR="${SWO_RUNNER_DIR:-/opt/spaceworks-organization-runner}"
+RUNNER_DIR="${SWB_RUNNER_DIR:-/opt/spaceworks-bookings-runner}"
 [[ "$RUNNER_DIR" == /* && "$RUNNER_DIR" != / && "$RUNNER_DIR" != "$ROOT" \
    && "$RUNNER_DIR" != *$'\n'* && "$RUNNER_DIR" != *$'\r'* ]] || die 'Use a dedicated absolute runner directory.'
 [[ ! -L "$RUNNER_DIR" ]] || die 'The runner directory cannot be a symlink.'
 if [[ -e "$RUNNER_DIR" ]]; then
   [[ -d "$RUNNER_DIR" && "$(stat -c %u "$RUNNER_DIR")" == "$(id -u)" ]] \
-    || die 'The runner directory must belong to the Space Works Organization install owner.'
+    || die 'The runner directory must belong to the Space Works Bookings install owner.'
 fi
 if [[ "$mode" == remove && ! -f "$RUNNER_DIR/.runner" ]]; then
   echo 'No configured runner to remove.'
   exit 0
 fi
-repository="${SWO_REPOSITORY:-$(repository_env_value SWO_REPOSITORY)}"
-repository="${repository:-SpaceWorks-HQ/SpaceWorks-Organization}"
-SWO_REPOSITORY="$repository"
+repository="${SWB_REPOSITORY:-$(repository_env_value SWB_REPOSITORY)}"
+repository="${repository:-SpaceWorks-HQ/SpaceWorks-Bookings}"
+SWB_REPOSITORY="$repository"
 configure_release_repository || die 'Invalid GitHub repository.'
 read_token() {
   local purpose="$1"
@@ -117,8 +117,8 @@ tar -xzf "$temporary/runner.tar.gz" --no-same-owner -C "$RUNNER_DIR"
 if [[ -f bin/installdependencies.sh ]]; then
   "${privileged[@]}" bash bin/installdependencies.sh
 fi
-configure_runner --url "https://github.com/$repository" --name "$(hostname)-spaceworks-organization" \
-  --labels spaceworks-organization-prod --unattended --replace
+configure_runner --url "https://github.com/$repository" --name "$(hostname)-spaceworks-bookings" \
+  --labels spaceworks-bookings-prod --unattended --replace
 unset runner_token
 [[ -f svc.sh ]] || die 'Runner configuration did not generate its systemd service helper.'
 # config.sh's env.sh creates .env; replace only our entries, preserving runner settings.
@@ -129,8 +129,8 @@ path = Path(sys.argv[1])
 if path.is_symlink():
     sys.exit('ERROR: runner .env cannot be a symlink.')
 lines = path.read_text().splitlines() if path.exists() else []
-lines = [line for line in lines if not line.startswith(('SWO_DIR=', 'RUNNER_ALLOW_RUNASROOT='))]
-lines.append('SWO_DIR=' + sys.argv[2])
+lines = [line for line in lines if not line.startswith(('SWB_DIR=', 'RUNNER_ALLOW_RUNASROOT='))]
+lines.append('SWB_DIR=' + sys.argv[2])
 if sys.argv[3] == '0':
     lines.append('RUNNER_ALLOW_RUNASROOT=1')
 path.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
@@ -141,11 +141,11 @@ if [[ ! -f .service ]]; then "${privileged[@]}" bash ./svc.sh install "$owner"; 
 cat <<EOF
 Runner installed as $owner. Complete these steps in GitHub repository $repository:
 1. Settings -> Secrets and variables -> Actions -> Variables -> New repository variable:
-   SWO_DEPLOY = true
+   SWB_DEPLOY = true
 2. Settings -> Actions -> General -> Fork pull request workflows:
    Require approval for all external contributors
-3. Settings -> Actions -> Runners: confirm this runner is Idle with label spaceworks-organization-prod.
-4. For an organization, restrict its runner group to this repository and, where the plan
+3. Settings -> Actions -> Runners: confirm this runner is Idle with label spaceworks-bookings-prod.
+4. For a makerspace, restrict its runner group to this repository and, where the plan
    allows, to release.yml on refs/heads/main.
 SECURITY: This public repository's runner controls Docker (effectively root on this server).
 GitHub recommends self-hosted runners only for private repositories. Apply the restrictions

@@ -3,7 +3,7 @@ import "server-only";
 import crypto from "crypto";
 
 /**
- * One interface for both gateways, so pricing, tax and receipts are identical whichever an organisation
+ * One interface for both gateways, so pricing, tax and receipts are identical whichever a makerspace
  * uses. Adapters talk to the providers' REST APIs directly; no provider SDK or script is loaded on our
  * pages except Razorpay's Checkout.js on the pay page.
  */
@@ -12,11 +12,11 @@ export type GatewayCredentials = { keyId: string | null; secret: string; webhook
 
 export type CheckoutRequest = {
   paymentId: string;
-  organisationId: string;
+  makerspaceId: string;
   amountMinor: number;
   currency: string;
   description: string;
-  organisationName: string;
+  makerspaceName: string;
   customer: { name: string; email: string };
   successUrl: string;
   cancelUrl: string;

@@ -17,9 +17,9 @@ const BLOCK_S = 60 * 60;
 const REPEAT_BLOCK_S = 24 * 60 * 60;
 const REMEMBER_S = 7 * 24 * 60 * 60;
 
-const failKey = (ip: string) => `swo:loginfail:${ip}`;
-const blockKey = (ip: string) => `swo:ipblock:${ip}`;
-const repeatKey = (ip: string) => `swo:ipblocked-before:${ip}`;
+const failKey = (ip: string) => `swb:loginfail:${ip}`;
+const blockKey = (ip: string) => `swb:ipblock:${ip}`;
+const repeatKey = (ip: string) => `swb:ipblocked-before:${ip}`;
 
 /** In development and tests without Redis, blocks live in memory. */
 const memory = new Map<string, { value: string; expiresAt: number }>();
@@ -84,11 +84,11 @@ export async function listBlockedIps(): Promise<BlockedAddress[]> {
   const redis = getRedisClient();
   const rows: BlockedAddress[] = [];
   if (!redis) {
-    for (const [key, entry] of memory) if (key.startsWith("swo:ipblock:") && entry.expiresAt > Date.now()) rows.push({ ip: key.slice(12), blockedAt: JSON.parse(entry.value).blockedAt ?? null, expiresAt: new Date(entry.expiresAt).toISOString() });
+    for (const [key, entry] of memory) if (key.startsWith("swb:ipblock:") && entry.expiresAt > Date.now()) rows.push({ ip: key.slice(12), blockedAt: JSON.parse(entry.value).blockedAt ?? null, expiresAt: new Date(entry.expiresAt).toISOString() });
   } else {
     let cursor = "0";
     do {
-      const [next, keys] = await redis.scan(cursor, "MATCH", "swo:ipblock:*", "COUNT", 200);
+      const [next, keys] = await redis.scan(cursor, "MATCH", "swb:ipblock:*", "COUNT", 200);
       cursor = next;
       for (const key of keys) {
         const [value, ttl] = await Promise.all([redis.get(key), redis.ttl(key)]);

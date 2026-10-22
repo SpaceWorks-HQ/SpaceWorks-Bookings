@@ -4,7 +4,7 @@ CREATE TYPE "LedgerDirection" AS ENUM ('RECEIPT', 'PAYMENT');
 -- CreateTable
 CREATE TABLE "LedgerEntry" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "direction" "LedgerDirection" NOT NULL,
     "occurredOn" DATE NOT NULL,
     "category" TEXT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE "LedgerEntry" (
 
 -- CreateTable
 CREATE TABLE "OpeningBalance" (
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "financialYear" TEXT NOT NULL,
     "currency" TEXT NOT NULL,
     "cashMinor" INTEGER NOT NULL DEFAULT 0,
@@ -33,20 +33,20 @@ CREATE TABLE "OpeningBalance" (
     "updatedById" TEXT,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OpeningBalance_pkey" PRIMARY KEY ("organisationId","financialYear","currency")
+    CONSTRAINT "OpeningBalance_pkey" PRIMARY KEY ("makerspaceId","financialYear","currency")
 );
 
 -- CreateIndex
-CREATE INDEX "LedgerEntry_organisationId_occurredOn_idx" ON "LedgerEntry"("organisationId", "occurredOn");
+CREATE INDEX "LedgerEntry_makerspaceId_occurredOn_idx" ON "LedgerEntry"("makerspaceId", "occurredOn");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "LedgerEntry_organisationId_id_key" ON "LedgerEntry"("organisationId", "id");
+CREATE UNIQUE INDEX "LedgerEntry_makerspaceId_id_key" ON "LedgerEntry"("makerspaceId", "id");
 
 -- AddForeignKey
-ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OpeningBalance" ADD CONSTRAINT "OpeningBalance_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "OpeningBalance" ADD CONSTRAINT "OpeningBalance_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 -- ── Hand-written constraints (accounts) ────────────────────────────────────
@@ -62,14 +62,14 @@ ALTER TABLE "OpeningBalance"
   ADD CONSTRAINT "OpeningBalance_currency_format" CHECK ("currency" ~ '^[A-Z]{3}$'),
   ADD CONSTRAINT "OpeningBalance_fy_format" CHECK ("financialYear" ~ '^[0-9]{4}(-[0-9]{2})?$');
 
--- Ledger entries are the organisation's books: never deleted, and once written only voided (once).
+-- Ledger entries are the makerspace's books: never deleted, and once written only voided (once).
 CREATE FUNCTION ledger_entry_guard() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'Ledger entries are never deleted; void them instead' USING ERRCODE = 'check_violation';
   END IF;
   IF OLD."voidedAt" IS NOT NULL
-    OR NEW."organisationId" IS DISTINCT FROM OLD."organisationId"
+    OR NEW."makerspaceId" IS DISTINCT FROM OLD."makerspaceId"
     OR NEW."direction" IS DISTINCT FROM OLD."direction"
     OR NEW."occurredOn" IS DISTINCT FROM OLD."occurredOn"
     OR NEW."category" IS DISTINCT FROM OLD."category"

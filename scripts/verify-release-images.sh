@@ -14,7 +14,7 @@ if [[ -z "$owner" ]]; then
 fi
 
 failed=0
-for package in spaceworks-organization-backend spaceworks-organization-frontend; do
+for package in spaceworks-bookings-backend spaceworks-bookings-frontend; do
   image="ghcr.io/${owner}/${package}:${tag}"
   echo "Verifying ${image}"
   if ! docker pull "$image"; then

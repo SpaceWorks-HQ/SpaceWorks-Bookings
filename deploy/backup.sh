@@ -9,7 +9,7 @@ set -eu
 umask 077
 interval_hours=${BACKUP_INTERVAL_HOURS:-24}
 retention_days=${BACKUP_RETENTION_DAYS:-14}
-bucket=local/spaceworks-organization
+bucket=local/spaceworks-bookings
 
 database() {
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
@@ -43,11 +43,11 @@ case "${1:-}" in
     test -s "$file"
     # Replace the schema in one transaction; grants for the runtime role come back
     # with the dump, and default privileges are restored for future migrations.
-    { printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\nGRANT USAGE ON SCHEMA public TO sworg_app;\n'
+    { printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\nGRANT USAGE ON SCHEMA public TO swbook_app;\n'
       gunzip -c "$file"
-      printf 'ALTER DEFAULT PRIVILEGES FOR ROLE sworg IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO sworg_app;\n'
-      printf 'ALTER DEFAULT PRIVILEGES FOR ROLE sworg IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO sworg_app;\n'
-      printf 'ALTER DEFAULT PRIVILEGES FOR ROLE sworg IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO sworg_app;\n'
+      printf 'ALTER DEFAULT PRIVILEGES FOR ROLE swbook IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO swbook_app;\n'
+      printf 'ALTER DEFAULT PRIVILEGES FOR ROLE swbook IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO swbook_app;\n'
+      printf 'ALTER DEFAULT PRIVILEGES FOR ROLE swbook IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO swbook_app;\n'
     } | psql --no-password -v ON_ERROR_STOP=1 --single-transaction --quiet >/dev/null
     echo "Database restored from backups/$(basename "$file")." ;;
   storage)

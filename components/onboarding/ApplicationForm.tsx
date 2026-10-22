@@ -3,13 +3,13 @@
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { submitOrganisationApplication } from "@/app/actions/organisation-application";
+import { submitMakerspaceApplication } from "@/app/actions/makerspace-application";
 import { indianStateName } from "@/lib/indianStates";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { CheckboxField } from "@/components/ui/choice";
 import { Callout, DetailList } from "@/components/ui/display";
-import { AboutFields, ContactFields, EMPTY_PROFILE, type FieldErrors, type ProfileValues } from "./OrganisationProfileFields";
+import { AboutFields, ContactFields, EMPTY_PROFILE, type FieldErrors, type ProfileValues } from "./MakerspaceProfileFields";
 import { SlugField, slugFromName } from "./SlugField";
 
 const STEPS = ["About", "Contact", "Review"] as const;
@@ -31,7 +31,7 @@ function StepIndicator({ step }: { step: number }) {
   );
 }
 
-/** Apply for a new organisation in three short steps. Each step is its own form, so the browser checks required fields. */
+/** Apply for a new makerspace in three short steps. Each step is its own form, so the browser checks required fields. */
 export function ApplicationForm({ applicantEmail }: { applicantEmail: string }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -65,7 +65,7 @@ export function ApplicationForm({ applicantEmail }: { applicantEmail: string }) 
     event.preventDefault();
     setFormError(null);
     startTransition(async () => {
-      const result = await submitOrganisationApplication({ ...values, slug });
+      const result = await submitMakerspaceApplication({ ...values, slug });
       if (result.ok) {
         router.push(`/dashboard/${result.data?.slug ?? slug}/application`);
         return;
@@ -77,7 +77,7 @@ export function ApplicationForm({ applicantEmail }: { applicantEmail: string }) 
     });
   };
 
-  const titles = ["Tell us about your organisation", "How can members reach you?", "Check and send"];
+  const titles = ["Tell us about your makerspace", "How can people reach you?", "Check and send"];
 
   return (
     <div className="flex flex-col gap-6">
@@ -127,7 +127,7 @@ export function ApplicationForm({ applicantEmail }: { applicantEmail: string }) 
               className="sm:grid-cols-[8rem_minmax(0,1fr)]"
               items={[
                 { label: "Name", value: values.name },
-                { label: "Web address", value: `/o/${slug}` },
+                { label: "Web address", value: `/m/${slug}` },
                 { label: "Kind", value: values.kind },
                 { label: "Description", value: <span className="whitespace-pre-wrap">{values.description}</span> },
               ]}
@@ -151,7 +151,7 @@ export function ApplicationForm({ applicantEmail }: { applicantEmail: string }) 
           <CheckboxField
             checked={authorised}
             onCheckedChange={(checked) => setAuthorised(checked === true)}
-            label="I'm allowed to apply for this organisation"
+            label="I'm allowed to apply for this makerspace"
             description="You'll be its owner here. A platform admin reviews every application before it opens."
           />
           <div className="flex items-center justify-between gap-3">

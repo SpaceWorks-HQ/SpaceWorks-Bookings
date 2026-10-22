@@ -24,17 +24,17 @@ SpaceWorks' `docker-compose.cloud.yml` and `scripts/spaceworks-compose.sh cloud`
   role with `CONNECT`, `USAGE` on the schema and `SELECT, INSERT, UPDATE, DELETE` on its tables (plus
   `USAGE, SELECT` on sequences and `ALTER DEFAULT PRIVILEGES` so new tables follow), put that role in
   `DATABASE_URL`, and keep the owner only in `DIRECT_URL`, which only the `migrate` role uses. This is how the
-  bundled VPS stack runs (`sworg_app`), and it means a compromised app process can't alter the schema or the
+  bundled VPS stack runs (`swbook_app`), and it means a compromised app process can't alter the schema or the
   payment triggers.
 
 ## Docker host with Compose
 
 ```bash
-git clone https://github.com/SpaceWorks-HQ/SpaceWorks-Organization.git /opt/spaceworks-organization
-cd /opt/spaceworks-organization
-sudo install -D -m 600 .env.production.example /etc/spaceworks-organization/cloud.env
-sudoedit /etc/spaceworks-organization/cloud.env      # fill every value; see docs/CONFIGURATION.md
-export SWO_IMAGE_TAG=0.7.0-main.42.a1b2c3d4e5f6     # a published release, or latest
+git clone https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings.git /opt/spaceworks-bookings
+cd /opt/spaceworks-bookings
+sudo install -D -m 600 .env.production.example /etc/spaceworks-bookings/cloud.env
+sudoedit /etc/spaceworks-bookings/cloud.env      # fill every value; see docs/CONFIGURATION.md
+export SWB_IMAGE_TAG=0.7.0-main.42.a1b2c3d4e5f6     # a published release, or latest
 scripts/spaceworks-compose.sh cloud pull
 scripts/spaceworks-compose.sh cloud up -d --wait
 scripts/spaceworks-compose.sh cloud run --rm ops     # TLS, migrations, Redis, bucket, readiness
@@ -43,7 +43,7 @@ scripts/spaceworks-compose.sh cloud run --rm ops     # TLS, migrations, Redis, b
 Generate the keys with `openssl rand -base64 32` (`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY`,
 `PAYMENT_SECRETS_KEY`) and `openssl rand -base64 48` (`AUTH_SECRET`, `CRON_SECRET`, `HEALTHCHECK_SECRET`).
 Keep an offline copy: without `MFA_ENCRYPTION_KEY` and `PAYMENT_SECRETS_KEY`, saved authenticator seeds and
-gateway keys cannot be read. `SWO_STATIC_ENV_FILE` points the wrapper at another settings file.
+gateway keys cannot be read. `SWB_STATIC_ENV_FILE` points the wrapper at another settings file.
 
 | Service | Role |
 |---|---|
@@ -55,14 +55,14 @@ gateway keys cannot be read. `SWO_STATIC_ENV_FILE` points the wrapper at another
 Block `/api/internal/*` at your edge; the endpoint also refuses any request without `CRON_SECRET`.
 
 **Updating:** back up the database with your provider (point-in-time recovery or a snapshot), then set the new
-`SWO_IMAGE_TAG` and run `pull` and `up -d --wait` again. `scripts/update.sh` is for the bundled topology.
+`SWB_IMAGE_TAG` and run `pull` and `up -d --wait` again. `scripts/update.sh` is for the bundled topology.
 
 ## Render
 
-[`render.yaml`](../render.yaml) defines a Docker web service (`sworg-backend`, health check `/api/health`,
-`MIGRATE_ON_START=1`) and a worker (`sworg-scheduler`, `--role scheduler`) sharing the `sworg-prod`
+[`render.yaml`](../render.yaml) defines a Docker web service (`swbook-backend`, health check `/api/health`,
+`MIGRATE_ON_START=1`) and a worker (`swbook-scheduler`, `--role scheduler`) sharing the `swbook-prod`
 environment group. Render builds the Dockerfile's last stage with your real `NEXT_PUBLIC_BASE_URL` and
-`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` as build arguments. Set `SWO_SCHEDULER_TARGET` on the worker to
+`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` as build arguments. Set `SWB_SCHEDULER_TARGET` on the worker to
 `https://<web service host>/api/internal/outbox`. Render's own Key Value is plain `redis://`, which production
 refuses, so use a TLS Redis such as Upstash.
 
@@ -70,11 +70,11 @@ refuses, so use a TLS Redis such as Upstash.
 
 Any container platform works with the published image:
 
-- web: `ghcr.io/spaceworks-hq/spaceworks-organization-backend:<version>` with the default command
+- web: `ghcr.io/spaceworks-hq/spaceworks-bookings-backend:<version>` with the default command
   (`--role backend node server.js`), the variables in [CONFIGURATION.md](CONFIGURATION.md) and
   `SCHEDULER_MODE=external`;
 - a release or pre-deploy job: the same image with `--role migrate`;
-- a worker: the same image with `--role scheduler node docker/ops/scheduler.mjs` and `SWO_SCHEDULER_TARGET`
+- a worker: the same image with `--role scheduler node docker/ops/scheduler.mjs` and `SWB_SCHEDULER_TARGET`
   set to the web service's internal URL, or leave `SCHEDULER_MODE` unset to run the scheduler inside the web
   process instead.
 

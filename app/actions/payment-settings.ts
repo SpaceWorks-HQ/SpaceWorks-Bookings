@@ -9,14 +9,14 @@ import { gstStateCode, isIndianStateCode } from "@/lib/indianStates";
 import { credentialsOf, ensurePaymentSettings, GATEWAYS, looksLikeTestKey, savePaymentKeys } from "@/lib/payments/config";
 import { RECEIPT_PREFIX_PATTERN } from "@/lib/payments/numbering";
 import { paymentAccess, paymentFailure } from "@/lib/payments/actionContext";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 const slug = z.string().trim().min(1).max(64);
 const optionalText = (max: number) => z.string().trim().max(max).optional().nullable().transform((value) => value || null);
 
 const gatewaySchema = z.object({
-  organisationSlug: slug,
+  makerspaceSlug: slug,
   provider: z.enum(["NONE", "RAZORPAY", "STRIPE"]),
   keyId: optionalText(80),
   secret: optionalText(300),
@@ -35,35 +35,35 @@ function fieldErrors(error: z.ZodError) {
 export async function savePaymentGateway(input: unknown): Promise<ActionResult> {
   const parsed = gatewaySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
-  const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  const current = await ensurePaymentSettings(ctx.org.id);
+  const current = await ensurePaymentSettings(ctx.makerspace.id);
   const { provider, keyId, secret, webhookSecret } = parsed.data;
   const switching = current.provider !== provider;
   if (switching && current.provider !== "NONE") {
-    const open = await prisma.payment.count({ where: { organisationId: ctx.org.id, provider: current.provider, status: "PENDING", createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } });
+    const open = await prisma.payment.count({ where: { makerspaceId: ctx.makerspace.id, provider: current.provider, status: "PENDING", createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } });
     if (open > 0) return { ok: false, error: `${open} online ${open === 1 ? "payment is" : "payments are"} still in progress with the current gateway. Switch once they finish or are cancelled on the Payments page.` };
   }
   if (provider === "RAZORPAY" && !keyId && (switching || !current.keyId)) return { ok: false, error: "Enter the key id.", fieldErrors: { keyId: ["Required"] } };
   if (provider !== "NONE" && !secret && (switching || !current.secretEncrypted)) return { ok: false, error: "Enter the secret key.", fieldErrors: { secret: ["Required"] } };
   const probe = provider === "RAZORPAY" ? keyId ?? current.keyId ?? "" : secret ?? "";
   try {
-    await savePaymentKeys(ctx.org.id, { provider, keyId, secret, webhookSecret, testMode: probe ? looksLikeTestKey(provider, probe) : current.testMode });
+    await savePaymentKeys(ctx.makerspace.id, { provider, keyId, secret, webhookSecret, testMode: probe ? looksLikeTestKey(provider, probe) : current.testMode });
   } catch (error) {
     return paymentFailure(error);
   }
-  await recordAuditEvent({ action: "PAYMENT_GATEWAY_SAVED", actorUserId: ctx.access.userId, organisationId: ctx.org.id, targetType: "Organisation", targetId: ctx.org.id, metadata: { provider, keysChanged: Boolean(keyId || secret || webhookSecret) } });
-  revalidatePath(`/dashboard/${ctx.org.slug}/settings/payments`);
+  await recordAuditEvent({ action: "PAYMENT_GATEWAY_SAVED", actorUserId: ctx.access.userId, makerspaceId: ctx.makerspace.id, targetType: "Makerspace", targetId: ctx.makerspace.id, metadata: { provider, keysChanged: Boolean(keyId || secret || webhookSecret) } });
+  revalidatePath(`/dashboard/${ctx.makerspace.slug}/settings/payments`);
   return { ok: true };
 }
 
 /** Check the saved keys with the provider and remember when they last worked. */
 export async function testPaymentGateway(input: unknown): Promise<ActionResult> {
-  const parsed = z.object({ organisationSlug: slug }).safeParse(input);
+  const parsed = z.object({ makerspaceSlug: slug }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  const settings = await ensurePaymentSettings(ctx.org.id);
+  const settings = await ensurePaymentSettings(ctx.makerspace.id);
   let credentials;
   try {
     credentials = credentialsOf(settings);
@@ -73,15 +73,15 @@ export async function testPaymentGateway(input: unknown): Promise<ActionResult> 
   if (settings.provider === "NONE" || !credentials) return { ok: false, error: "Save a gateway and its keys first." };
   const result = await GATEWAYS[settings.provider].testConnection(credentials);
   if (!result.ok) return { ok: false, error: `The provider rejected the keys: ${result.error}` };
-  await prisma.orgPaymentSettings.update({ where: { organisationId: ctx.org.id }, data: { verifiedAt: new Date() } });
-  revalidatePath(`/dashboard/${ctx.org.slug}/settings/payments`);
+  await prisma.makerspacePaymentSettings.update({ where: { makerspaceId: ctx.makerspace.id }, data: { verifiedAt: new Date() } });
+  revalidatePath(`/dashboard/${ctx.makerspace.slug}/settings/payments`);
   return { ok: true };
 }
 
 const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 const taxSchema = z.object({
-  organisationSlug: slug,
+  makerspaceSlug: slug,
   mode: z.enum(["NONE", "SIMPLE", "GST"]),
   scheme: z.enum(["REGULAR", "COMPOSITION"]),
   gstin: optionalText(15).transform((value) => value?.toUpperCase() ?? null),
@@ -110,18 +110,18 @@ const taxSchema = z.object({
 export async function saveTaxSettings(input: unknown): Promise<ActionResult> {
   const parsed = taxSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
-  const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  const { organisationSlug: _, ...data } = parsed.data;
+  const { makerspaceSlug: _, ...data } = parsed.data;
   void _;
-  await prisma.orgTaxSettings.upsert({ where: { organisationId: ctx.org.id }, create: { organisationId: ctx.org.id, ...data }, update: data });
-  await recordAuditEvent({ action: "TAX_SETTINGS_SAVED", actorUserId: ctx.access.userId, organisationId: ctx.org.id, targetType: "Organisation", targetId: ctx.org.id, metadata: { mode: data.mode } });
-  revalidatePath(`/dashboard/${ctx.org.slug}/settings/payments`);
+  await prisma.makerspaceTaxSettings.upsert({ where: { makerspaceId: ctx.makerspace.id }, create: { makerspaceId: ctx.makerspace.id, ...data }, update: data });
+  await recordAuditEvent({ action: "TAX_SETTINGS_SAVED", actorUserId: ctx.access.userId, makerspaceId: ctx.makerspace.id, targetType: "Makerspace", targetId: ctx.makerspace.id, metadata: { mode: data.mode } });
+  revalidatePath(`/dashboard/${ctx.makerspace.slug}/settings/payments`);
   return { ok: true };
 }
 
 const offlineSchema = z.object({
-  organisationSlug: slug,
+  makerspaceSlug: slug,
   upiVpa: optionalText(80).refine((value) => !value || /^[A-Za-z0-9._-]{2,64}@[A-Za-z][A-Za-z0-9.-]{1,32}$/.test(value), "Enter a UPI ID like club@bank"),
   upiPayeeName: optionalText(80),
   offlineInstructions: z.string().trim().max(1500),
@@ -131,10 +131,10 @@ const offlineSchema = z.object({
 export async function saveOfflinePaymentSettings(input: unknown): Promise<ActionResult> {
   const parsed = offlineSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
-  const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  await ensurePaymentSettings(ctx.org.id);
-  await prisma.orgPaymentSettings.update({ where: { organisationId: ctx.org.id }, data: { upiVpa: parsed.data.upiVpa, upiPayeeName: parsed.data.upiPayeeName, offlineInstructions: parsed.data.offlineInstructions } });
-  revalidatePath(`/dashboard/${ctx.org.slug}/settings/payments`);
+  await ensurePaymentSettings(ctx.makerspace.id);
+  await prisma.makerspacePaymentSettings.update({ where: { makerspaceId: ctx.makerspace.id }, data: { upiVpa: parsed.data.upiVpa, upiPayeeName: parsed.data.upiPayeeName, offlineInstructions: parsed.data.offlineInstructions } });
+  revalidatePath(`/dashboard/${ctx.makerspace.slug}/settings/payments`);
   return { ok: true };
 }

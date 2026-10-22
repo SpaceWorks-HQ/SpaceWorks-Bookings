@@ -1,6 +1,6 @@
 /**
  * Money helpers for reports. Client-safe. Reports never add different currencies together: every money
- * figure is a list of per-currency totals with the organisation's default currency first (owner rule,
+ * figure is a list of per-currency totals with the makerspace's default currency first (owner rule,
  * plan "Multiple currencies"). Built on lib/money/currencies.ts totalsByCurrency.
  */
 import { formatMoney, isCurrencyCode, toInputValue, totalsByCurrency } from "@/lib/money/currencies";
@@ -21,7 +21,7 @@ export function subtractTotals(a: CurrencyTotal[], b: CurrencyTotal[], primary?:
   return totalsByCurrency([...a, ...b.map((entry) => ({ currency: entry.currency, minor: -entry.minor }))], primary);
 }
 
-/** Every currency present in some rows, the organisation's default first. */
+/** Every currency present in some rows, the makerspace's default first. */
 export function currenciesOf(rows: Array<{ currency: string }>, primary?: string): string[] {
   return totalsByCurrency(rows.map((row) => ({ currency: row.currency, minor: 0 })), primary).map((entry) => entry.currency);
 }

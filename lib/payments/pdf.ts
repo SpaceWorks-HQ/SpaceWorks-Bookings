@@ -85,7 +85,7 @@ export async function renderDocumentPdf(snapshot: DocumentSnapshot): Promise<Uin
   const pen: Pen = { page: pdf.addPage(A4), regular: await pdf.embedFont(regularBytes, { subset: true }), bold: await pdf.embedFont(boldBytes, { subset: true }) };
   pdf.setTitle(`${DOCUMENT_KIND_LABELS[snapshot.kind]} ${snapshot.number}`);
   pdf.setAuthor(snapshot.issuer.legalName ?? snapshot.issuer.name);
-  pdf.setProducer("Space Works Organization");
+  pdf.setProducer("Space Works Bookings");
   const right = A4[0] - MARGIN;
   const money = (minor: number) => documentAmount(minor, snapshot.currency, snapshot.locale);
   let y = A4[1] - MARGIN - 10;
@@ -155,6 +155,6 @@ export async function renderDocumentPdf(snapshot: DocumentSnapshot): Promise<Uin
     text(pen, line, MARGIN, y, { size: 8.5, color: MUTED, maxWidth: right - MARGIN });
     y -= 12;
   }
-  text(pen, "Issued with Space Works Organization", MARGIN, MARGIN - 10, { size: 7.5, color: MUTED });
+  text(pen, "Issued with Space Works Bookings", MARGIN, MARGIN - 10, { size: 7.5, color: MUTED });
   return pdf.save();
 }

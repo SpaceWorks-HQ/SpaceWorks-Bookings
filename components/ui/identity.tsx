@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import { getAccentTokens } from "@/lib/theme/accent";
 import { AvatarImage } from "./avatar-image";
 
-/* ---------- Avatar & org logo ---------- */
+/* ---------- Avatar & makerspace logo ---------- */
 
 export function initials(name: string | null | undefined, fallback = "?") {
   const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
@@ -36,12 +36,12 @@ export function Avatar({ name, src, size = "md", tone = "neutral", className }: 
 
 const logoSizes = { sm: "size-8 rounded-[9px] text-xs", md: "size-10 rounded-[10px] text-sm", lg: "size-14 rounded-[14px] text-lg", xl: "size-24 rounded-[24px] text-3xl" } as const;
 
-/** Square organisation logo; falls back to initials on ink. */
-export function OrgLogo({ name, src, size = "md", className }: { name: string; src?: string | null; size?: keyof typeof logoSizes; className?: string }) {
+/** Square makerspace logo; falls back to initials on ink. */
+export function MakerspaceLogo({ name, src, size = "md", className }: { name: string; src?: string | null; size?: keyof typeof logoSizes; className?: string }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden border border-line font-semibold", logoSizes[size], src ? "bg-panel" : "bg-primary text-on-primary", className)}>
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- organisation logos are served by the app's own upload route
+        // eslint-disable-next-line @next/next/no-img-element -- makerspace logos are served by the app's own upload route
         <img src={src} alt="" className="size-full object-cover" />
       ) : (
         <span aria-hidden>{initials(name)}</span>
@@ -52,7 +52,7 @@ export function OrgLogo({ name, src, size = "md", className }: { name: string; s
 
 /* ---------- Date block (docs/DESIGN.md §4.6) ---------- */
 
-export function DateBlock({ month, day, tone = "accent", color, size = "md", className }: { month: string; day: string; tone?: "accent" | "draft" | "ink"; /** Explicit header colour (validated hex), e.g. an organisation accent. */ color?: string; size?: "sm" | "md" | "lg"; className?: string }) {
+export function DateBlock({ month, day, tone = "accent", color, size = "md", className }: { month: string; day: string; tone?: "accent" | "draft" | "ink"; /** Explicit header colour (validated hex), e.g. a makerspace accent. */ color?: string; size?: "sm" | "md" | "lg"; className?: string }) {
   const header = color ? undefined : tone === "accent" ? "bg-accent text-on-accent" : tone === "draft" ? "bg-emphasis text-ink-secondary" : "bg-primary text-on-primary";
   return (
     <span

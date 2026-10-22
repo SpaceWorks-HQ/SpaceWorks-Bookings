@@ -25,7 +25,7 @@ export type FinancePayment = {
   amountMinor: number;
   createdAt: Date;
   paidAt: Date | null;
-  /** Needs a person to look at it (amount mismatch, late capture with no revive, suspended organisation…). */
+  /** Needs a person to look at it (amount mismatch, late capture with no revive, suspended makerspace…). */
   flagged: boolean;
   recordedById: string | null;
   confirmedById: string | null;

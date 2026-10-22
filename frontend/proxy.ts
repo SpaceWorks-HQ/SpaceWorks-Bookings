@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
     try {
       if (!origin || !key || !canonical) throw new Error();
       const response = await fetch(`${origin}/api/frontend/guard/${bucket}`, {
-        method: "POST", headers: { "x-swo-frontend-key": key, "x-swo-frontend-client-ip": value && value.length < 64 ? value : "unknown", Origin: canonical },
+        method: "POST", headers: { "x-swb-frontend-key": key, "x-swb-frontend-client-ip": value && value.length < 64 ? value : "unknown", Origin: canonical },
         redirect: "manual", signal: AbortSignal.timeout(10_000),
       });
       await response.body?.cancel();

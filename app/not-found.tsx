@@ -15,7 +15,7 @@ export default function NotFound() {
       <p className="text-body text-ink-secondary">The link may be old, or the page may have moved. Check the address, or start again from the home page.</p>
       <div className="flex flex-wrap justify-center gap-3">
         <Link href="/" className={buttonClasses({ variant: "primary" })}>Go to the home page</Link>
-        <Link href="/organisations" className={buttonClasses({ variant: "secondary" })}>Find an organisation</Link>
+        <Link href="/makerspaces" className={buttonClasses({ variant: "secondary" })}>Find a makerspace</Link>
       </div>
       <p className="text-caption text-ink-muted">Patch is out looking for it too.</p>
     </main>

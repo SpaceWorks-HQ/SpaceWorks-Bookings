@@ -34,7 +34,7 @@ export function PaymentActions(props: Props) {
   const [amount, setAmount] = useState(toInputValue(props.refundableMinor, props.currency));
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, startTransition] = useTransition();
-  const ref = { organisationSlug: props.slug, paymentId: props.paymentId };
+  const ref = { makerspaceSlug: props.slug, paymentId: props.paymentId };
   const run = (work: () => Promise<{ ok: boolean; error?: string }>, success: string) =>
     startTransition(async () => {
       const result = await work();
@@ -73,8 +73,8 @@ export function PaymentActions(props: Props) {
         {props.blockedConfirm && awaiting ? <p className="text-caption text-ink-muted">{props.blockedConfirm}</p> : null}
       </div>
 
-      <ConfirmDialog open={open === "reject"} title="Mark as not received?" message="The member is emailed and can submit a corrected reference." confirmLabel="Mark not received" loading={busy} onCancel={() => setOpen(null)} onConfirm={() => run(() => rejectPayment({ ...ref, reason }), "Marked as not received.")}>
-        <Field label="Reason" helperText="Shown to the member."><Textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={3} maxLength={300} /></Field>
+      <ConfirmDialog open={open === "reject"} title="Mark as not received?" message="The customer is emailed." confirmLabel="Mark not received" loading={busy} onCancel={() => setOpen(null)} onConfirm={() => run(() => rejectPayment({ ...ref, reason }), "Marked as not received.")}>
+        <Field label="Reason" helperText="Shown to the customer."><Textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={3} maxLength={300} /></Field>
       </ConfirmDialog>
       <ConfirmDialog open={open === "cancel"} title="Cancel this payment attempt?" message="Only an unfinished attempt is cancelled. A capture that still arrives later is receipted and flagged." confirmLabel="Cancel attempt" loading={busy} onCancel={() => setOpen(null)} onConfirm={() => run(() => cancelOpenPayment(ref), "Attempt cancelled.")} />
       <ConfirmDialog open={open === "release"} title="Issue the receipt on the amount received?" message="The receipt's lines are shared out across the amount actually received." confirmLabel="Issue receipt" destructive={false} loading={busy} onCancel={() => setOpen(null)} onConfirm={() => run(() => releaseDocument(ref), "Receipt issued.")} />

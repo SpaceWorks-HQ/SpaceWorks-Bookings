@@ -18,7 +18,7 @@ export async function loadSuperAdminAuditView({ searchParams }: Props) {
           { action: { contains: q, mode: "insensitive" } },
           { targetType: { contains: q, mode: "insensitive" } },
           { actor: { is: { email: { contains: q, mode: "insensitive" } } } },
-          { organisation: { is: { name: { contains: q, mode: "insensitive" } } } },
+          { makerspace: { is: { name: { contains: q, mode: "insensitive" } } } },
         ],
       }
       : undefined,

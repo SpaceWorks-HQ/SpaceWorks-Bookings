@@ -6,9 +6,9 @@
       "id": "app__account__layout:loadAccountShell"
     },
     {
-      "module": "lib/views/app__account__organisations__page",
-      "name": "loadAccountOrganisationsView",
-      "id": "app__account__organisations__page:loadAccountOrganisationsView"
+      "module": "lib/views/app__account__makerspaces__page",
+      "name": "loadAccountMakerspacesView",
+      "id": "app__account__makerspaces__page:loadAccountMakerspacesView"
     },
     {
       "module": "lib/views/app__account__profile__page",
@@ -31,59 +31,59 @@
       "id": "app__dashboard__layout:loadDashboardShell"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__application__page",
-      "name": "loadOrgApplicationView",
-      "id": "app__dashboard__orgSlug__application__page:loadOrgApplicationView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__application__page",
+      "name": "loadMakerspaceApplicationView",
+      "id": "app__dashboard__makerspaceSlug__application__page:loadMakerspaceApplicationView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__layout",
-      "name": "loadOrgSlugShell",
-      "id": "app__dashboard__orgSlug__layout:loadOrgSlugShell"
+      "module": "lib/views/app__dashboard__makerspaceSlug__layout",
+      "name": "loadMakerspaceSlugShell",
+      "id": "app__dashboard__makerspaceSlug__layout:loadMakerspaceSlugShell"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__page",
-      "name": "loadOrgOverviewView",
-      "id": "app__dashboard__orgSlug__page:loadOrgOverviewView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__page",
+      "name": "loadMakerspaceOverviewView",
+      "id": "app__dashboard__makerspaceSlug__page:loadMakerspaceOverviewView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__payments__page",
+      "module": "lib/views/app__dashboard__makerspaceSlug__payments__page",
       "name": "loadPaymentsDirectory",
-      "id": "app__dashboard__orgSlug__payments__page:loadPaymentsDirectory"
+      "id": "app__dashboard__makerspaceSlug__payments__page:loadPaymentsDirectory"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__payments__paymentId__page",
+      "module": "lib/views/app__dashboard__makerspaceSlug__payments__paymentId__page",
       "name": "loadPaymentView",
-      "id": "app__dashboard__orgSlug__payments__paymentId__page:loadPaymentView"
+      "id": "app__dashboard__makerspaceSlug__payments__paymentId__page:loadPaymentView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__settings__email__page",
-      "name": "loadOrgEmailSettingsView",
-      "id": "app__dashboard__orgSlug__settings__email__page:loadOrgEmailSettingsView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__email__page",
+      "name": "loadMakerspaceEmailSettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__email__page:loadMakerspaceEmailSettingsView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__settings__money__page",
-      "name": "loadOrgMoneySettingsView",
-      "id": "app__dashboard__orgSlug__settings__money__page:loadOrgMoneySettingsView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__money__page",
+      "name": "loadMakerspaceMoneySettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__money__page:loadMakerspaceMoneySettingsView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__settings__notifications__page",
-      "name": "loadOrgNotificationsView",
-      "id": "app__dashboard__orgSlug__settings__notifications__page:loadOrgNotificationsView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__notifications__page",
+      "name": "loadMakerspaceNotificationsView",
+      "id": "app__dashboard__makerspaceSlug__settings__notifications__page:loadMakerspaceNotificationsView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__settings__page",
-      "name": "loadOrgSettingsView",
-      "id": "app__dashboard__orgSlug__settings__page:loadOrgSettingsView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__page",
+      "name": "loadMakerspaceSettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__page:loadMakerspaceSettingsView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__settings__payments__page",
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__payments__page",
       "name": "loadPaymentSettingsView",
-      "id": "app__dashboard__orgSlug__settings__payments__page:loadPaymentSettingsView"
+      "id": "app__dashboard__makerspaceSlug__settings__payments__page:loadPaymentSettingsView"
     },
     {
-      "module": "lib/views/app__dashboard__orgSlug__team__page",
-      "name": "loadOrgMembersView",
-      "id": "app__dashboard__orgSlug__team__page:loadOrgMembersView"
+      "module": "lib/views/app__dashboard__makerspaceSlug__team__page",
+      "name": "loadMakerspaceMembersView",
+      "id": "app__dashboard__makerspaceSlug__team__page:loadMakerspaceMembersView"
     },
     {
       "module": "lib/views/app__dashboard__page",
@@ -91,29 +91,29 @@
       "id": "app__dashboard__page:loadDashboardView"
     },
     {
-      "module": "lib/views/app__join__org__token__page",
-      "name": "loadJoinOrganisationView",
-      "id": "app__join__org__token__page:loadJoinOrganisationView"
+      "module": "lib/views/app__join__makerspace__token__page",
+      "name": "loadJoinMakerspaceView",
+      "id": "app__join__makerspace__token__page:loadJoinMakerspaceView"
     },
     {
-      "module": "lib/views/app__o__orgSlug__layout",
-      "name": "loadPublicOrgLayout",
-      "id": "app__o__orgSlug__layout:loadPublicOrgLayout"
+      "module": "lib/views/app__m__makerspaceSlug__layout",
+      "name": "loadPublicMakerspaceLayout",
+      "id": "app__m__makerspaceSlug__layout:loadPublicMakerspaceLayout"
     },
     {
-      "module": "lib/views/app__o__orgSlug__page",
-      "name": "loadPublicOrgPage",
-      "id": "app__o__orgSlug__page:loadPublicOrgPage"
+      "module": "lib/views/app__m__makerspaceSlug__page",
+      "name": "loadPublicMakerspacePage",
+      "id": "app__m__makerspaceSlug__page:loadPublicMakerspacePage"
     },
     {
-      "module": "lib/views/app__organisations__page",
-      "name": "loadOrganisationsDirectory",
-      "id": "app__organisations__page:loadOrganisationsDirectory"
+      "module": "lib/views/app__makerspaces__page",
+      "name": "loadMakerspacesDirectory",
+      "id": "app__makerspaces__page:loadMakerspacesDirectory"
     },
     {
       "module": "lib/views/app__sitemap",
-      "name": "loadSitemapOrganisations",
-      "id": "app__sitemap:loadSitemapOrganisations"
+      "name": "loadSitemapMakerspaces",
+      "id": "app__sitemap:loadSitemapMakerspaces"
     },
     {
       "module": "lib/views/app__start__page",
@@ -136,6 +136,21 @@
       "id": "app__super-admin__layout:loadSuperAdminShell"
     },
     {
+      "module": "lib/views/app__super-admin__makerspaces__makerspaceId__page",
+      "name": "loadSuperAdminMakerspaceDetailView",
+      "id": "app__super-admin__makerspaces__makerspaceId__page:loadSuperAdminMakerspaceDetailView"
+    },
+    {
+      "module": "lib/views/app__super-admin__makerspaces__new__page",
+      "name": "loadSuperAdminNewMakerspaceView",
+      "id": "app__super-admin__makerspaces__new__page:loadSuperAdminNewMakerspaceView"
+    },
+    {
+      "module": "lib/views/app__super-admin__makerspaces__page",
+      "name": "loadSuperAdminOrgsView",
+      "id": "app__super-admin__makerspaces__page:loadSuperAdminOrgsView"
+    },
+    {
       "module": "lib/views/app__super-admin__monitoring__page",
       "name": "loadSuperAdminMonitoringView",
       "id": "app__super-admin__monitoring__page:loadSuperAdminMonitoringView"
@@ -144,21 +159,6 @@
       "module": "lib/views/app__super-admin__operations__page",
       "name": "loadSuperAdminOperationsView",
       "id": "app__super-admin__operations__page:loadSuperAdminOperationsView"
-    },
-    {
-      "module": "lib/views/app__super-admin__orgs__new__page",
-      "name": "loadSuperAdminNewOrgView",
-      "id": "app__super-admin__orgs__new__page:loadSuperAdminNewOrgView"
-    },
-    {
-      "module": "lib/views/app__super-admin__orgs__orgId__page",
-      "name": "loadSuperAdminOrgDetailView",
-      "id": "app__super-admin__orgs__orgId__page:loadSuperAdminOrgDetailView"
-    },
-    {
-      "module": "lib/views/app__super-admin__orgs__page",
-      "name": "loadSuperAdminOrgsView",
-      "id": "app__super-admin__orgs__page:loadSuperAdminOrgsView"
     },
     {
       "module": "lib/views/app__super-admin__page",
@@ -193,9 +193,9 @@
   ],
   "actions": [
     {
-      "module": "app/actions/account-organisations",
-      "name": "leaveOrganisation",
-      "id": "account-organisations:leaveOrganisation"
+      "module": "app/actions/account-makerspaces",
+      "name": "leaveMakerspace",
+      "id": "account-makerspaces:leaveMakerspace"
     },
     {
       "module": "app/actions/account",
@@ -244,8 +244,8 @@
     },
     {
       "module": "app/actions/instance-settings",
-      "name": "setOrganisationApplicationsEnabled",
-      "id": "instance-settings:setOrganisationApplicationsEnabled"
+      "name": "setMakerspaceApplicationsEnabled",
+      "id": "instance-settings:setMakerspaceApplicationsEnabled"
     },
     {
       "module": "app/actions/instance-settings",
@@ -274,8 +274,8 @@
     },
     {
       "module": "app/actions/invite-acceptance",
-      "name": "acceptOrganisationInvite",
-      "id": "invite-acceptance:acceptOrganisationInvite"
+      "name": "acceptMakerspaceInvite",
+      "id": "invite-acceptance:acceptMakerspaceInvite"
     },
     {
       "module": "app/actions/ip-blocks",
@@ -283,54 +283,54 @@
       "id": "ip-blocks:unblockAddress"
     },
     {
+      "module": "app/actions/makerspace-application",
+      "name": "checkMakerspaceSlug",
+      "id": "makerspace-application:checkMakerspaceSlug"
+    },
+    {
+      "module": "app/actions/makerspace-application",
+      "name": "submitMakerspaceApplication",
+      "id": "makerspace-application:submitMakerspaceApplication"
+    },
+    {
+      "module": "app/actions/makerspace-application",
+      "name": "resubmitMakerspaceApplication",
+      "id": "makerspace-application:resubmitMakerspaceApplication"
+    },
+    {
+      "module": "app/actions/makerspace-email",
+      "name": "saveMakerspaceEmailSettings",
+      "id": "makerspace-email:saveMakerspaceEmailSettings"
+    },
+    {
+      "module": "app/actions/makerspace-email",
+      "name": "sendMakerspaceTestEmail",
+      "id": "makerspace-email:sendMakerspaceTestEmail"
+    },
+    {
+      "module": "app/actions/makerspace-invites",
+      "name": "createMakerspaceInvite",
+      "id": "makerspace-invites:createMakerspaceInvite"
+    },
+    {
+      "module": "app/actions/makerspace-invites",
+      "name": "revokeMakerspaceInvite",
+      "id": "makerspace-invites:revokeMakerspaceInvite"
+    },
+    {
+      "module": "app/actions/makerspace",
+      "name": "updateMakerspace",
+      "id": "makerspace:updateMakerspace"
+    },
+    {
       "module": "app/actions/media",
-      "name": "uploadOrganisationLogo",
-      "id": "media:uploadOrganisationLogo"
+      "name": "uploadMakerspaceLogo",
+      "id": "media:uploadMakerspaceLogo"
     },
     {
       "module": "app/actions/media",
       "name": "uploadAccountProfileImage",
       "id": "media:uploadAccountProfileImage"
-    },
-    {
-      "module": "app/actions/org-email",
-      "name": "saveOrgEmailSettings",
-      "id": "org-email:saveOrgEmailSettings"
-    },
-    {
-      "module": "app/actions/org-email",
-      "name": "sendOrgTestEmail",
-      "id": "org-email:sendOrgTestEmail"
-    },
-    {
-      "module": "app/actions/org-invites",
-      "name": "createOrgInvite",
-      "id": "org-invites:createOrgInvite"
-    },
-    {
-      "module": "app/actions/org-invites",
-      "name": "revokeOrgInvite",
-      "id": "org-invites:revokeOrgInvite"
-    },
-    {
-      "module": "app/actions/org",
-      "name": "updateOrganisation",
-      "id": "org:updateOrganisation"
-    },
-    {
-      "module": "app/actions/organisation-application",
-      "name": "checkOrganisationSlug",
-      "id": "organisation-application:checkOrganisationSlug"
-    },
-    {
-      "module": "app/actions/organisation-application",
-      "name": "submitOrganisationApplication",
-      "id": "organisation-application:submitOrganisationApplication"
-    },
-    {
-      "module": "app/actions/organisation-application",
-      "name": "resubmitOrganisationApplication",
-      "id": "organisation-application:resubmitOrganisationApplication"
     },
     {
       "module": "app/actions/password-reset",
@@ -389,8 +389,8 @@
     },
     {
       "module": "app/actions/preferences",
-      "name": "updateOrganisationPreferences",
-      "id": "preferences:updateOrganisationPreferences"
+      "name": "updateMakerspacePreferences",
+      "id": "preferences:updateMakerspacePreferences"
     },
     {
       "module": "app/actions/refunds",
@@ -418,29 +418,29 @@
       "id": "security:revokeAllSessions"
     },
     {
-      "module": "app/actions/super-admin-organisations",
-      "name": "reviewOrganisation",
-      "id": "super-admin-organisations:reviewOrganisation"
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "reviewMakerspace",
+      "id": "super-admin-makerspaces:reviewMakerspace"
     },
     {
-      "module": "app/actions/super-admin-organisations",
-      "name": "setOrganisationLimits",
-      "id": "super-admin-organisations:setOrganisationLimits"
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "setMakerspaceLimits",
+      "id": "super-admin-makerspaces:setMakerspaceLimits"
     },
     {
-      "module": "app/actions/super-admin-organisations",
-      "name": "createOrganisationForOwner",
-      "id": "super-admin-organisations:createOrganisationForOwner"
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "createMakerspaceForOwner",
+      "id": "super-admin-makerspaces:createMakerspaceForOwner"
     },
     {
-      "module": "app/actions/super-admin-organisations",
+      "module": "app/actions/super-admin-makerspaces",
       "name": "resendOwnerInvite",
-      "id": "super-admin-organisations:resendOwnerInvite"
+      "id": "super-admin-makerspaces:resendOwnerInvite"
     },
     {
-      "module": "app/actions/super-admin-organisations",
-      "name": "setOrganisationVisibility",
-      "id": "super-admin-organisations:setOrganisationVisibility"
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "setMakerspaceVisibility",
+      "id": "super-admin-makerspaces:setMakerspaceVisibility"
     },
     {
       "module": "app/actions/team",
@@ -454,8 +454,8 @@
     },
     {
       "module": "app/actions/team",
-      "name": "deleteOrganisation",
-      "id": "team:deleteOrganisation"
+      "name": "deleteMakerspace",
+      "id": "team:deleteMakerspace"
     }
   ]
 }

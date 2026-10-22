@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Space Works Organization - guided first-run setup (Linux, macOS, or Windows Git Bash/WSL).
+# Space Works Bookings - guided first-run setup (Linux, macOS, or Windows Git Bash/WSL).
 # Run it from the project folder:  bash setup.sh [--build]
 # The curl installer (install.sh) runs it from the installed release.
 set -euo pipefail
@@ -17,10 +17,10 @@ case "${1:-}" in
   *) printf 'Usage: bash setup.sh [--build]\n' >&2; exit 64 ;;
 esac
 if [[ "$BUILD_FROM_SOURCE" == 1 ]]; then
-  export SWO_COMPOSE_BUILD_LAYER=1
-  export SWO_IMAGE_TAG="${SWO_IMAGE_TAG:-local}"
+  export SWB_COMPOSE_BUILD_LAYER=1
+  export SWB_IMAGE_TAG="${SWB_IMAGE_TAG:-local}"
 else
-  unset SWO_COMPOSE_BUILD_LAYER
+  unset SWB_COMPOSE_BUILD_LAYER
 fi
 
 say()  { printf '\n\033[1;36m%s\033[0m\n' "$*"; }
@@ -38,7 +38,7 @@ if [[ "${ANSWERS_CONFIRMED:-}" == yes ]]; then
   :
 elif [[ -f .spaceworks-answers ]]; then
   load_setup_answers "$ROOT/.spaceworks-answers" || die 'Invalid private answers file.'
-elif [[ ! -f "${SWO_STATIC_ENV_FILE:-$ROOT/.env}" ]]; then
+elif [[ ! -f "${SWB_STATIC_ENV_FILE:-$ROOT/.env}" ]]; then
   ask_setup_questions || exit 0
   persist_setup_answers "$ROOT/.spaceworks-answers"
 fi
@@ -64,14 +64,14 @@ fi
 
 # 2. Private CA and TLS certificates for PostgreSQL, Redis and Silo, made with the
 # app image's openssl so the host needs none.
-TLS_DIR="${SWO_TLS_DIR:-$ROOT/tls}"
+TLS_DIR="${SWB_TLS_DIR:-$ROOT/tls}"
 if [[ ! -s "$TLS_DIR/ca.crt" ]]; then
   say "Creating the private CA and service certificates in $TLS_DIR..."
   mkdir -p "$TLS_DIR"
   chmod 755 "$TLS_DIR"
   MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --entrypoint sh \
     -v "$(host_path "$TLS_DIR"):/tls" -v "$(host_path "$ROOT/deploy/certificates.sh"):/certificates.sh:ro" \
-    "$SWO_BACKEND_IMAGE:${SWO_IMAGE_TAG:-latest}" /certificates.sh
+    "$SWB_BACKEND_IMAGE:${SWB_IMAGE_TAG:-latest}" /certificates.sh
 fi
 
 say "Starting PostgreSQL, Redis, storage, migrations, the app, the scheduler and the web edge..."
@@ -99,10 +99,10 @@ base_url="$(repository_env_value PUBLIC_APP_BASE_URL)"
 say "All done!"
 echo "  Website: $base_url"
 echo "  Super admin: $(repository_env_value SUPER_ADMIN_EMAIL)"
-echo "  Settings and secrets: ${SWO_STATIC_ENV_FILE:-$ROOT/.env} and $TLS_DIR (keep an encrypted off-server copy)"
+echo "  Settings and secrets: ${SWB_STATIC_ENV_FILE:-$ROOT/.env} and $TLS_DIR (keep an encrypted off-server copy)"
 echo
 echo "Next: open $base_url/login, sign in as the super admin with the password you chose, then open"
-echo "/super-admin to check email and create your first organisation."
+echo "/super-admin to check email and create your first makerspace."
 echo "Change the super-admin password only on this server: bash scripts/admin.sh set-password --email <address>"
 if [[ "$(repository_env_value DEPLOYMENT_MODE)" == backend ]]; then
   echo "Then deploy the website on Netlify (docs/DEPLOYMENT_NETLIFY.md) with the FRONTEND_GATEWAY_SECRET from .env."

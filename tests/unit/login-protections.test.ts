@@ -2,7 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { isBreachedPassword } from "@/lib/breachedPassword";
 import { isPrivateAddress } from "@/lib/net/publicHost";
 import { deviceLabel, justVerified } from "@/lib/loginSecurity";
-import { senderAddress } from "@/lib/email/orgTransport";
+import { senderAddress } from "@/lib/email/makerspaceTransport";
 
 beforeAll(() => {
   process.env.AUTH_SECRET ??= "unit-test-secret-unit-test-secret-1234";
@@ -58,7 +58,7 @@ describe("new sign-ins", () => {
   });
 
   it("reads the bare sender address the platform sends from", () => {
-    expect(senderAddress("Space Works Organization <noreply@example.org>")).toBe("noreply@example.org");
+    expect(senderAddress("Space Works Bookings <noreply@example.org>")).toBe("noreply@example.org");
     expect(senderAddress("noreply@example.org")).toBe("noreply@example.org");
   });
 });

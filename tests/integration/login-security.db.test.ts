@@ -11,7 +11,7 @@ const { prisma } = await import("@/lib/db");
 const { issueLoginCode, consumeLoginCode } = await import("@/lib/loginSecurity");
 const { isIpBlocked, listBlockedIps, recordFailedLogin, unblockIp } = await import("@/lib/ipBlock");
 const { requestPasswordReset } = await import("@/app/actions/password-reset");
-const { orgActionAccess, hasAuthenticator } = await import("@/lib/permissions");
+const { makerspaceActionAccess, hasAuthenticator } = await import("@/lib/permissions");
 
 const tag = randomUUID().slice(0, 8);
 const adminEmail = `root-${tag}@example.test`;
@@ -33,7 +33,7 @@ afterAll(async () => {
   await prisma.auditEvent.deleteMany({ where: { OR: [{ targetId: { in: ids } }, { actorUserId: { in: ids } }] } });
   await prisma.outboxMessage.deleteMany({ where: { kind: { in: ["login-code", "password-reset"] }, payload: { path: ["to"], string_contains: tag } } });
   await prisma.teamMember.deleteMany({ where: { userId: { in: ids } } });
-  await prisma.organisation.deleteMany({ where: { slug: `mfa-${tag}` } });
+  await prisma.makerspace.deleteMany({ where: { slug: `mfa-${tag}` } });
   await prisma.user.deleteMany({ where: { id: { in: ids } } });
   await prisma.$disconnect();
 });
@@ -98,13 +98,13 @@ describe.sequential("automatic address blocking", () => {
 describe.sequential("staff need an authenticator", () => {
   it("refuses dashboard actions to a team member without one, and allows them once it's on", async () => {
     const owner = await prisma.user.create({ data: { email: `owner-${tag}@example.test`, emailVerified: new Date() } });
-    const org = await prisma.organisation.create({ data: { name: "MFA Test", slug: `mfa-${tag}`, status: "ACTIVE" } });
-    await prisma.teamMember.create({ data: { userId: owner.id, organisationId: org.id, role: "OWNER" } });
+    const makerspace = await prisma.makerspace.create({ data: { name: "MFA Test", slug: `mfa-${tag}`, status: "ACTIVE" } });
+    await prisma.teamMember.create({ data: { userId: owner.id, makerspaceId: makerspace.id, role: "OWNER" } });
     identity.current = { id: owner.id };
     expect(await hasAuthenticator(owner.id)).toBe(false);
-    expect(await orgActionAccess(org.slug, "org.settings")).toMatchObject({ ok: false, error: expect.stringContaining("authenticator") });
+    expect(await makerspaceActionAccess(makerspace.slug, "makerspace.settings")).toMatchObject({ ok: false, error: expect.stringContaining("authenticator") });
     await prisma.user.update({ where: { id: owner.id }, data: { mfaEnabledAt: new Date(), mfaSecretEncrypted: "v1.x.y.z" } });
-    expect(await orgActionAccess(org.slug, "org.settings")).toMatchObject({ ok: true });
+    expect(await makerspaceActionAccess(makerspace.slug, "makerspace.settings")).toMatchObject({ ok: true });
     identity.current = { id: "" };
   });
 });

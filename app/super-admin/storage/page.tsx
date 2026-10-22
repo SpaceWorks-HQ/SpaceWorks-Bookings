@@ -7,10 +7,10 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 
 export default async function SuperAdminStoragePage() {
   await requireSuperAdmin();
-  const { dbSizeBytes, assetSummary, sortedTypes, recentAssets, tableSizes, perOrgCounts, assetTotals } = await loadSuperAdminStorageView();
+  const { dbSizeBytes, assetSummary, sortedTypes, recentAssets, tableSizes, perMakerspaceCounts, assetTotals } = await loadSuperAdminStorageView();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Storage" description="Database size, largest tables, and each organisation's footprint." />
+      <PageHeader title="Storage" description="Database size, largest tables, and each makerspace's footprint." />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatTile
@@ -58,7 +58,7 @@ export default async function SuperAdminStoragePage() {
             <Table label="Recent uploads">
               <THead>
                 <tr>
-                  <TH>Organisation</TH>
+                  <TH>Makerspace</TH>
                   <TH>Type</TH>
                   <TH className="text-right">Size</TH>
                   <TH>Uploaded</TH>
@@ -67,7 +67,7 @@ export default async function SuperAdminStoragePage() {
               <TBody>
                 {recentAssets.map((asset) => (
                   <TR key={asset.id}>
-                    <TD>{asset.organisation ? <NameCell href={`/super-admin/orgs/${asset.organisation.id}`} name={asset.organisation.name} /> : "—"}</TD>
+                    <TD>{asset.makerspace ? <NameCell href={`/super-admin/makerspaces/${asset.makerspace.id}`} name={asset.makerspace.name} /> : "—"}</TD>
                     <TD className="tabular-nums text-sm">{asset.contentType ?? "unknown"}</TD>
                     <TD className="text-right tabular-nums">{formatBytes(asset.byteSize == null ? null : Number(asset.byteSize))}</TD>
                     <TD className="whitespace-nowrap text-ink-secondary">{asset.createdAt.toLocaleString()}</TD>
@@ -104,19 +104,19 @@ export default async function SuperAdminStoragePage() {
         )}
       </AdminPanel>
 
-      <AdminPanel title="Per-org logical footprint (counts)">
-        <Table label="Per-org logical footprint">
+      <AdminPanel title="Per-makerspace logical footprint (counts)">
+        <Table label="Per-makerspace logical footprint">
           <THead>
             <tr>
-              <TH>Org</TH>
+              <TH>Makerspace</TH>
               <TH className="text-right">Assets bytes</TH>
               <TH className="text-right">Team</TH>
             </tr>
           </THead>
           <TBody>
-            {perOrgCounts.map((o) => (
+            {perMakerspaceCounts.map((o) => (
               <TR key={o.id}>
-                <TD><NameCell href={`/super-admin/orgs/${o.id}`} name={o.name} sub={`/o/${o.slug}`} /></TD>
+                <TD><NameCell href={`/super-admin/makerspaces/${o.id}`} name={o.name} sub={`/m/${o.slug}`} /></TD>
                 <TD className="text-right tabular-nums">{formatBytes(assetTotals.get(o.id) ?? 0)}</TD>
                 <TD className="text-right tabular-nums">{o._count.teamMembers}</TD>
               </TR>

@@ -15,7 +15,7 @@ describe("colour mode", () => {
     expect(isColorMode("system")).toBe(false);
   });
 
-  it("uses the organisation product cookie name", () => {
-    expect(COLOR_MODE_COOKIE).toBe("swo.theme");
+  it("uses the makerspace product cookie name", () => {
+    expect(COLOR_MODE_COOKIE).toBe("swb.theme");
   });
 });

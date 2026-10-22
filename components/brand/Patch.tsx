@@ -16,7 +16,7 @@ export function patchClearSpace(size: number) {
  * - `idle`: breathes, blinks and twitches each ear (frames 1–4 of the concept loop, without the sneeze).
  *   For empty states and the About page.
  * - `sneeze`: plays the sneeze (frames 5–8) once, then rests. Saved for moments when the community acts
- *   together, like an organisation being approved or a member being let in.
+ *   together, like a makerspace being approved or a member being let in.
  * - `walk`: trots in place on the walk cycle. For loading.
  *
  * Patch is never recoloured, mirrored, stretched or shown past its native size, carries its clear space as

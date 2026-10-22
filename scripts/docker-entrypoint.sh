@@ -1,20 +1,20 @@
 #!/bin/sh
 # Common entrypoint for every process role of the published images, as SpaceWorks
 # does it: an explicit `--role <role>` and the command for that role.
-#   spaceworks-organization-backend:
+#   spaceworks-bookings-backend:
 #     --role backend node server.js                   the web app and API (image default)
 #     --role migrate                                  apply pending migrations once, then exit
 #     --role scheduler node docker/ops/scheduler.mjs  one scheduler pass a minute
 #     --role ops node docker/ops/check.mjs            operator checks
-#   spaceworks-organization-frontend:
+#   spaceworks-bookings-frontend:
 #     --role frontend node frontend/server.js         the website alone (image default)
 # Web roles (backend, frontend) get the public origins applied and need the
 # runtime key; they fail closed without it.
 #
 # Release images are built once for every installation, so the public origins
 # Next.js compiles in are placeholders, replaced before a web server starts:
-#   spaceworks-organization-origin.invalid   <- NEXT_PUBLIC_BASE_URL (the site)
-#   spaceworks-organization-backend.invalid  <- NEXT_PUBLIC_BACKEND_ORIGIN (frontend image)
+#   spaceworks-bookings-origin.invalid   <- NEXT_PUBLIC_BASE_URL (the site)
+#   spaceworks-bookings-backend.invalid  <- NEXT_PUBLIC_BACKEND_ORIGIN (frontend image)
 # Images built with real origins (Render, a local `docker build`) contain no
 # placeholder and skip this.
 #
@@ -24,7 +24,7 @@
 # release step (Render). A failed migration exits non-zero.
 set -eu
 
-built=${SWO_NEXT_DIR:-/app/.next}
+built=${SWB_NEXT_DIR:-/app/.next}
 
 migrate() {
   direct=${DIRECT_URL:-${DATABASE_URL:-}}
@@ -75,7 +75,7 @@ apply_origin() {
   fi
 }
 
-if grep -rqF -e spaceworks-organization-origin.invalid -e spaceworks-organization-backend.invalid "$built" 2>/dev/null; then
+if grep -rqF -e spaceworks-bookings-origin.invalid -e spaceworks-bookings-backend.invalid "$built" 2>/dev/null; then
   # The build's own key ships in every copy of the image; never fall back to it.
   if [ -z "${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}" ]; then
     echo "[entrypoint] Set NEXT_SERVER_ACTIONS_ENCRYPTION_KEY to this installation's own stable key." >&2
@@ -87,8 +87,8 @@ if grep -rqF -e spaceworks-organization-origin.invalid -e spaceworks-organizatio
     exit 1
   fi
 fi
-apply_origin spaceworks-organization-origin.invalid NEXT_PUBLIC_BASE_URL "${NEXT_PUBLIC_BASE_URL:-}"
-apply_origin spaceworks-organization-backend.invalid NEXT_PUBLIC_BACKEND_ORIGIN "${NEXT_PUBLIC_BACKEND_ORIGIN:-}"
+apply_origin spaceworks-bookings-origin.invalid NEXT_PUBLIC_BASE_URL "${NEXT_PUBLIC_BASE_URL:-}"
+apply_origin spaceworks-bookings-backend.invalid NEXT_PUBLIC_BACKEND_ORIGIN "${NEXT_PUBLIC_BACKEND_ORIGIN:-}"
 
 if [ "$role" = backend ] && [ "${MIGRATE_ON_START:-0}" = "1" ]; then
   echo "[entrypoint] Applying database migrations (MIGRATE_ON_START=1)"

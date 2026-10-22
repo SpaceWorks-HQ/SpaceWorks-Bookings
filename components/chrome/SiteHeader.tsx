@@ -13,34 +13,34 @@ import { ColorModeToggle } from "./ColorModeToggle";
 
 const primaryLinks = [
   { href: "/#how-it-works", label: "How it works", guestOnly: false },
-  { href: "/organisations", label: "Organisations", guestOnly: false },
+  { href: "/makerspaces", label: "Makerspaces", guestOnly: false },
   { href: "/#self-host", label: "Self-host", guestOnly: false },
 ];
 
 /**
- * The Space Works logo plus the product name "Organization", as a home link (site
+ * The Space Works logo plus the product name "Makerspace", as a home link (site
  * header, auth pages, app shell, super admin). Below `sm` the symbol stands in
  * for the horizontal lockup so the bar keeps room for its controls. `stacked`
- * puts "Organization" under the lockup, for the narrow dashboard sidebar.
+ * puts "Makerspace" under the lockup, for the narrow dashboard sidebar.
  */
 export function BrandHomeLink({ href = "/", stacked = false, className }: { href?: string; stacked?: boolean; className?: string }) {
   if (stacked) {
     return (
-      <Link href={href} aria-label="Space Works Organization home" className={cn("inline-flex shrink-0 flex-col items-start gap-1.5 rounded-md", className)}>
+      <Link href={href} aria-label="Space Works Bookings home" className={cn("inline-flex shrink-0 flex-col items-start gap-1.5 rounded-md", className)}>
         <SpaceWorksLogo variant="lockup-stacked" height={64} label={null} />
-        <span aria-hidden className="text-[15px] font-semibold leading-none text-ink">Organization</span>
+        <span aria-hidden className="text-[15px] font-semibold leading-none text-ink">Makerspace</span>
       </Link>
     );
   }
   return (
-    <Link href={href} aria-label="Space Works Organization home" className={cn("inline-flex shrink-0 items-center gap-3 rounded-md", className)}>
+    <Link href={href} aria-label="Space Works Bookings home" className={cn("inline-flex shrink-0 items-center gap-3 rounded-md", className)}>
       <SpaceWorksLogo variant="app-icon" height={36} label={null} className="sm:hidden" />
       <SpaceWorksProductLogo height={32} label={null} className="hidden sm:inline-flex" />
     </Link>
   );
 }
 
-/** The Space Works Organization site header (docs/DESIGN.md): home, how it works, self-hosting and sign-in. */
+/** The Space Works Bookings site header (docs/DESIGN.md): home, how it works, self-hosting and sign-in. */
 export function SiteHeader() {
   const pathname = usePathname();
   const { status } = useSession();
@@ -88,7 +88,7 @@ export function SiteHeader() {
                   <Link href="/login">Sign in</Link>
                 </Button>
                 <Button asChild variant="primary" size="md">
-                  <Link href="/start">Apply for your organisation</Link>
+                  <Link href="/start">Apply for your makerspace</Link>
                 </Button>
               </>
             )}
@@ -134,7 +134,7 @@ export function SiteHeader() {
                   ) : (
                     <>
                       <Button asChild variant="primary" fullWidth>
-                        <Link href="/start" onClick={() => setMenuOpen(false)}>Apply for your organisation</Link>
+                        <Link href="/start" onClick={() => setMenuOpen(false)}>Apply for your makerspace</Link>
                       </Button>
                       <Button asChild variant="secondary" fullWidth>
                         <Link href="/login" onClick={() => setMenuOpen(false)}>Sign in</Link>

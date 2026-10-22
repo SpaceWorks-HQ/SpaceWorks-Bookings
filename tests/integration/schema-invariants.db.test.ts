@@ -3,27 +3,27 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 
 const suffix = randomUUID().replace(/-/g, "").slice(0, 12);
-let organisationId: string;
+let makerspaceId: string;
 let userId: string;
 
 describe.sequential("production database invariants", () => {
   beforeAll(async () => {
-    const organisation = await prisma.organisation.create({
-      data: { name: "Schema invariant org", slug: `schema-invariants-${suffix}` },
+    const makerspace = await prisma.makerspace.create({
+      data: { name: "Schema invariant makerspace", slug: `schema-invariants-${suffix}` },
     });
-    organisationId = organisation.id;
+    makerspaceId = makerspace.id;
     userId = (await prisma.user.create({ data: { email: `schema-user-${suffix}@example.test` } })).id;
   });
 
   afterAll(async () => {
-    if (organisationId) await prisma.organisation.deleteMany({ where: { id: organisationId } });
+    if (makerspaceId) await prisma.makerspace.deleteMany({ where: { id: makerspaceId } });
     if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     await prisma.$disconnect();
   });
 
-  it("rejects malformed organisation addresses, months, limits and currencies", async () => {
+  it("rejects malformed makerspace addresses, months, limits and currencies", async () => {
     const make = (data: Record<string, unknown>) =>
-      prisma.organisation.create({ data: { name: "Bad", slug: `bad-${suffix}`, ...data } });
+      prisma.makerspace.create({ data: { name: "Bad", slug: `bad-${suffix}`, ...data } });
     await expect(make({ slug: `Bad_Slug_${suffix}` })).rejects.toThrow();
     await expect(make({ financialYearStartMonth: 13 })).rejects.toThrow();
     await expect(make({ financialYearStartMonth: 0 })).rejects.toThrow();
@@ -32,37 +32,37 @@ describe.sequential("production database invariants", () => {
     await expect(make({ currency: "inr" })).rejects.toThrow();
   });
 
-  it("allows one team row per person per organisation", async () => {
-    await prisma.teamMember.create({ data: { userId, organisationId, role: "OWNER" } });
-    await expect(prisma.teamMember.create({ data: { userId, organisationId, role: "VIEWER" } })).rejects.toThrow();
+  it("allows one team row per person per makerspace", async () => {
+    await prisma.teamMember.create({ data: { userId, makerspaceId, role: "OWNER" } });
+    await expect(prisma.teamMember.create({ data: { userId, makerspaceId, role: "VIEWER" } })).rejects.toThrow();
   });
 
   it("requires a note on refusals and change requests", async () => {
-    await expect(prisma.organisationReview.create({ data: { organisationId, action: "REJECTED" } })).rejects.toThrow();
-    await expect(prisma.organisationReview.create({ data: { organisationId, action: "CHANGES_REQUESTED", reason: "   " } })).rejects.toThrow();
-    await expect(prisma.organisationReview.create({ data: { organisationId, action: "CHANGES_REQUESTED", reason: "Add your address" } })).resolves.toBeTruthy();
-    await expect(prisma.organisationReview.create({ data: { organisationId, action: "APPROVED" } })).resolves.toBeTruthy();
+    await expect(prisma.makerspaceReview.create({ data: { makerspaceId, action: "REJECTED" } })).rejects.toThrow();
+    await expect(prisma.makerspaceReview.create({ data: { makerspaceId, action: "CHANGES_REQUESTED", reason: "   " } })).rejects.toThrow();
+    await expect(prisma.makerspaceReview.create({ data: { makerspaceId, action: "CHANGES_REQUESTED", reason: "Add your address" } })).resolves.toBeTruthy();
+    await expect(prisma.makerspaceReview.create({ data: { makerspaceId, action: "APPROVED" } })).resolves.toBeTruthy();
   });
 
   it("records who used an invite only together with when", async () => {
-    await expect(prisma.teamInvite.create({ data: { organisationId, token: `t-${suffix}-1`, usedByUserId: userId } })).rejects.toThrow();
-    await expect(prisma.teamInvite.create({ data: { organisationId, token: `t-${suffix}-2`, usedByUserId: userId, usedAt: new Date() } })).resolves.toBeTruthy();
+    await expect(prisma.teamInvite.create({ data: { makerspaceId, token: `t-${suffix}-1`, usedByUserId: userId } })).rejects.toThrow();
+    await expect(prisma.teamInvite.create({ data: { makerspaceId, token: `t-${suffix}-2`, usedByUserId: userId, usedAt: new Date() } })).resolves.toBeTruthy();
   });
 
   it("rejects impossible outbox states and negative attempts", async () => {
-    await expect(prisma.outboxMessage.create({ data: { kind: "organisation-notice", payload: {}, status: "SENT", sentAt: null } })).rejects.toThrow();
-    await expect(prisma.outboxMessage.create({ data: { kind: "organisation-notice", payload: {}, status: "PROCESSING" } })).rejects.toThrow();
-    await expect(prisma.outboxMessage.create({ data: { kind: "organisation-notice", payload: {}, attempts: -1 } })).rejects.toThrow();
+    await expect(prisma.outboxMessage.create({ data: { kind: "makerspace-notice", payload: {}, status: "SENT", sentAt: null } })).rejects.toThrow();
+    await expect(prisma.outboxMessage.create({ data: { kind: "makerspace-notice", payload: {}, status: "PROCESSING" } })).rejects.toThrow();
+    await expect(prisma.outboxMessage.create({ data: { kind: "makerspace-notice", payload: {}, attempts: -1 } })).rejects.toThrow();
   });
 
-  it("removes an organisation's team, invites and review history with it", async () => {
-    const org = await prisma.organisation.create({ data: { name: "Cascade", slug: `cascade-${suffix}` } });
-    await prisma.teamMember.create({ data: { userId, organisationId: org.id, role: "OWNER" } });
-    await prisma.teamInvite.create({ data: { organisationId: org.id, token: `cascade-${suffix}` } });
-    await prisma.organisationReview.create({ data: { organisationId: org.id, action: "SUBMITTED" } });
-    await prisma.organisation.delete({ where: { id: org.id } });
-    expect(await prisma.teamMember.count({ where: { organisationId: org.id } })).toBe(0);
-    expect(await prisma.teamInvite.count({ where: { organisationId: org.id } })).toBe(0);
-    expect(await prisma.organisationReview.count({ where: { organisationId: org.id } })).toBe(0);
+  it("removes a makerspace's team, invites and review history with it", async () => {
+    const makerspace = await prisma.makerspace.create({ data: { name: "Cascade", slug: `cascade-${suffix}` } });
+    await prisma.teamMember.create({ data: { userId, makerspaceId: makerspace.id, role: "OWNER" } });
+    await prisma.teamInvite.create({ data: { makerspaceId: makerspace.id, token: `cascade-${suffix}` } });
+    await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action: "SUBMITTED" } });
+    await prisma.makerspace.delete({ where: { id: makerspace.id } });
+    expect(await prisma.teamMember.count({ where: { makerspaceId: makerspace.id } })).toBe(0);
+    expect(await prisma.teamInvite.count({ where: { makerspaceId: makerspace.id } })).toBe(0);
+    expect(await prisma.makerspaceReview.count({ where: { makerspaceId: makerspace.id } })).toBe(0);
   });
 });

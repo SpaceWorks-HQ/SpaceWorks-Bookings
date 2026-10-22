@@ -43,7 +43,7 @@ export async function deliverLoginAlert(payload: AlertPayload, messageId: string
   await sendBrandedEmail({
     to: device.user.email,
     messageId,
-    subject: "New sign-in to your Space Works Organization account",
+    subject: "New sign-in to your Space Works Bookings account",
     heading: "New sign-in",
     paragraphs: [
       `Your account was signed in to from ${device.label}${device.lastIp ? ` (address ${device.lastIp})` : ""} on ${when} UTC.`,

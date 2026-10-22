@@ -6,7 +6,7 @@
 # Migrations then bring an older dump up to the running release.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${SWO_UPDATE_INSTALL_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${SWB_UPDATE_INSTALL_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 # shellcheck source=scripts/install-owner.sh
 source "$SCRIPT_DIR/install-owner.sh"
 require_install_owner "$SCRIPT_DIR/restore.sh" "$@"
@@ -25,11 +25,11 @@ for argument in "$@"; do
     *) dump="$argument" ;;
   esac
 done
-backups="${SWO_BACKUP_DIR:-$ROOT/backups}"
+backups="${SWB_BACKUP_DIR:-$ROOT/backups}"
 name="$(basename "${dump:-}")"
 [[ "$name" =~ ^[a-z][a-z0-9-]*-[0-9]{8}T[0-9]{6}Z\.sql\.gz$ && -s "$backups/$name" ]] \
   || die "Choose a dump made by scripts/backup.sh or the backup service, inside $backups."
-[[ "$with_storage" == 0 || "$(repository_env_value SWO_STORAGE)" != external ]] \
+[[ "$with_storage" == 0 || "$(repository_env_value SWB_STORAGE)" != external ]] \
   || die 'Files in an external bucket are restored with your storage provider.'
 if [[ "$assume_yes" == 0 ]]; then
   [[ -r /dev/tty ]] || die 'An interactive terminal is required (or pass --yes).'

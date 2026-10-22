@@ -1,8 +1,8 @@
 # Security
 
-How Space Works Organization protects an installation, and what an operator must do. Report a vulnerability
+How Space Works Bookings protects an installation, and what an operator must do. Report a vulnerability
 privately through GitHub's **Security → Report a vulnerability** on
-[SpaceWorks-HQ/SpaceWorks-Organization](https://github.com/SpaceWorks-HQ/SpaceWorks-Organization), not in a
+[SpaceWorks-HQ/SpaceWorks-Bookings](https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings), not in a
 public issue.
 
 ## Data in transit
@@ -19,10 +19,10 @@ public issue.
 
 ## Least privilege
 
-- The app connects as `sworg_app`, which can read and write rows but owns no table and cannot create
-  databases, roles or schema objects. Migrations run separately as the owner role `sworg`. The operator check
+- The app connects as `swbook_app`, which can read and write rows but owns no table and cannot create
+  databases, roles or schema objects. Migrations run separately as the owner role `swbook`. The operator check
   (`--role ops`) verifies this on every install and update.
-- The app's storage identity `sworg-app` can list, read, write and delete only in the private bucket; the
+- The app's storage identity `swbook-app` can list, read, write and delete only in the private bucket; the
   bucket has no anonymous access.
 - The backend and frontend images run as an unprivileged user; operator scripts and the Prisma CLI are
   root-owned and read-only inside the image.
@@ -46,12 +46,12 @@ public issue.
 - The installer and updater accept only published, non-prerelease `main` releases whose tag matches
   `v<VERSION>-main.<run>.<sha>`, and pin the images to that exact version.
 - This repository is public, and GitHub recommends self-hosted runners only for private repositories. The
-  deploy runner controls Docker, which is root on the server. Before setting `SWO_DEPLOY=true`:
+  deploy runner controls Docker, which is root on the server. Before setting `SWB_DEPLOY=true`:
   - require approval for **all external contributors'** workflow runs;
   - protect `main` so only maintainers can merge;
-  - in an organisation, limit the runner group to this repository (and to `release.yml` on
+  - in a makerspace, limit the runner group to this repository (and to `release.yml` on
     `refs/heads/main` where your plan allows);
-  - never add the `spaceworks-organization-prod` label to a `pull_request` workflow.
+  - never add the `spaceworks-bookings-prod` label to a `pull_request` workflow.
   The deploy job uses no checkout and no third-party actions. Keep runner auto-updates on.
 - `scripts/install-runner.sh` verifies the runner download against GitHub's published SHA-256 and never echoes
   or stores the registration token.
@@ -65,7 +65,7 @@ public issue.
 
 ### Sign-in
 
-- **Staff need an authenticator.** Anyone on an organisation's team (owner, manager, treasurer, viewer) must
+- **Staff need an authenticator.** Anyone on a makerspace's team (owner, manager, treasurer, viewer) must
   turn on an authenticator app before the dashboard, its actions or its exports open (`hasAuthenticator` in
   `lib/permissions.ts`). Members never need one.
 - **Super admins** sign in with email and password only. Their accounts and passwords are created and changed
@@ -81,5 +81,5 @@ public issue.
 - **Breached passwords.** New passwords (sign-up, change, reset, the server command) found in known breaches are
   refused, via Have I Been Pwned with k-anonymity: only the first five characters of the SHA-1 hash leave the
   server. `PWNED_PASSWORDS_CHECK=0` turns it off for offline installs.
-- **Organisation-entered hosts** (an organisation's SMTP relay, a self-hosted Mattermost) must resolve to public
+- **Makerspace-entered hosts** (a makerspace's SMTP relay, a self-hosted Mattermost) must resolve to public
   addresses, checked when saved and again when used, so they can't reach the server's own network.

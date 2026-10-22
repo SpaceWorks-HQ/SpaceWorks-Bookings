@@ -4,11 +4,11 @@
 # fallback in the builder stage; see the comment there for the tradeoff.)
 #
 # Two published images come from this file (see .github/workflows/release.yml):
-#   runner    -> ghcr.io/<owner>/spaceworks-organization-backend   every backend role: the app and API,
+#   runner    -> ghcr.io/<owner>/spaceworks-bookings-backend   every backend role: the app and API,
 #                migrations, the scheduler and operator checks (scripts/docker-entrypoint.sh --role)
-#   frontend  -> ghcr.io/<owner>/spaceworks-organization-frontend  the website alone, for the split layout
+#   frontend  -> ghcr.io/<owner>/spaceworks-bookings-frontend  the website alone, for the split layout
 # Release images are the same for every installation: public origins are
-# placeholders (spaceworks-organization-origin.invalid, -backend.invalid) that
+# placeholders (spaceworks-bookings-origin.invalid, -backend.invalid) that
 # docker-entrypoint.sh replaces at start, and each installation supplies its own
 # Server Actions key.
 
@@ -62,7 +62,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 # This stage starts fresh; avoid writing a compiler cache that the runner never uses.
-ENV SWO_DISABLE_BUILD_CACHE=1
+ENV SWB_DISABLE_BUILD_CACHE=1
 
 RUN npx prisma generate
 # The key is consumed by Next.js while compiling Server Actions. Every image
@@ -81,7 +81,7 @@ RUN --mount=type=secret,id=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY \
     npm run build
 
 # The separately deployable rendering frontend (the frontend/ workspace, the
-# same build Netlify runs), published as spaceworks-organization-frontend. It
+# same build Netlify runs), published as spaceworks-bookings-frontend. It
 # holds no database, mail, Redis or storage client and reaches the backend only
 # through the authenticated gateway.
 FROM node:22-alpine AS frontend-builder
@@ -95,8 +95,8 @@ ARG NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV SWO_DISABLE_BUILD_CACHE=1
-ENV SWO_FRONTEND_STANDALONE=1
+ENV SWB_DISABLE_BUILD_CACHE=1
+ENV SWB_FRONTEND_STANDALONE=1
 RUN npx prisma generate
 RUN --mount=type=secret,id=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY     if [ -s /run/secrets/NEXT_SERVER_ACTIONS_ENCRYPTION_KEY ]; then       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY="$(cat /run/secrets/NEXT_SERVER_ACTIONS_ENCRYPTION_KEY)";     fi;     if [ -z "$NEXT_SERVER_ACTIONS_ENCRYPTION_KEY" ]; then       echo "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY is required: pass it as a BuildKit secret or build arg." >&2;       exit 1;     fi;     export NEXT_SERVER_ACTIONS_ENCRYPTION_KEY;     npm run build:frontend
 
@@ -116,7 +116,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 # Where docker-entrypoint.sh finds the build to apply the public origins to.
-ENV SWO_NEXT_DIR=/app/frontend/.next
+ENV SWB_NEXT_DIR=/app/frontend/.next
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["--role", "frontend", "node", "frontend/server.js"]

@@ -5,7 +5,7 @@ import Redis from "ioredis";
 import { PrismaClient } from "@prisma/client";
 import { S3Client, HeadBucketCommand } from "@aws-sdk/client-s3";
 
-const bundled = process.env.SWO_TOPOLOGY !== "cloud";
+const bundled = process.env.SWB_TOPOLOGY !== "cloud";
 const results = [];
 async function check(name, run) {
   try {

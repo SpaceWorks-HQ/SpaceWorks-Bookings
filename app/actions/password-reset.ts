@@ -6,7 +6,7 @@ import { newPasswordSchema } from "@/lib/passwordPolicy";
 import { BREACHED_PASSWORD_MESSAGE, isBreachedPassword } from "@/lib/breachedPassword";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { enqueuePasswordReset } from "@/lib/outbox";

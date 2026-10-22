@@ -1,5 +1,5 @@
 import { assertEmailAccepted, getEmailTransport } from "./transporter";
-import { organisationEmailTransport } from "./orgTransport";
+import { makerspaceEmailTransport } from "./makerspaceTransport";
 import { EMAIL_BUTTON_STYLE, EMAIL_COLORS, emailLayout } from "./brand";
 
 export function escapeHtml(value: string) {
@@ -16,8 +16,8 @@ export type BrandedEmail = {
   /** Small print under the action, e.g. how long a link lasts. */
   footnote?: string;
   messageId?: string;
-  /** Sent on behalf of this organisation: its own SMTP if set up, otherwise the platform's in its name. */
-  organisationId?: string;
+  /** Sent on behalf of this makerspace: its own SMTP if set up, otherwise the platform's in its name. */
+  makerspaceId?: string;
   /** Attachments such as a receipt PDF or a membership card. */
   attachments?: Array<{ filename: string; content: Buffer; contentType: string }>;
 };
@@ -44,7 +44,7 @@ export function cleanSubject(subject: string) {
 
 /** Send a branded email. Without SMTP configured it is a no-op that never logs the recipient or links. */
 export async function sendBrandedEmail(email: BrandedEmail): Promise<void> {
-  const { transporter, from, replyTo } = email.organisationId ? await organisationEmailTransport(email.organisationId) : { ...(await getEmailTransport()), replyTo: undefined };
+  const { transporter, from, replyTo } = email.makerspaceId ? await makerspaceEmailTransport(email.makerspaceId) : { ...(await getEmailTransport()), replyTo: undefined };
   const { html, text } = renderBrandedEmail(email);
   if (!transporter) {
     console.log(`[EMAIL MOCK] ${email.subject.slice(0, 80)} queued`);

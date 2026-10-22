@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { at, createPaymentsOrg, ensurePaymentKey, people, removePaymentsOrg, unpaidTerm } from "./payments-helpers";
+import { at, createPaymentsMakerspace, ensurePaymentKey, people, removePaymentsMakerspace, unpaidTerm } from "./payments-helpers";
 
 ensurePaymentKey();
 
@@ -10,8 +10,8 @@ const { settlePayment } = await import("@/lib/payments/settle");
 const { createRefund } = await import("@/lib/payments/refunds");
 const { reconcileGatewayRefunds } = await import("@/lib/payments/reconcileRefunds");
 
-type Ctx = Awaited<ReturnType<typeof createPaymentsOrg>>;
-let org: Ctx["org"];
+type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
+let makerspace: Ctx["makerspace"];
 let plan: Ctx["plan"];
 let staff: Array<{ id: string }>;
 const paidOn = at("2026-06-15T06:00:00Z");
@@ -20,10 +20,10 @@ const later = new Date(refundedOn.getTime() + 15 * 60_000);
 
 /** A Razorpay-paid membership with a refund still PENDING, as if the provider's answer never arrived. */
 async function pendingRefund(name: string, paymentRef: string) {
-  const term = await unpaidTerm(org, plan, name, paidOn);
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { org, termId: term.id, provider: "RAZORPAY", status: "PENDING", now: paidOn }));
-  await prisma.$transaction((tx) => settlePayment(tx, { org, paymentId: payment.id, capture: { gatewayPaymentId: paymentRef, amountMinor: 118_000, currency: "INR", method: "upi" }, now: paidOn }));
-  const { refund } = await prisma.$transaction((tx) => createRefund(tx, { org, paymentId: payment.id, amountMinor: 118_000, reason: "Cancelled", actorUserId: staff[0].id, now: refundedOn }));
+  const term = await unpaidTerm(makerspace, plan, name, paidOn);
+  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "RAZORPAY", status: "PENDING", now: paidOn }));
+  await prisma.$transaction((tx) => settlePayment(tx, { makerspace, paymentId: payment.id, capture: { gatewayPaymentId: paymentRef, amountMinor: 118_000, currency: "INR", method: "upi" }, now: paidOn }));
+  const { refund } = await prisma.$transaction((tx) => createRefund(tx, { makerspace, paymentId: payment.id, amountMinor: 118_000, reason: "Cancelled", actorUserId: staff[0].id, now: refundedOn }));
   await prisma.$executeRaw`UPDATE "Refund" SET "createdAt" = ${refundedOn} WHERE "id" = ${refund.id}`;
   return refund;
 }
@@ -36,15 +36,15 @@ function stubRazorpay(items: (url: string) => Array<Record<string, unknown>>) {
 }
 
 beforeAll(async () => {
-  ({ org, plan } = await createPaymentsOrg());
+  ({ makerspace, plan } = await createPaymentsMakerspace());
   staff = await people(1);
-  await savePaymentKeys(org.id, { provider: "RAZORPAY", keyId: "rzp_test_key", secret: "secret_key", webhookSecret: "hook_secret", testMode: true });
+  await savePaymentKeys(makerspace.id, { provider: "RAZORPAY", keyId: "rzp_test_key", secret: "secret_key", webhookSecret: "hook_secret", testMode: true });
 });
 
 afterEach(() => vi.unstubAllGlobals());
 
 afterAll(async () => {
-  if (org) await removePaymentsOrg(org.id, staff?.map((person) => person.id) ?? []);
+  if (makerspace) await removePaymentsMakerspace(makerspace.id, staff?.map((person) => person.id) ?? []);
   await prisma.$disconnect();
 });
 

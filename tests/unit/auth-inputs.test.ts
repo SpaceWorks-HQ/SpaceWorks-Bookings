@@ -20,7 +20,7 @@ describe("auth inputs", () => {
     expect(safeAuthRedirect(path)).toBe("/dashboard");
   });
   it("preserves local invitation destinations", () => {
-    expect(safeAuthRedirect("/join/org/example?from=login")).toBe("/join/org/example?from=login");
+    expect(safeAuthRedirect("/join/makerspace/example?from=login")).toBe("/join/makerspace/example?from=login");
   });
   it.each([NaN, Infinity, Date.now() + 60_000, Date.now() - 601_000])("rejects invalid freshness %s", async (authenticatedAt) => {
     mocks.auth.mockResolvedValue({ user: { id: "u" }, authenticatedAt });

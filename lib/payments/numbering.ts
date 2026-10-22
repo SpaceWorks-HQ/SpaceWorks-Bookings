@@ -5,7 +5,7 @@ export type DocumentSeries = "R" | "C";
 export const RECEIPT_PREFIX_PATTERN = /^[A-Z0-9]{0,4}$/;
 
 /**
- * "SWO-2627-00042" for payment documents and "SWO-2627-C00042" for credit notes. The financial year is
+ * "SWB-2627-00042" for payment documents and "SWB-2627-C00042" for credit notes. The financial year is
  * written compactly ("2026-27" becomes "2627"; a calendar year stays "2026"). Never more than 16 characters,
  * the GST limit: past five-digit sequences the hyphens go first ("SWOR2627C100000"), so a busy year never
  * fails to number a payment.

@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/permissions";
 import { hasRecentAuthentication } from "@/lib/reauth";
 import { consumeMfaCode, createMfaEnrollment, decryptMfaSecret, encryptMfaSecret, generateRecoveryCodes, hashRecoveryCode, verifyMfaCode } from "@/lib/mfa";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 
 const codeSchema = z.object({ code: z.string().trim().min(6).max(32) });
 

@@ -15,7 +15,7 @@ export default function ErrorBoundary({ error, reset }: { error: Error & { diges
         <span className="absolute -right-2 -top-2 size-7 rounded-full bg-sw-citron" />
       </span>
       <h1 className="text-h1 text-ink">We couldn’t load this page.</h1>
-      <p className="text-body-ui text-ink-secondary">Try again. If it keeps happening, let the team that runs this Space Works Organization site know.</p>
+      <p className="text-body-ui text-ink-secondary">Try again. If it keeps happening, let the team that runs this Space Works Bookings site know.</p>
       <Button variant="primary" onClick={reset}>Try again</Button>
     </div>
   );

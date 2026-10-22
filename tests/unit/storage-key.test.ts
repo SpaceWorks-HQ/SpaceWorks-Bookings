@@ -4,24 +4,24 @@ import { isPublicDerivativeKey } from "@/lib/storage";
 describe("public derivative storage keys", () => {
   const uuid = "123e4567-e89b-42d3-a456-426614174000";
 
-  it("accepts only generated organisation image derivatives", () => {
+  it("accepts only generated makerspace image derivatives", () => {
     expect(
-      isPublicDerivativeKey(`organisations/org_1/event-covers/${uuid}.webp`),
+      isPublicDerivativeKey(`makerspaces/org_1/event-covers/${uuid}.webp`),
     ).toBe(true);
     expect(
-      isPublicDerivativeKey(`organisations/org_1/event-speakers/${uuid}.webp`),
+      isPublicDerivativeKey(`makerspaces/org_1/event-speakers/${uuid}.webp`),
     ).toBe(true);
     expect(
-      isPublicDerivativeKey(`organisations/org_1/event-sponsors/${uuid}.webp`),
+      isPublicDerivativeKey(`makerspaces/org_1/event-sponsors/${uuid}.webp`),
     ).toBe(true);
     expect(
       isPublicDerivativeKey(
-        `organisations/org_1/organisation-logos/${uuid}.webp`,
+        `makerspaces/org_1/makerspace-logos/${uuid}.webp`,
       ),
     ).toBe(true);
     expect(
       isPublicDerivativeKey(
-        `organisations/org_1/event-page-logos/${uuid}.webp`,
+        `makerspaces/org_1/event-page-logos/${uuid}.webp`,
       ),
     ).toBe(true);
     expect(
@@ -31,14 +31,14 @@ describe("public derivative storage keys", () => {
 
   it("rejects traversal, encoded separators, arbitrary objects, and non-WebP files", () => {
     expect(
-      isPublicDerivativeKey(`organisations/org_1/../secrets/${uuid}.webp`),
+      isPublicDerivativeKey(`makerspaces/org_1/../secrets/${uuid}.webp`),
     ).toBe(false);
     expect(
-      isPublicDerivativeKey(`organisations/org_1/event-covers/%2e%2e.webp`),
+      isPublicDerivativeKey(`makerspaces/org_1/event-covers/%2e%2e.webp`),
     ).toBe(false);
     expect(isPublicDerivativeKey(`backups/${uuid}.webp`)).toBe(false);
     expect(
-      isPublicDerivativeKey(`organisations/org_1/event-covers/${uuid}.svg`),
+      isPublicDerivativeKey(`makerspaces/org_1/event-covers/${uuid}.svg`),
     ).toBe(false);
   });
 });

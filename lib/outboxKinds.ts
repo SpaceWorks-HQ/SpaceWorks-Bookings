@@ -3,7 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { sendPasswordResetEmail } from "@/lib/email/passwordReset";
 import { sendEmailVerificationEmail } from "@/lib/email/emailVerification";
-import { asAdminPayload, asInvitePayload, asNoticePayload, deliverAdminApplicationAlert, deliverOrganisationNotice, deliverOwnerInvite } from "@/lib/email/organisation";
+import { asAdminPayload, asInvitePayload, asNoticePayload, deliverAdminApplicationAlert, deliverMakerspaceNotice, deliverOwnerInvite } from "@/lib/email/makerspace";
 import { asPaymentNoticePayload, deliverPaymentNotice } from "@/lib/email/payments";
 import { asChatPayload, deliverChatNotice } from "@/lib/chat/notify";
 import { asLoginAlertPayload, asLoginCodePayload, deliverLoginAlert, deliverLoginCode } from "@/lib/email/loginSecurity";
@@ -82,16 +82,16 @@ const emailVerification: OutboxKindHandler = {
   },
 };
 
-const organisationNotice: OutboxKindHandler = {
+const makerspaceNotice: OutboxKindHandler = {
   capability: false,
   async deliver(value, messageId) {
     const payload = asNoticePayload(value);
     if (!payload) throw new PermanentOutboxError();
-    return deliverOrganisationNotice(payload, messageId);
+    return deliverMakerspaceNotice(payload, messageId);
   },
 };
 
-const organisationApplicationAlert: OutboxKindHandler = {
+const makerspaceApplicationAlert: OutboxKindHandler = {
   capability: false,
   async deliver(value, messageId) {
     const payload = asAdminPayload(value);
@@ -151,8 +151,8 @@ const chatNotice: OutboxKindHandler = {
 export const OUTBOX_KINDS = {
   "password-reset": passwordReset,
   "email-verification": emailVerification,
-  "organisation-notice": organisationNotice,
-  "organisation-application-alert": organisationApplicationAlert,
+  "makerspace-notice": makerspaceNotice,
+  "makerspace-application-alert": makerspaceApplicationAlert,
   "owner-invite": ownerInvite,
   "payment-notice": paymentNotice,
   "chat-notice": chatNotice,

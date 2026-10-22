@@ -45,7 +45,7 @@ describe("Razorpay", () => {
   it("creates orders with our payment id in the notes", async () => {
     const fetch = vi.fn(async () => new Response(JSON.stringify({ id: "order_42" }), { status: 200 }));
     vi.stubGlobal("fetch", fetch);
-    const result = await razorpay.createCheckout(credentials, { paymentId: "p1", organisationId: "o1", amountMinor: 118000, currency: "INR", description: "Annual", organisationName: "Club", customer: { name: "A", email: "a@example.test" }, successUrl: "https://x/s", cancelUrl: "https://x/c" });
+    const result = await razorpay.createCheckout(credentials, { paymentId: "p1", makerspaceId: "o1", amountMinor: 118000, currency: "INR", description: "Annual", makerspaceName: "Club", customer: { name: "A", email: "a@example.test" }, successUrl: "https://x/s", cancelUrl: "https://x/c" });
     expect(result).toEqual({ kind: "razorpay", orderId: "order_42", keyId: "rzp_test_abc" });
     const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(String(init.body))).toMatchObject({ amount: 118000, currency: "INR", notes: { paymentId: "p1" } });
@@ -81,6 +81,6 @@ describe("Stripe", () => {
   });
 
   it("refuses three-decimal amounts Stripe cannot take", async () => {
-    await expect(stripe.createCheckout(stripeCredentials, { paymentId: "p", organisationId: "o", amountMinor: 1005, currency: "KWD", description: "x", organisationName: "x", customer: { name: "x", email: "x@example.test" }, successUrl: "https://x", cancelUrl: "https://x" })).rejects.toThrow(/multiples of 10/);
+    await expect(stripe.createCheckout(stripeCredentials, { paymentId: "p", makerspaceId: "o", amountMinor: 1005, currency: "KWD", description: "x", makerspaceName: "x", customer: { name: "x", email: "x@example.test" }, successUrl: "https://x", cancelUrl: "https://x" })).rejects.toThrow(/multiples of 10/);
   });
 });

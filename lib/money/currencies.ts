@@ -1,5 +1,5 @@
 /**
- * Currencies an organisation can price in. Amounts are always stored as integer minor units with an ISO 4217
+ * Currencies a makerspace can price in. Amounts are always stored as integer minor units with an ISO 4217
  * code beside them; `exponent` is how many decimal places the minor unit has (paise: 2, fils: 3, yen: 0).
  * Client-safe: no server imports.
  */
@@ -94,7 +94,7 @@ export function sumMinor(amounts: Array<{ minor: number; currency: string }>, co
   return total;
 }
 
-/** Group amounts by currency, the organisation's default first, for reports and totals. */
+/** Group amounts by currency, the makerspace's default first, for reports and totals. */
 export function totalsByCurrency(amounts: Array<{ minor: number; currency: string }>, primary?: string) {
   const totals = new Map<string, number>();
   for (const amount of amounts) totals.set(amount.currency, (totals.get(amount.currency) ?? 0) + amount.minor);

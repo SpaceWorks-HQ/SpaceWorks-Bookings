@@ -2,7 +2,7 @@ import { webhookResponse } from "@/lib/payments/webhookRoute";
 
 export const dynamic = "force-dynamic";
 
-/** Razorpay webhooks; the organisation is identified by the unguessable code in the path. */
+/** Razorpay webhooks; the makerspace is identified by the unguessable code in the path. */
 export async function POST(request: Request, { params }: { params: Promise<{ code: string }> }) {
   return webhookResponse("RAZORPAY", (await params).code, request);
 }

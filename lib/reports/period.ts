@@ -1,11 +1,11 @@
 /**
  * Report periods. Pure and client-safe. A period is a half-open range of instants [from, to) whose
- * boundaries are local midnights in the organisation's timezone, so "FY 2026-27" in Asia/Kolkata runs
+ * boundaries are local midnights in the makerspace's timezone, so "FY 2026-27" in Asia/Kolkata runs
  * from 1 April 2026 00:00 IST to 1 April 2027 00:00 IST. Definitions: docs/REPORTS.md.
  */
 import { addDays, addMonths, financialYearLabel, financialYearStart, localDate, startOfLocalDay, type CalendarDate } from "@/lib/calendarDate";
 
-export type OrgCalendar = { timezone: string; financialYearStartMonth: number };
+export type MakerspaceCalendar = { timezone: string; financialYearStartMonth: number };
 
 export const PERIOD_PRESETS = ["fy", "last-fy", "12m", "90d", "30d", "month", "custom"] as const;
 export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
@@ -15,7 +15,7 @@ export type ReportPeriod = {
   from: Date;
   /** Exclusive. Never later than the end of today, so "this year" stops at now. */
   to: Date;
-  /** First and last calendar day covered, in the organisation's timezone. */
+  /** First and last calendar day covered, in the makerspace's timezone. */
   firstDay: CalendarDate;
   lastDay: CalendarDate;
   label: string;
@@ -42,7 +42,7 @@ export function formatDay(date: CalendarDate): string {
   return `${date.day} ${MONTHS[date.month - 1]} ${date.year}`;
 }
 
-/** "FY 2026-27" (or "FY 2026" for calendar-year organisations) for the year containing `date`. */
+/** "FY 2026-27" (or "FY 2026" for calendar-year makerspaces) for the year containing `date`. */
 export function fyLabel(date: CalendarDate, startMonth: number): string {
   return `FY ${financialYearLabel(date, startMonth)}`;
 }
@@ -55,7 +55,7 @@ function compare(a: CalendarDate, b: CalendarDate) {
  * Resolve a period from query parameters. Unknown presets fall back to the current financial year; a
  * custom range needs both days, in order, and at most ten years apart.
  */
-export function resolvePeriod(input: { period?: string; from?: string; to?: string }, calendar: OrgCalendar, now: Date): ReportPeriod {
+export function resolvePeriod(input: { period?: string; from?: string; to?: string }, calendar: MakerspaceCalendar, now: Date): ReportPeriod {
   const tz = calendar.timezone;
   const today = localDate(now, tz);
   const tomorrow = addDays(today, 1);

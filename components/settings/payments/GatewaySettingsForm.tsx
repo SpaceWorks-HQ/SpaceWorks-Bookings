@@ -17,7 +17,7 @@ const EVENTS = {
   STRIPE: "checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, checkout.session.expired, refund.created, refund.updated and refund.failed",
 };
 
-/** Choose Razorpay or Stripe and save the organisation's own keys. Saved secrets show only as "saved". */
+/** Choose Razorpay or Stripe and save the makerspace's own keys. Saved secrets show only as "saved". */
 export function GatewaySettingsForm({ slug, initial, canEdit, secretsReady }: { slug: string; initial: GatewayState; canEdit: boolean; secretsReady: boolean }) {
   const router = useRouter();
   const [provider, setProvider] = useState<Provider>(initial.provider);
@@ -33,7 +33,7 @@ export function GatewaySettingsForm({ slug, initial, canEdit, secretsReady }: { 
   const save = () =>
     startTransition(async () => {
       setStatus(null);
-      const result = await savePaymentGateway({ organisationSlug: slug, provider, keyId: provider === "RAZORPAY" ? keyId : null, secret, webhookSecret });
+      const result = await savePaymentGateway({ makerspaceSlug: slug, provider, keyId: provider === "RAZORPAY" ? keyId : null, secret, webhookSecret });
       setErrors(result.ok ? {} : result.fieldErrors ?? {});
       setStatus(result.ok ? { ok: true, text: provider === "NONE" ? "Online payments are off." : "Saved. Test the connection to check the keys." } : { ok: false, text: result.error });
       if (result.ok) {
@@ -44,7 +44,7 @@ export function GatewaySettingsForm({ slug, initial, canEdit, secretsReady }: { 
     });
   const test = () =>
     startTransition(async () => {
-      const result = await testPaymentGateway({ organisationSlug: slug });
+      const result = await testPaymentGateway({ makerspaceSlug: slug });
       setStatus(result.ok ? { ok: true, text: "The provider accepted the keys." } : { ok: false, text: result.error });
       router.refresh();
     });
@@ -60,7 +60,7 @@ export function GatewaySettingsForm({ slug, initial, canEdit, secretsReady }: { 
         options={[{ value: "NONE", label: "Offline only" }, { value: "RAZORPAY", label: "Razorpay" }, { value: "STRIPE", label: "Stripe" }]}
       />
       {provider === "NONE" ? (
-        <p className="text-body-ui text-ink-secondary">Members pay you directly by UPI, bank transfer or cash, and your team records or confirms each payment.</p>
+        <p className="text-body-ui text-ink-secondary">Customers pay you directly by UPI, bank transfer or cash, and your team records or confirms each payment.</p>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2">
@@ -84,7 +84,7 @@ export function GatewaySettingsForm({ slug, initial, canEdit, secretsReady }: { 
             <div className="flex flex-col gap-2 rounded-xl border border-line bg-subtle p-4">
               <CopyField label="Webhook URL" value={initial.webhookUrls[provider]} />
               <p className="text-caption text-ink-muted">In your {provider === "RAZORPAY" ? "Razorpay" : "Stripe"} dashboard, add this URL as a webhook for: {EVENTS[provider]}.</p>
-              {provider === "STRIPE" ? <p className="text-caption text-ink-muted">New Stripe accounts in India may be invite-only. Stripe takes every currency here; members are sent to Stripe&apos;s own checkout page.</p> : null}
+              {provider === "STRIPE" ? <p className="text-caption text-ink-muted">New Stripe accounts in India may be invite-only. Stripe takes every currency here; customers are sent to Stripe&apos;s own checkout page.</p> : null}
             </div>
           ) : null}
         </>

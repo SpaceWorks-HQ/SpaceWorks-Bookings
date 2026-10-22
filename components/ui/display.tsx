@@ -102,8 +102,8 @@ export function Callout({ tone = "info", title, children, action, className, rol
 /* ---------- Empty state ---------- */
 
 /**
- * Empty, success or error message in a card. On Space Works Organization' own screens pass a dot
- * face `mood` (Sleepy for empty lists, Sad for errors); organisation-branded public pages
+ * Empty, success or error message in a card. On Space Works Bookings' own screens pass a dot
+ * face `mood` (Sleepy for empty lists, Sad for errors); makerspace-branded public pages
  * leave it out. For a list that has never had anything in it (no members yet, no payments yet), pass
  * `patch` instead to show Patch idling; never on a screen that already has a bold moment.
  */
@@ -136,9 +136,9 @@ export function DangerZone({ title, description, action, className, children }: 
   );
 }
 
-/* ---------- Avatar, org logo and date block live in ./identity ---------- */
+/* ---------- Avatar, makerspace logo and date block live in ./identity ---------- */
 
-export { Avatar, DateBlock, initials, OrgLogo } from "./identity";
+export { Avatar, DateBlock, initials, MakerspaceLogo } from "./identity";
 
 /* ---------- Progress & stat tile ---------- */
 

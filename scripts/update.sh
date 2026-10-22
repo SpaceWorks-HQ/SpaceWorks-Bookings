@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Apply the newest published Space Works Organization release to a bundled Compose stack.
+# Apply the newest published Space Works Bookings release to a bundled Compose stack.
 set -euo pipefail
 
 UPDATE_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${SWO_UPDATE_INSTALL_DIR:-$(cd "$UPDATE_SCRIPT_DIR/.." && pwd)}"
+ROOT="${SWB_UPDATE_INSTALL_DIR:-$(cd "$UPDATE_SCRIPT_DIR/.." && pwd)}"
 cd "$ROOT"
-export SWO_UPDATE_INSTALL_DIR="$ROOT"
+export SWB_UPDATE_INSTALL_DIR="$ROOT"
 # shellcheck source=scripts/install-owner.sh
 source "$UPDATE_SCRIPT_DIR/install-owner.sh"
 require_install_owner "$UPDATE_SCRIPT_DIR/update.sh" "$@"
@@ -80,7 +80,7 @@ cleanup() {
     warn "The update stopped before deployment; the running release was not replaced."
   fi
   release_update_lock
-  [[ -z "${SWO_UPDATE_STAGE_DIR:-}" || "$SWO_UPDATE_STAGE_DIR" != */.sworg-stage.* ]] || rm -rf -- "$SWO_UPDATE_STAGE_DIR"
+  [[ -z "${SWB_UPDATE_STAGE_DIR:-}" || "$SWB_UPDATE_STAGE_DIR" != */.swbook-stage.* ]] || rm -rf -- "$SWB_UPDATE_STAGE_DIR"
   exit "$exit_code"
 }
 trap cleanup EXIT
@@ -96,13 +96,13 @@ if [[ "$ROLLBACK" == 1 ]]; then
 fi
 github() {
   curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 --retry 2 --retry-delay 5 \
-    --header 'Accept: application/vnd.github+json' --header 'User-Agent: sworg-self-host-updater' "$@"
+    --header 'Accept: application/vnd.github+json' --header 'User-Agent: swbook-self-host-updater' "$@"
 }
-api="https://api.github.com/repos/$SWO_REPOSITORY/releases"
+api="https://api.github.com/repos/$SWB_REPOSITORY/releases"
 if [[ -n "$REQUESTED_VERSION" ]]; then
-  release_json="$(github "$api/tags/v$REQUESTED_VERSION")" || die "v$REQUESTED_VERSION is not a release of $SWO_REPOSITORY."
+  release_json="$(github "$api/tags/v$REQUESTED_VERSION")" || die "v$REQUESTED_VERSION is not a release of $SWB_REPOSITORY."
 else
-  release_json="$(github "$api/latest")" || die "$SWO_REPOSITORY has no published release."
+  release_json="$(github "$api/latest")" || die "$SWB_REPOSITORY has no published release."
 fi
 grep -Eq '"draft"[[:space:]]*:[[:space:]]*false' <<< "$release_json" \
   && grep -Eq '"prerelease"[[:space:]]*:[[:space:]]*false' <<< "$release_json" \
@@ -116,20 +116,20 @@ if [[ "$current" == "$version" ]]; then
 fi
 
 # Every update runs the target release's own updater and host files: stage it and hand over.
-if [[ "${SWO_UPDATE_STAGED:-0}" != 1 ]]; then
-  stage="$(mktemp -d "${TMPDIR:-/tmp}/.sworg-stage.XXXXXX")"
+if [[ "${SWB_UPDATE_STAGED:-0}" != 1 ]]; then
+  stage="$(mktemp -d "${TMPDIR:-/tmp}/.swbook-stage.XXXXXX")"
   say "Downloading $tag into temporary storage."
-  github "https://github.com/$SWO_REPOSITORY/archive/refs/tags/$tag.tar.gz" | tar -xz -C "$stage" --strip-components=1 --no-same-owner \
+  github "https://github.com/$SWB_REPOSITORY/archive/refs/tags/$tag.tar.gz" | tar -xz -C "$stage" --strip-components=1 --no-same-owner \
     || { rm -rf -- "$stage"; die "Could not download $tag."; }
   [[ -f "$stage/scripts/update.sh" ]] || { rm -rf -- "$stage"; die "$tag has no updater."; }
   release_update_lock
   exec 8>&-
   trap - EXIT
   [[ "$ROLLBACK" == 0 ]] || ARGUMENTS=(--version "$version")
-  exec env SWO_UPDATE_STAGED=1 SWO_UPDATE_STAGE_DIR="$stage" SWO_ROLLBACK="$ROLLBACK" \
+  exec env SWB_UPDATE_STAGED=1 SWB_UPDATE_STAGE_DIR="$stage" SWB_ROLLBACK="$ROLLBACK" \
     bash "$stage/scripts/update.sh" ${ARGUMENTS[@]+"${ARGUMENTS[@]}"}
 fi
-ROLLBACK="${SWO_ROLLBACK:-$ROLLBACK}"
+ROLLBACK="${SWB_ROLLBACK:-$ROLLBACK}"
 
 say "Updating ${current:-untracked installation} to $version."
 mkdir -p "$ROOT/backups"
@@ -138,15 +138,15 @@ chmod 700 "$ROOT/backups"
 backup_name="pre-update-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
 say "Creating database backup backups/$backup_name."
 # The database container trusts its local socket for administrators only.
-"${COMPOSE[@]}" exec -T db pg_dump -U sworg -d sworg | gzip > "$ROOT/backups/$backup_name.partial" \
+"${COMPOSE[@]}" exec -T db pg_dump -U swbook -d swbook | gzip > "$ROOT/backups/$backup_name.partial" \
   && [[ "$(gzip -dc "$ROOT/backups/$backup_name.partial" | head -c 1 | wc -c | tr -d " ")" == 1 ]] \
   || { rm -f "$ROOT/backups/$backup_name.partial"; die "Database backup failed; update cancelled."; }
 chmod 600 "$ROOT/backups/$backup_name.partial"
 mv "$ROOT/backups/$backup_name.partial" "$ROOT/backups/$backup_name"
-export SWO_IMAGE_TAG="$version"
+export SWB_IMAGE_TAG="$version"
 
 # Check the new backend image exists before replacing any host file.
-docker pull --quiet "$SWO_BACKEND_IMAGE:$version" >/dev/null || die "Cannot pull $SWO_BACKEND_IMAGE:$version; check that the packages are public."
+docker pull --quiet "$SWB_BACKEND_IMAGE:$version" >/dev/null || die "Cannot pull $SWB_BACKEND_IMAGE:$version; check that the packages are public."
 host_configuration_started=1
 install_staged_host_bundle "$(cd "$UPDATE_SCRIPT_DIR/.." && pwd)"
 say "Pulling immutable release images."

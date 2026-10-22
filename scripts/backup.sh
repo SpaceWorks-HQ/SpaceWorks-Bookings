@@ -6,7 +6,7 @@
 # in the backup and backup-storage services (deploy/backup.sh).
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${SWO_UPDATE_INSTALL_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${SWB_UPDATE_INSTALL_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 # shellcheck source=scripts/install-owner.sh
 source "$SCRIPT_DIR/install-owner.sh"
 require_install_owner "$SCRIPT_DIR/backup.sh" "$@"
@@ -24,13 +24,13 @@ while (($# > 0)); do
   esac
   shift
 done
-[[ -f "${SWO_STATIC_ENV_FILE:-$ROOT/.env}" ]] || die "No installation settings in $ROOT/.env."
-backups="${SWO_BACKUP_DIR:-$ROOT/backups}"
+[[ -f "${SWB_STATIC_ENV_FILE:-$ROOT/.env}" ]] || die "No installation settings in $ROOT/.env."
+backups="${SWB_BACKUP_DIR:-$ROOT/backups}"
 mkdir -p "$backups"
 chmod 700 "$backups"
 "${COMPOSE[@]}" up -d --wait db >/dev/null
 "${COMPOSE[@]}" run --rm --no-deps -T backup database "$prefix" || die 'Database backup failed.'
-if [[ "$storage" == 1 && "$(repository_env_value SWO_STORAGE)" != external ]]; then
+if [[ "$storage" == 1 && "$(repository_env_value SWB_STORAGE)" != external ]]; then
   "${COMPOSE[@]}" run --rm --no-deps -T backup-storage storage || die 'Storage backup failed.'
 fi
 if [[ "$prefix" == manual ]]; then

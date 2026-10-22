@@ -35,7 +35,7 @@ describe("collected (B5)", () => {
     expect(june.net).toEqual([{ currency: "INR", minor: 80_000 }]);
   });
 
-  it("puts the organisation's currency first, then the rest alphabetically", () => {
+  it("puts the makerspace's currency first, then the rest alphabetically", () => {
     const list = subtractTotals([{ currency: "USD", minor: 5 }, { currency: "AED", minor: 1 }], [], "USD");
     expect(list.map((entry) => entry.currency)).toEqual(["USD", "AED"]);
     expect(formatTotals([{ currency: "INR", minor: 120_050 }, { currency: "USD", minor: 2_500 }])).toBe("₹1,200.50 · $25.00");

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # The only supported way to run the production Compose stacks:
 #   scripts/spaceworks-compose.sh bundled <compose arguments...>   docker-compose.prod.yml + overlays, ./.env
-#   scripts/spaceworks-compose.sh cloud <compose arguments...>     docker-compose.cloud.yml, /etc/spaceworks-organization/cloud.env
-# Bundled overlays come from the install's settings: SWO_LAYER in .env (tls for
-# automatic HTTPS, proxy for an existing reverse proxy), SWO_STORAGE=external,
-# and SWO_COMPOSE_BUILD_LAYER=1 to build the images from this checkout.
+#   scripts/spaceworks-compose.sh cloud <compose arguments...>     docker-compose.cloud.yml, /etc/spaceworks-bookings/cloud.env
+# Bundled overlays come from the install's settings: SWB_LAYER in .env (tls for
+# automatic HTTPS, proxy for an existing reverse proxy), SWB_STORAGE=external,
+# and SWB_COMPOSE_BUILD_LAYER=1 to build the images from this checkout.
 set -euo pipefail
 
 WRAPPER_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${SWO_UPDATE_INSTALL_DIR:-$(cd "$WRAPPER_SCRIPT_DIR/.." && pwd)}"
-export SWO_UPDATE_INSTALL_DIR="$ROOT"
+ROOT="${SWB_UPDATE_INSTALL_DIR:-$(cd "$WRAPPER_SCRIPT_DIR/.." && pwd)}"
+export SWB_UPDATE_INSTALL_DIR="$ROOT"
 # shellcheck source=scripts/spaceworks-repository.sh
 source "$WRAPPER_SCRIPT_DIR/spaceworks-repository.sh"
 TOPOLOGY="${1:-}"
@@ -28,47 +28,47 @@ for argument in "$@"; do
 done
 
 if [[ "$TOPOLOGY" == bundled ]]; then
-  export SWO_STATIC_ENV_FILE="${SWO_STATIC_ENV_FILE:-$ROOT/.env}"
+  export SWB_STATIC_ENV_FILE="${SWB_STATIC_ENV_FILE:-$ROOT/.env}"
   COMPOSE_FILES=("$ROOT/docker-compose.prod.yml")
-  PROJECT="${SWO_COMPOSE_PROJECT:-sworg}"
+  PROJECT="${SWB_COMPOSE_PROJECT:-swbook}"
 else
-  export SWO_STATIC_ENV_FILE="${SWO_STATIC_ENV_FILE:-/etc/spaceworks-organization/cloud.env}"
+  export SWB_STATIC_ENV_FILE="${SWB_STATIC_ENV_FILE:-/etc/spaceworks-bookings/cloud.env}"
   COMPOSE_FILES=("$ROOT/docker-compose.cloud.yml")
-  PROJECT="${SWO_COMPOSE_PROJECT:-sworg-cloud}"
+  PROJECT="${SWB_COMPOSE_PROJECT:-swbook-cloud}"
 fi
-[[ -f "$SWO_STATIC_ENV_FILE" ]] || { echo "Missing $SWO_STATIC_ENV_FILE; run setup.sh (bundled) or create it from .env.production.example (cloud)." >&2; exit 66; }
-[[ "$PROJECT" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]] || { echo "Invalid SWO_COMPOSE_PROJECT." >&2; exit 64; }
+[[ -f "$SWB_STATIC_ENV_FILE" ]] || { echo "Missing $SWB_STATIC_ENV_FILE; run setup.sh (bundled) or create it from .env.production.example (cloud)." >&2; exit 66; }
+[[ "$PROJECT" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]] || { echo "Invalid SWB_COMPOSE_PROJECT." >&2; exit 64; }
 
 # A curl install pins the exact release it installed; keep every later
 # invocation on it unless the updater supplies a different tag in the shell.
-if [[ -z "${SWO_IMAGE_TAG:-}" && -f "$ROOT/.spaceworks-version" ]]; then
+if [[ -z "${SWB_IMAGE_TAG:-}" && -f "$ROOT/.spaceworks-version" ]]; then
   pinned_tag="$(tr -d '[:space:]' < "$ROOT/.spaceworks-version")"
   [[ "$pinned_tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { echo "Invalid image tag in $ROOT/.spaceworks-version." >&2; exit 64; }
-  export SWO_IMAGE_TAG="$pinned_tag"
+  export SWB_IMAGE_TAG="$pinned_tag"
 fi
 configure_release_repository
 
 if [[ "$TOPOLOGY" == bundled ]]; then
-  LAYER="$(repository_env_value SWO_LAYER)"
+  LAYER="$(repository_env_value SWB_LAYER)"
   case "${LAYER:-none}" in
     none) ;;
     tls) COMPOSE_FILES+=("$ROOT/docker/compose.tls.yml") ;;
     proxy) COMPOSE_FILES+=("$ROOT/docker/compose.proxy.yml") ;;
-    *) echo "Unknown SWO_LAYER; use none, tls or proxy." >&2; exit 64 ;;
+    *) echo "Unknown SWB_LAYER; use none, tls or proxy." >&2; exit 64 ;;
   esac
-  [[ "$(repository_env_value SWO_STORAGE)" != external ]] || COMPOSE_FILES+=("$ROOT/docker/compose.external-storage.yml")
-  if [[ "${SWO_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
+  [[ "$(repository_env_value SWB_STORAGE)" != external ]] || COMPOSE_FILES+=("$ROOT/docker/compose.external-storage.yml")
+  if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
     COMPOSE_FILES+=("$ROOT/docker/compose.build.yml")
     # Builds compile with a throwaway Server Actions key; the real one is runtime-only.
-    SWO_BUILD_KEY="${SWO_BUILD_KEY:-$(head -c 32 /dev/urandom | base64 | tr -d '\n')}"
-    export SWO_BUILD_KEY COMPOSE_BAKE=false
+    SWB_BUILD_KEY="${SWB_BUILD_KEY:-$(head -c 32 /dev/urandom | base64 | tr -d '\n')}"
+    export SWB_BUILD_KEY COMPOSE_BAKE=false
   fi
-elif [[ "${SWO_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
+elif [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
   echo "Build overlays are available only for the bundled topology." >&2
   exit 64
 fi
 
-COMPOSE_ARGS=(--project-name "$PROJECT" --project-directory "$ROOT" --env-file "$SWO_STATIC_ENV_FILE")
+COMPOSE_ARGS=(--project-name "$PROJECT" --project-directory "$ROOT" --env-file "$SWB_STATIC_ENV_FILE")
 for file in "${COMPOSE_FILES[@]}"; do COMPOSE_ARGS+=(-f "$file"); done
 # Shell values outrank --env-file during interpolation: the saved settings are
 # authoritative, even in an old operator shell.

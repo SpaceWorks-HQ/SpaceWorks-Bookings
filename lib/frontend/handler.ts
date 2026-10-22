@@ -14,7 +14,7 @@ const params = z.record(z.string().max(128), stringValue).refine((value) => Obje
 const query = z.record(z.string().max(128), z.union([stringValue, z.array(stringValue).max(20)])).refine((value) => Object.keys(value).length <= 50);
 const viewInput = z.array(z.object({
   params: params.optional(), searchParams: query.optional(),
-  ctx: z.object({ organisation: z.object({ slug: z.string().min(1).max(128) }).strict(), event: z.object({ id: z.string().min(1).max(128) }).strict() }).strict().optional(),
+  ctx: z.object({ makerspace: z.object({ slug: z.string().min(1).max(128) }).strict(), event: z.object({ id: z.string().min(1).max(128) }).strict() }).strict().optional(),
 }).strict()).max(1);
 const secretFields = new Set([
   "passwordHash", "mfaSecretEncrypted", "recoveryCodeHashes", "checkInStationPinHash",

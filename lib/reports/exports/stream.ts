@@ -9,7 +9,7 @@ export type AuditedExport = {
   header: string[];
   rows: ExportRows;
   filename: string;
-  audit: { action: "REPORT_EXPORTED" | "FINANCE_REPORT_EXPORTED"; actorUserId: string; organisationId: string | null; report: string; filters: Record<string, string | number | boolean | null> };
+  audit: { action: "REPORT_EXPORTED" | "FINANCE_REPORT_EXPORTED"; actorUserId: string; makerspaceId: string | null; report: string; filters: Record<string, string | number | boolean | null> };
 };
 
 /**
@@ -22,9 +22,9 @@ export async function auditedCsvResponse(input: AuditedExport): Promise<Response
     await recordAuditEvent({
       action: input.audit.action,
       actorUserId: input.audit.actorUserId,
-      organisationId: input.audit.organisationId,
-      targetType: input.audit.organisationId ? "Organisation" : "Platform",
-      targetId: input.audit.organisationId ?? undefined,
+      makerspaceId: input.audit.makerspaceId,
+      targetType: input.audit.makerspaceId ? "Makerspace" : "Platform",
+      targetId: input.audit.makerspaceId ?? undefined,
       metadata: { report: input.audit.report, stage: "started", ...input.audit.filters },
     });
   } catch {
@@ -40,9 +40,9 @@ export async function auditedCsvResponse(input: AuditedExport): Promise<Response
     await recordAuditEvent({
       action: input.audit.action,
       actorUserId: input.audit.actorUserId,
-      organisationId: input.audit.organisationId,
-      targetType: input.audit.organisationId ? "Organisation" : "Platform",
-      targetId: input.audit.organisationId ?? undefined,
+      makerspaceId: input.audit.makerspaceId,
+      targetType: input.audit.makerspaceId ? "Makerspace" : "Platform",
+      targetId: input.audit.makerspaceId ?? undefined,
       metadata: { report: input.audit.report, rows: rowCount, complete, ...input.audit.filters },
     }).catch(() => console.error("[reports] export audit failed"));
   };

@@ -42,7 +42,7 @@ def retention_identifiers(
             previous_version,
             "main",
             "latest",
-            # The staging image the dev branch publishes (Space Works Organization).
+            # The staging image the dev branch publishes (Space Works Bookings).
             "dev",
         )
         if identifier

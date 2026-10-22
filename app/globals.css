@@ -6,7 +6,7 @@
 @import "./styles/patch.css";
 @import "./styles/eggs.css";
 
-/* Dark utilities follow the class on <html> (set on the server from the swo.theme cookie). */
+/* Dark utilities follow the class on <html> (set on the server from the swb.theme cookie). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
@@ -40,7 +40,7 @@
 /*
  * Tailwind theme mapped onto the semantic layer. `initial` removes Tailwind's default palette so no
  * off-brand colour can reach a screen; `inline` keeps utilities pointing at the live variables, so
- * light, dark and organisation accents switch without regenerating classes.
+ * light, dark and makerspace accents switch without regenerating classes.
  */
 @theme inline {
   --color-*: initial;
@@ -66,7 +66,7 @@
   --color-inverse: rgb(var(--sw-ui-inverse));
   --color-on-inverse: rgb(var(--sw-ui-on-inverse));
 
-  /* Organisation accent: Maker Teal unless a public page sets its own (see .sw-accent-scope). */
+  /* Makerspace accent: Maker Teal unless a public page sets its own (see .sw-accent-scope). */
   --color-accent: var(--sw-accent);
   --color-accent-soft: var(--sw-accent-soft);
   --color-on-accent: var(--sw-on-accent);
@@ -146,7 +146,7 @@
 }
 
 /*
- * Public pages set an organisation accent inline with accentStyle() (lib/theme/accent.ts), which writes
+ * Public pages set a makerspace accent inline with accentStyle() (lib/theme/accent.ts), which writes
  * contrast-checked --sw-accent-*-light / -dark values; this scope picks the pair for the current mode.
  */
 .sw-accent-scope {

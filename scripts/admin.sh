@@ -6,11 +6,11 @@
 #   bash scripts/admin.sh reset-mfa --email you@example.org
 #   bash scripts/admin.sh revoke --email you@example.org
 #   bash scripts/admin.sh list
-# Runs docker/ops/admin.mjs in the bundled stack's ops container (SWO_ADMIN_TOPOLOGY=cloud for the cloud stack).
+# Runs docker/ops/admin.mjs in the bundled stack's ops container (SWB_ADMIN_TOPOLOGY=cloud for the cloud stack).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-topology="${SWO_ADMIN_TOPOLOGY:-bundled}"
-case "$topology" in bundled|cloud) ;; *) echo "[admin] SWO_ADMIN_TOPOLOGY must be bundled or cloud." >&2; exit 64 ;; esac
+topology="${SWB_ADMIN_TOPOLOGY:-bundled}"
+case "$topology" in bundled|cloud) ;; *) echo "[admin] SWB_ADMIN_TOPOLOGY must be bundled or cloud." >&2; exit 64 ;; esac
 (($# > 0)) || { sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 64; }
 tty=()
 [[ -t 0 ]] || tty=(-T)

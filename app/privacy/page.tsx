@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "What personal information this Space Works Organization site collects, why, who can see it, how long it is kept and the choices you have.",
+  description: "What personal information this Space Works Bookings site collects, why, who can see it, how long it is kept and the choices you have.",
 };
 
 const sections: LegalSection[] = [
@@ -11,8 +11,8 @@ const sections: LegalSection[] = [
     id: "who-is-responsible",
     title: "Who is responsible",
     body: [
-      "Space Works Organization is open-source membership software from Space Works that anyone can run on their own server. In this policy, the “operator” is whoever runs this Space Works Organization site, and “organisations” are the clubs, associations, societies and other groups that run their memberships on it.",
-      "The operator is responsible for accounts, security and the running of this site. Each organisation is responsible for the information it asks its members for and uses to run its memberships, such as its join form questions, member records, payments and receipts. Depending on where you live, the law may call the operator and the organisation a “controller” or a “data fiduciary” for that information.",
+      "Space Works Bookings is open-source membership software from Space Works that anyone can run on their own server. In this policy, the “operator” is whoever runs this Space Works Bookings site, and “makerspaces” are the clubs, associations, societies and other groups that run their memberships on it.",
+      "The operator is responsible for accounts, security and the running of this site. Each makerspace is responsible for the information it asks its members for and uses to run its memberships, such as its join form questions, member records, payments and receipts. Depending on where you live, the law may call the operator and the makerspace a “controller” or a “data fiduciary” for that information.",
     ],
   },
   {
@@ -20,10 +20,10 @@ const sections: LegalSection[] = [
     title: "What we collect",
     body: [
       "Your account. Your name, email address, password (stored only as a one-way hash), profile picture if you add one, whether you have verified your email, and your two-step verification settings.",
-      "Your memberships. When you join an organisation, we store your name, email address, the answers you give on its join form (which can include a phone number, address, date of birth or a photo), your member number, your membership plan and the dates each membership period starts and ends, its status (for example pending approval, active, in grace, lapsed or cancelled), and your consent to the organisation’s privacy notice, including which version and when.",
-      "Payments and receipts. When you pay for a membership, we store the amount, the plan it was for, how you paid (online through the organisation’s payment provider, or offline by cash, UPI, bank transfer or cheque), reference numbers such as a UPI transaction reference (UTR), and the receipts or tax invoices issued to you. Card and bank details are entered with the payment provider, not on this site, and are never stored here.",
-      "Membership cards. Your card shows your name, photo if the organisation uses one, member number, plan and validity. Each card has a QR code that opens a public check page showing whether the card is valid.",
-      "Organisations and teams. For each organisation we store its details, the people on its team and their roles, team invitations including any invited email address, and the platform’s review of its application.",
+      "Your memberships. When you join a makerspace, we store your name, email address, the answers you give on its join form (which can include a phone number, address, date of birth or a photo), your member number, your membership plan and the dates each membership period starts and ends, its status (for example pending approval, active, in grace, lapsed or cancelled), and your consent to the makerspace’s privacy notice, including which version and when.",
+      "Payments and receipts. When you pay for a membership, we store the amount, the plan it was for, how you paid (online through the makerspace’s payment provider, or offline by cash, UPI, bank transfer or cheque), reference numbers such as a UPI transaction reference (UTR), and the receipts or tax invoices issued to you. Card and bank details are entered with the payment provider, not on this site, and are never stored here.",
+      "Membership cards. Your card shows your name, photo if the makerspace uses one, member number, plan and validity. Each card has a QR code that opens a public check page showing whether the card is valid.",
+      "Makerspaces and teams. For each makerspace we store its details, the people on its team and their roles, team invitations including any invited email address, and the platform’s review of its application.",
       "Uploads. Logos, profile pictures and member photos are checked, resized and re-encoded, and hidden metadata such as camera details and location is removed before they are stored.",
       "Technical and security information. Your IP address is used briefly to limit repeated requests and prevent abuse. It is not stored in our database. We keep an activity log of important actions, such as sign-ins, approvals, role changes, payments recorded, refunds and exports, recording who did what and when.",
     ],
@@ -32,18 +32,18 @@ const sections: LegalSection[] = [
     id: "how-we-use-it",
     title: "How we use it",
     body: [
-      "We use this information to run the service: to create and secure your account, review organisation applications, take membership applications, approve members, issue member numbers and cards, take and record payments, issue receipts and tax invoices, send renewal reminders, and investigate security or technical problems.",
-      "We process it because it is needed to provide the service you asked for, because the law requires it (for example, keeping tax records), because you gave your consent (for example, to an optional join form question or a member photo), or because we and the organisation have a legitimate interest in running memberships safely and accurately.",
+      "We use this information to run the service: to create and secure your account, review makerspace applications, take membership applications, approve members, issue member numbers and cards, take and record payments, issue receipts and tax invoices, send renewal reminders, and investigate security or technical problems.",
+      "We process it because it is needed to provide the service you asked for, because the law requires it (for example, keeping tax records), because you gave your consent (for example, to an optional join form question or a member photo), or because we and the makerspace have a legitimate interest in running memberships safely and accurately.",
     ],
   },
   {
     id: "who-can-see-it",
     title: "Who can see it",
     body: [
-      "Organisations. People on an organisation’s team can see its members according to their role: owners and admins see and manage member records; treasurers see payments, receipts and finance reports; viewers see member lists with contact details hidden. Team members can export records they are allowed to see, and every export is logged.",
-      "The public. A card’s check page shows only what is needed to confirm it: the name on the card, the organisation, the plan, whether it is valid and until when. It never shows contact details. Public organisation pages show only what the organisation publishes about itself and its plans.",
-      "Payment providers. If you pay online, the organisation’s own payment provider (for example Razorpay or Stripe) processes the payment under its own privacy policy and receives the details it needs to do so.",
-      "The operator. The operator’s administrators can see account and organisation details to review applications, support organisations and protect the site. Opening an organisation’s records is logged.",
+      "Makerspaces. People on a makerspace’s team can see its members according to their role: owners and admins see and manage member records; treasurers see payments, receipts and finance reports; viewers see member lists with contact details hidden. Team members can export records they are allowed to see, and every export is logged.",
+      "The public. A card’s check page shows only what is needed to confirm it: the name on the card, the makerspace, the plan, whether it is valid and until when. It never shows contact details. Public makerspace pages show only what the makerspace publishes about itself and its plans.",
+      "Payment providers. If you pay online, the makerspace’s own payment provider (for example Razorpay or Stripe) processes the payment under its own privacy policy and receives the details it needs to do so.",
+      "The operator. The operator’s administrators can see account and makerspace details to review applications, support makerspaces and protect the site. Opening a makerspace’s records is logged.",
     ],
   },
   {
@@ -65,12 +65,12 @@ const sections: LegalSection[] = [
     title: "Emails we send",
     body: [
       "We send emails needed for the service: email verification, password resets, team invitations, application decisions, membership approvals and rejections, your membership card, payment receipts and renewal reminders before your membership expires.",
-      "Renewal reminders are part of your membership. To stop receiving them, cancel your renewal from your account or contact the organisation.",
+      "Renewal reminders are part of your membership. To stop receiving them, cancel your renewal from your account or contact the makerspace.",
     ],
   },
   {
-    id: "organisations-duties",
-    title: "If you run an organisation",
+    id: "makerspaces-duties",
+    title: "If you run a makerspace",
     body: "Ask only for what you need to run your memberships, explain why you are asking, get consent for optional information and member photos, get a parent’s or guardian’s consent for members who are children, and limit who on your team can see contact details and payments.",
   },
   {
@@ -78,7 +78,7 @@ const sections: LegalSection[] = [
     title: "How long we keep it",
     body: [
       "Password-reset and email-verification links expire after one hour. Unused team invitations expire after seven days. Copies of sent emails are deleted after 30 days by default, and those containing sign-in or invitation links are deleted as soon as they are sent.",
-      "Accounts and member records are kept until they are deleted by you, the organisation or the operator. Payment records, receipts and tax invoices are kept for at least eight years, because tax law requires it, even if the member record is erased. In that case the name and contact details on them are removed where the law allows, and the financial record stays.",
+      "Accounts and member records are kept until they are deleted by you, the makerspace or the operator. Payment records, receipts and tax invoices are kept for at least eight years, because tax law requires it, even if the member record is erased. In that case the name and contact details on them are removed where the law allows, and the financial record stays.",
       "Backups may hold copies of deleted information for a limited time, as set by the operator. Ask the operator about their retention schedule.",
     ],
   },
@@ -91,15 +91,15 @@ const sections: LegalSection[] = [
     id: "your-choices-and-rights",
     title: "Your choices and rights",
     body: [
-      "From your account you can update your profile, see your memberships, payments, receipts and cards, withdraw consent you gave to an organisation, download your information and ask for it to be erased.",
+      "From your account you can update your profile, see your memberships, payments, receipts and cards, withdraw consent you gave to a makerspace, download your information and ask for it to be erased.",
       "Depending on where you live, including under India’s Digital Personal Data Protection Act, you may also have the right to access, correct, complete, update or erase your information, to withdraw consent as easily as you gave it, to nominate someone to act for you, to have a grievance addressed, and to complain to a data protection authority.",
-      "For anything about a specific organisation’s membership, contact that organisation. For your account, contact the operator. They will respond as required by the laws that apply to them. We may need to confirm who you are first.",
+      "For anything about a specific makerspace’s membership, contact that makerspace. For your account, contact the operator. They will respond as required by the laws that apply to them. We may need to confirm who you are first.",
     ],
   },
   {
     id: "children",
     title: "Children",
-    body: "If you are below the age at which you can consent to the use of your personal information where you live, a parent or guardian must give consent for you when you join. Organisations with members who are children are responsible for obtaining any parental consent the law requires.",
+    body: "If you are below the age at which you can consent to the use of your personal information where you live, a parent or guardian must give consent for you when you join. Makerspaces with members who are children are responsible for obtaining any parental consent the law requires.",
   },
   {
     id: "international-transfers",
@@ -114,7 +114,7 @@ const sections: LegalSection[] = [
   {
     id: "contact",
     title: "Contact",
-    body: "For questions or requests about your information, contact the operator at [operator contact email — to be filled in by the operator], or its grievance officer at [grievance officer name and contact — to be filled in by the operator]. For anything about a particular membership, contact the organisation shown on its page.",
+    body: "For questions or requests about your information, contact the operator at [operator contact email — to be filled in by the operator], or its grievance officer at [grievance officer name and contact — to be filled in by the operator]. For anything about a particular membership, contact the makerspace shown on its page.",
   },
 ];
 
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
       current="privacy"
       title="Privacy"
       updated="19 October 2026"
-      notice="This policy describes how Space Works Organization handles personal information. Each operator must replace the bracketed placeholders with its own name and contact details, add its hosting, email, storage and payment providers, retention periods and the laws that apply to it, and should have it reviewed by a lawyer. It is not legal advice."
+      notice="This policy describes how Space Works Bookings handles personal information. Each operator must replace the bracketed placeholders with its own name and contact details, add its hosting, email, storage and payment providers, retention periods and the laws that apply to it, and should have it reviewed by a lawyer. It is not legal advice."
       sections={sections}
     />
   );

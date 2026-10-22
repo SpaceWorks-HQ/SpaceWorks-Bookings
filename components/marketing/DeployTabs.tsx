@@ -4,8 +4,8 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { Check } from "lucide-react";
 import { CopyCommand } from "./CopyCommand";
 
-const IMAGE = "ghcr.io/spaceworks-hq/spaceworks-organization";
-const INSTALL = "curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Organization/main/install.sh | bash";
+const IMAGE = "ghcr.io/spaceworks-hq/spaceworks-bookings";
+const INSTALL = "curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash";
 
 /** The ways to run it, each with what it sets up and the command that starts it. */
 const OPTIONS = [
@@ -23,7 +23,7 @@ const OPTIONS = [
     terminal: [
       ["$ ", "curl -fsSL \\"],
       ["", "  https://raw.githubusercontent.com/\\"],
-      ["", "SpaceWorks-HQ/SpaceWorks-Organization/\\"],
+      ["", "SpaceWorks-HQ/SpaceWorks-Bookings/\\"],
       ["", "main/install.sh | bash"],
       ["", ""],
       ["# ", "Deployment summary"],
@@ -52,8 +52,8 @@ const OPTIONS = [
       ["# ", "On Netlify (package directory: frontend)"],
       ["$ ", "npm run build:frontend"],
       ["", ""],
-      ["", "  BACKEND_ORIGIN       https://api.your-org.in"],
-      ["", "  NEXT_PUBLIC_BASE_URL https://members.your-org.in"],
+      ["", "  BACKEND_ORIGIN       https://api.your-makerspace.in"],
+      ["", "  NEXT_PUBLIC_BASE_URL https://book.your-makerspace.in"],
     ],
   },
   {

@@ -6,7 +6,7 @@ import { Spinner } from "./spinner";
 /**
  * Space Works button family (docs/DESIGN.md §4.1):
  * - `primary`: Maker Teal, the screen's main action.
- * - `accent`: the organisation's own colour on its public pages (teal by default).
+ * - `accent`: the makerspace's own colour on its public pages (teal by default).
  * - `secondary` / `neutral`: panel fill with a hairline border.
  * - `ghost`: teal text, soft teal on hover.
  * - `quiet`: text-only link button.
@@ -34,7 +34,7 @@ export type ButtonSize = "sm" | "md" | "lg";
 const base =
   "relative inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-control font-semibold transition-[background-color,border-color,color] duration-[120ms] ease-sw disabled:pointer-events-none aria-disabled:pointer-events-none";
 
-/** Organisation accents are chosen by the organisation, so hover darkens toward Deep Ink in sRGB instead of using a fixed token. */
+/** Makerspace accents are chosen by the makerspace, so hover darkens toward Deep Ink in sRGB instead of using a fixed token. */
 const accentHover = "hover:bg-[color-mix(in_srgb,var(--sw-accent)_88%,var(--sw-ink))]";
 
 const neutral = "border border-line bg-panel text-ink hover:bg-muted active:bg-emphasis";

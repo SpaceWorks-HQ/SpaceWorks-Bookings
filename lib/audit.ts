@@ -10,7 +10,7 @@ import { prisma } from "@/lib/db";
 export async function recordAuditEvent(params: {
   action: string;
   actorUserId?: string | null;
-  organisationId?: string | null;
+  makerspaceId?: string | null;
   targetType?: string;
   targetId?: string;
   metadata?: Record<string, string | number | boolean | null>;
@@ -21,7 +21,7 @@ export async function recordAuditEvent(params: {
     data: {
       action: params.action,
       actorUserId: params.actorUserId ?? null,
-      organisationId: params.organisationId ?? null,
+      makerspaceId: params.makerspaceId ?? null,
       targetType: params.targetType ?? null,
       targetId: params.targetId ?? null,
       metadata: params.metadata ?? undefined,

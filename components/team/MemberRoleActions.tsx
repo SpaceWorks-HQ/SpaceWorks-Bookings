@@ -18,14 +18,14 @@ const ROLE_TONES = { OWNER: "ink", ADMIN: "warning", TREASURER: "info", VIEWER: 
 const ASSIGNABLE: Array<"ADMIN" | "TREASURER" | "VIEWER"> = ["ADMIN", "TREASURER", "VIEWER"];
 
 export function MemberRoleActions(props: {
-  organisationSlug: string;
+  makerspaceSlug: string;
   targetUserId: string;
   role: TeamRole;
   actorRole: TeamRole;
   /** Used to label the role select and removal dialog for this row. */
   memberName?: string;
 }) {
-  const { organisationSlug, targetUserId, role, actorRole, memberName } = props;
+  const { makerspaceSlug, targetUserId, role, actorRole, memberName } = props;
   const router = useRouter();
   const { showToast } = useToast();
   const [pending, startTransition] = useTransition();
@@ -51,7 +51,7 @@ export function MemberRoleActions(props: {
             const next = e.target.value as "ADMIN" | "TREASURER" | "VIEWER";
             startTransition(async () => {
               const res = await updateTeamRole({
-                organisationSlug,
+                makerspaceSlug,
                 targetUserId,
                 role: next,
               });
@@ -80,14 +80,14 @@ export function MemberRoleActions(props: {
       <ConfirmationDialog
         open={confirmRemove}
         title={memberName ? `Remove ${memberName} from the team?` : "Remove from the team?"}
-        message="This person will immediately lose access to the organisation dashboard."
+        message="This person will immediately lose access to the makerspace dashboard."
         confirmLabel="Remove from team"
         loading={pending}
         onCancel={() => setConfirmRemove(false)}
         onConfirm={() => {
           startTransition(async () => {
             const res = await removeTeamMember({
-              organisationSlug,
+              makerspaceSlug,
               targetUserId,
             });
             if (!res.ok) {

@@ -4,16 +4,16 @@ How members pay, how money is recorded, and how receipts are issued. Tax rules a
 
 ## Ways to pay
 
-Each organisation picks **one** gateway, or none:
+Each makerspace picks **one** gateway, or none:
 
 | Gateway | How the member pays | Notes |
 | --- | --- | --- |
 | Razorpay | Checkout.js opens over the pay page (UPI, cards, netbanking) | Orders API. INR, plus the international currencies the Razorpay account has enabled. |
-| Stripe | Redirect to Stripe Checkout and back | Checkout Sessions (`mode: payment`) on the organisation's **own** Stripe account. No Stripe script runs on our pages. Takes every supported currency; three-decimal currencies must be multiples of 10. New Stripe accounts in India may be invite-only. |
+| Stripe | Redirect to Stripe Checkout and back | Checkout Sessions (`mode: payment`) on the makerspace's **own** Stripe account. No Stripe script runs on our pages. Takes every supported currency; three-decimal currencies must be multiples of 10. New Stripe accounts in India may be invite-only. |
 | Offline | UPI QR, bank transfer, cash, cheque | Always available. A manager records it, or the member submits "I've paid" with a UTR. |
 
 Keys are saved under **Settings → Payments and tax**. Secrets are encrypted with AES-256-GCM using
-`PAYMENT_SECRETS_KEY` (32 random bytes, base64), bound to the organisation, and never sent back to the browser.
+`PAYMENT_SECRETS_KEY` (32 random bytes, base64), bound to the makerspace, and never sent back to the browser.
 Without that key the gateway section stays locked. Test mode follows the key (`rzp_test_`, `sk_test_`).
 
 ## The payment record
@@ -43,7 +43,7 @@ Money received is **never refused**. These still become `PAID` with a document, 
 
 - paid after the attempt was cancelled or failed (late capture);
 - the membership was already paid (duplicate);
-- the organisation was suspended or the plan archived.
+- the makerspace was suspended or the plan archived.
 
 A **mismatched amount** is also `PAID` and flagged, but its document is **held**. A manager either issues the
 receipt on the amount received (lines are re-apportioned) or refunds.
@@ -51,9 +51,9 @@ receipt on the amount received (lines are re-apportioned) or refunds.
 ## Webhooks
 
 `POST /api/webhooks/razorpay/{code}` and `/api/webhooks/stripe/{code}`. The `{code}` is an unguessable
-per-organisation value shown in settings.
+per-makerspace value shown in settings.
 
-- The signature is checked with the organisation's webhook secret (Razorpay: HMAC of the body; Stripe:
+- The signature is checked with the makerspace's webhook secret (Razorpay: HMAC of the body; Stripe:
   `t.v1` with a five-minute tolerance).
 - `ProcessedWebhookEvent (provider, eventId)` makes every event apply once.
 - Business outcomes always answer **200**; unknown events are acknowledged; only infrastructure errors give 5xx,
@@ -76,7 +76,7 @@ With **"A second person confirms offline payments"** on (Settings → Money and 
 owner, manager or treasurer counts only after a different one confirms it. The receipt number is allocated at
 confirmation. With it off, recorded payments are paid and receipted at once.
 
-Members can say "I've paid" with a UPI or bank UTR. A reference can be claimed once per organisation (a
+Members can say "I've paid" with a UPI or bank UTR. A reference can be claimed once per makerspace (a
 partial unique index ignores rejected claims, so a corrected claim can be resubmitted). Claims are rate
 limited per member.
 
@@ -92,7 +92,7 @@ A manager may tick **Also end the membership** when refunding: the term the paym
 
 ### Refund policy and member requests
 
-Settings → Payments and tax → **Refunds** sets the policy (`OrgPaymentSettings.refundPolicy`):
+Settings → Payments and tax → **Refunds** sets the policy (`MakerspacePaymentSettings.refundPolicy`):
 
 - **No refunds** (the default): members can still leave, but nothing is offered.
 - **Full refund within N days** of payment: everything still refundable.
@@ -102,7 +102,7 @@ Settings → Payments and tax → **Refunds** sets the policy (`OrgPaymentSettin
 
 A member with a paid, running membership inside the window sees **Cancel and request a refund** on their
 membership page, with the amount on offer and the policy text. That opens a `RefundRequest` (one open request
-per payment, enforced by a partial unique index) and emails the organisation-wide finance team. Nothing changes
+per payment, enforced by a partial unique index) and emails the makerspace-wide finance team. Nothing changes
 until a manager decides on the payment's page (or the **Refund requests** filter on Payments):
 
 - **Approve**: the amount is prefilled from the policy and may be changed up to what is left; the refund runs
@@ -132,11 +132,11 @@ Database triggers enforce, with column allowlists:
 - a tax document may only gain `cancelledAt`; never deleted;
 - a refund may only move on from `PENDING`.
 
-An organisation that has taken payments cannot be deleted; a platform admin archives it instead.
+A makerspace that has taken payments cannot be deleted; a platform admin archives it instead.
 
 ## Documents
 
-Numbers are gapless per organisation, series and financial year: `PREFIX-2627-00042` for receipts and invoices,
+Numbers are gapless per makerspace, series and financial year: `PREFIX-2627-00042` for receipts and invoices,
 `PREFIX-2627-C00042` for credit notes (at most 16 characters). PDFs are drawn on demand from the frozen
 snapshot (`/api/documents/{id}`, for the finance team within their unit, or the member it was issued to), so
 a rendering problem never burns a number. Amounts are printed with the ISO code ("INR 1,180.00").

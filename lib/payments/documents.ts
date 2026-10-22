@@ -1,12 +1,12 @@
 import "server-only";
 
-import type { Organisation, Prisma, TaxDocument } from "@prisma/client";
+import type { Makerspace, Prisma, TaxDocument } from "@prisma/client";
 import { financialYearLabel, localDate } from "@/lib/calendarDate";
 import { formatDocumentNumber, type DocumentSeries } from "./numbering";
 import { creditNoteLines, placeOfSupply, sumSplits, type TaxSnapshot } from "./tax";
 
 type Tx = Prisma.TransactionClient;
-type OrgForDocs = Pick<Organisation, "id" | "name" | "timezone" | "financialYearStartMonth" | "addressLine" | "city" | "stateCode" | "postalCode" | "contactEmail" | "locale" | "logoUrl">;
+type MakerspaceForDocs = Pick<Makerspace, "id" | "name" | "timezone" | "financialYearStartMonth" | "addressLine" | "city" | "stateCode" | "postalCode" | "contactEmail" | "locale" | "logoUrl">;
 
 export const DOCUMENT_TEMPLATE_VERSION = 1;
 
@@ -31,17 +31,17 @@ export type DocumentSnapshot = {
 };
 
 /** Next number in a gapless series. Callers hold the payment row lock first (lock order: payment, counter). */
-async function allocate(tx: Tx, organisationId: string, series: DocumentSeries, financialYear: string) {
+async function allocate(tx: Tx, makerspaceId: string, series: DocumentSeries, financialYear: string) {
   const [row] = await tx.$queryRaw<Array<{ value: number }>>`
-    INSERT INTO "DocumentCounter" ("organisationId", "series", "financialYear", "next") VALUES (${organisationId}, ${series}, ${financialYear}, 2)
-    ON CONFLICT ("organisationId", "series", "financialYear") DO UPDATE SET "next" = "DocumentCounter"."next" + 1
+    INSERT INTO "DocumentCounter" ("makerspaceId", "series", "financialYear", "next") VALUES (${makerspaceId}, ${series}, ${financialYear}, 2)
+    ON CONFLICT ("makerspaceId", "series", "financialYear") DO UPDATE SET "next" = "DocumentCounter"."next" + 1
     RETURNING "next" - 1 AS value`;
   return Number(row.value);
 }
 
-function issuerOf(org: OrgForDocs, snapshot: TaxSnapshot): DocumentSnapshot["issuer"] {
-  const address = snapshot.address || [org.addressLine, org.city, org.postalCode].filter(Boolean).join(", ");
-  return { name: org.name, legalName: snapshot.legalName, gstin: snapshot.gstin, address, state: snapshot.supplierState ?? org.stateCode, email: org.contactEmail, logoUrl: org.logoUrl };
+function issuerOf(makerspace: MakerspaceForDocs, snapshot: TaxSnapshot): DocumentSnapshot["issuer"] {
+  const address = snapshot.address || [makerspace.addressLine, makerspace.city, makerspace.postalCode].filter(Boolean).join(", ");
+  return { name: makerspace.name, legalName: snapshot.legalName, gstin: snapshot.gstin, address, state: snapshot.supplierState ?? makerspace.stateCode, email: makerspace.contactEmail, logoUrl: makerspace.logoUrl };
 }
 
 const paymentForDocument = { lines: true } satisfies Prisma.PaymentInclude;
@@ -54,13 +54,13 @@ function recipientOf(payment: { customerName: string; customerEmail: string; cus
  * Issue the receipt, tax invoice or bill of supply for a settled payment. Idempotent per payment.
  * `receivedMinor` re-apportions the lines when a manager accepts a mismatched capture.
  */
-export async function issuePaymentDocument(tx: Tx, org: OrgForDocs, paymentId: string, prefix: string, now = new Date(), receivedMinor?: number) {
-  const existing = await tx.taxDocument.findFirst({ where: { organisationId: org.id, paymentId, kind: { not: "CREDIT_NOTE" } } });
+export async function issuePaymentDocument(tx: Tx, makerspace: MakerspaceForDocs, paymentId: string, prefix: string, now = new Date(), receivedMinor?: number) {
+  const existing = await tx.taxDocument.findFirst({ where: { makerspaceId: makerspace.id, paymentId, kind: { not: "CREDIT_NOTE" } } });
   if (existing) return existing;
-  const payment = await tx.payment.findUniqueOrThrow({ where: { organisationId_id: { organisationId: org.id, id: paymentId } }, include: paymentForDocument });
+  const payment = await tx.payment.findUniqueOrThrow({ where: { makerspaceId_id: { makerspaceId: makerspace.id, id: paymentId } }, include: paymentForDocument });
   const tax = payment.taxSnapshot as unknown as TaxSnapshot;
-  const financialYear = financialYearLabel(localDate(now, org.timezone), org.financialYearStartMonth);
-  const sequence = await allocate(tx, org.id, "R", financialYear);
+  const financialYear = financialYearLabel(localDate(now, makerspace.timezone), makerspace.financialYearStartMonth);
+  const sequence = await allocate(tx, makerspace.id, "R", financialYear);
   const number = formatDocumentNumber(prefix, "R", financialYear, sequence);
   const lines = receivedMinor === undefined ? payment.lines : creditNoteLines(payment.lines, receivedMinor);
   const totals = sumSplits(lines);
@@ -71,9 +71,9 @@ export async function issuePaymentDocument(tx: Tx, org: OrgForDocs, paymentId: s
     issuedAt: now.toISOString(),
     financialYear,
     currency: payment.currency,
-    locale: org.locale,
-    timeZone: org.timezone,
-    issuer: issuerOf(org, tax),
+    locale: makerspace.locale,
+    timeZone: makerspace.timezone,
+    issuer: issuerOf(makerspace, tax),
     recipient: recipientOf(payment),
     placeOfSupply: tax.mode === "GST" ? pos : null,
     sac: tax.sac,
@@ -85,7 +85,7 @@ export async function issuePaymentDocument(tx: Tx, org: OrgForDocs, paymentId: s
   };
   return tx.taxDocument.create({
     data: {
-      organisationId: org.id,
+      makerspaceId: makerspace.id,
       paymentId,
       kind: tax.documentKind,
       series: "R",
@@ -109,18 +109,18 @@ export async function issuePaymentDocument(tx: Tx, org: OrgForDocs, paymentId: s
 }
 
 /** A credit note for a processed refund, apportioning tax pro rata across the original lines. */
-export async function issueCreditNote(tx: Tx, org: OrgForDocs, refundId: string, prefix: string, now = new Date()) {
+export async function issueCreditNote(tx: Tx, makerspace: MakerspaceForDocs, refundId: string, prefix: string, now = new Date()) {
   const existing = await tx.taxDocument.findUnique({ where: { refundId } });
   if (existing) return existing;
-  const refund = await tx.refund.findUniqueOrThrow({ where: { organisationId_id: { organisationId: org.id, id: refundId } } });
-  const payment = await tx.payment.findUniqueOrThrow({ where: { organisationId_id: { organisationId: org.id, id: refund.paymentId } }, include: { ...paymentForDocument, documents: { where: { kind: { not: "CREDIT_NOTE" } } } } });
+  const refund = await tx.refund.findUniqueOrThrow({ where: { makerspaceId_id: { makerspaceId: makerspace.id, id: refundId } } });
+  const payment = await tx.payment.findUniqueOrThrow({ where: { makerspaceId_id: { makerspaceId: makerspace.id, id: refund.paymentId } }, include: { ...paymentForDocument, documents: { where: { kind: { not: "CREDIT_NOTE" } } } } });
   const original = payment.documents[0];
   const tax = payment.taxSnapshot as unknown as TaxSnapshot;
   const earlier = await tx.refund.aggregate({ where: { paymentId: payment.id, status: "PROCESSED", id: { not: refund.id } }, _sum: { amountMinor: true } });
   const lines = creditNoteLines(payment.lines, refund.amountMinor, earlier._sum.amountMinor ?? 0);
   const totals = sumSplits(lines);
-  const financialYear = financialYearLabel(localDate(now, org.timezone), org.financialYearStartMonth);
-  const sequence = await allocate(tx, org.id, "C", financialYear);
+  const financialYear = financialYearLabel(localDate(now, makerspace.timezone), makerspace.financialYearStartMonth);
+  const sequence = await allocate(tx, makerspace.id, "C", financialYear);
   const number = formatDocumentNumber(prefix, "C", financialYear, sequence);
   const originalSnapshot = original?.snapshot as unknown as DocumentSnapshot | undefined;
   const snapshot: DocumentSnapshot = {
@@ -129,9 +129,9 @@ export async function issueCreditNote(tx: Tx, org: OrgForDocs, refundId: string,
     issuedAt: now.toISOString(),
     financialYear,
     currency: refund.currency,
-    locale: org.locale,
-    timeZone: org.timezone,
-    issuer: originalSnapshot?.issuer ?? issuerOf(org, tax),
+    locale: makerspace.locale,
+    timeZone: makerspace.timezone,
+    issuer: originalSnapshot?.issuer ?? issuerOf(makerspace, tax),
     recipient: originalSnapshot?.recipient ?? recipientOf(payment),
     placeOfSupply: original?.placeOfSupply ?? null,
     sac: tax.sac,
@@ -143,7 +143,7 @@ export async function issueCreditNote(tx: Tx, org: OrgForDocs, refundId: string,
   };
   return tx.taxDocument.create({
     data: {
-      organisationId: org.id,
+      makerspaceId: makerspace.id,
       paymentId: payment.id,
       refundId,
       kind: "CREDIT_NOTE",

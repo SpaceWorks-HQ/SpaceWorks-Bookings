@@ -5,7 +5,7 @@ import { compactNumber, formatTick, formatValue, niceTicks, signed } from "@/lib
 
 const KOLKATA = { timezone: "Asia/Kolkata", financialYearStartMonth: 4 };
 
-describe("financial-year periods in the organisation's timezone", () => {
+describe("financial-year periods in the makerspace's timezone", () => {
   it("starts FY 2026-27 at midnight IST on 1 April and stops at the end of today", () => {
     const period = resolvePeriod({}, KOLKATA, new Date("2026-10-20T06:30:00Z"));
     expect(period.label).toBe("FY 2026-27");
@@ -20,7 +20,7 @@ describe("financial-year periods in the organisation's timezone", () => {
     expect(resolvePeriod({}, KOLKATA, new Date("2026-03-31T18:00:00Z")).label).toBe("FY 2025-26");
   });
 
-  it("labels last year and calendar-year organisations", () => {
+  it("labels last year and calendar-year makerspaces", () => {
     expect(resolvePeriod({ period: "last-fy" }, KOLKATA, new Date("2026-10-20T06:30:00Z")).label).toBe("FY 2025-26");
     expect(fyLabel({ year: 2026, month: 6, day: 1 }, 1)).toBe("FY 2026");
     expect(resolvePeriod({}, { timezone: "Europe/London", financialYearStartMonth: 1 }, new Date("2026-10-20T06:30:00Z")).from.toISOString()).toBe("2026-01-01T00:00:00.000Z");

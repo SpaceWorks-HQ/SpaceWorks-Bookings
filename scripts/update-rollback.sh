@@ -5,7 +5,7 @@ rollback_application_images() {
   [[ "$previous_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(main|dev)\.[0-9]+\.[0-9a-f]{12}$ || "$previous_version" == local ]] || return 0
   say "Update failed; rolling application containers back to $previous_version."
   restore_host_bundle
-  export SWO_IMAGE_TAG="$previous_version"
+  export SWB_IMAGE_TAG="$previous_version"
   printf '%s\n' "$previous_version" > "$VERSION_FILE" || \
     say "WARNING: could not reset $VERSION_FILE to $previous_version."
   "${COMPOSE[@]}" pull --quiet backend scheduler || \

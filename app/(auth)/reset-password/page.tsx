@@ -3,7 +3,7 @@ import { ResetPasswordForm } from "./ui";
 
 export const metadata: Metadata = {
   title: "Reset Password",
-  description: "Set a new password for your Space Works Organization account.",
+  description: "Set a new password for your Space Works Bookings account.",
 };
 
 type Props = {

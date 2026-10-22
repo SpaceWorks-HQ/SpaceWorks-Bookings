@@ -9,7 +9,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 
 export type OfflineValues = { upiVpa: string; upiPayeeName: string; offlineInstructions: string };
 
-/** What members see when they pay directly: a UPI QR and free-form bank or cash instructions. */
+/** What customers see when they pay directly: a UPI QR and free-form bank or cash instructions. */
 export function OfflinePaymentsForm({ slug, initial, canEdit }: { slug: string; initial: OfflineValues; canEdit: boolean }) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
@@ -22,7 +22,7 @@ export function OfflinePaymentsForm({ slug, initial, canEdit }: { slug: string; 
       onSubmit={(event) => {
         event.preventDefault();
         startTransition(async () => {
-          const result = await saveOfflinePaymentSettings({ organisationSlug: slug, ...values });
+          const result = await saveOfflinePaymentSettings({ makerspaceSlug: slug, ...values });
           setErrors(result.ok ? {} : result.fieldErrors ?? {});
           setStatus(result.ok ? { ok: true, text: "Saved." } : { ok: false, text: result.error });
           if (result.ok) router.refresh();
@@ -31,7 +31,7 @@ export function OfflinePaymentsForm({ slug, initial, canEdit }: { slug: string; 
     >
       {status ? <Callout tone={status.ok ? "success" : "danger"} role={status.ok ? "status" : "alert"}>{status.text}</Callout> : null}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Field label="UPI ID" optional helperText="Members see a QR code for the exact amount." error={errors.upiVpa?.[0]}>
+        <Field label="UPI ID" optional helperText="Customers see a QR code for the exact amount." error={errors.upiVpa?.[0]}>
           <Input value={values.upiVpa} disabled={!canEdit} placeholder="club@okbank" onChange={(event) => setValues({ ...values, upiVpa: event.target.value.trim() })} maxLength={80} spellCheck={false} />
         </Field>
         <Field label="Payee name" optional error={errors.upiPayeeName?.[0]}>

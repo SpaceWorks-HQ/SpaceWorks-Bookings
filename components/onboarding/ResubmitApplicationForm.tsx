@@ -2,13 +2,13 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { resubmitOrganisationApplication } from "@/app/actions/organisation-application";
+import { resubmitMakerspaceApplication } from "@/app/actions/makerspace-application";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/display";
-import { AboutFields, ContactFields, type FieldErrors, type ProfileValues } from "./OrganisationProfileFields";
+import { AboutFields, ContactFields, type FieldErrors, type ProfileValues } from "./MakerspaceProfileFields";
 
 /** Edit the application after a platform admin asked for changes, then send it again. */
-export function ResubmitApplicationForm({ organisationSlug, initial }: { organisationSlug: string; initial: ProfileValues }) {
+export function ResubmitApplicationForm({ makerspaceSlug, initial }: { makerspaceSlug: string; initial: ProfileValues }) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -19,7 +19,7 @@ export function ResubmitApplicationForm({ organisationSlug, initial }: { organis
     event.preventDefault();
     setFormError(null);
     startTransition(async () => {
-      const result = await resubmitOrganisationApplication({ ...values, organisationSlug });
+      const result = await resubmitMakerspaceApplication({ ...values, makerspaceSlug });
       if (!result.ok) {
         setErrors(result.fieldErrors ?? {});
         setFormError(result.error);

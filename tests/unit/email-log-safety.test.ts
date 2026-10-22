@@ -3,14 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/email/transporter", () => ({
   getEmailTransport: vi.fn().mockResolvedValue({
     transporter: null,
-    from: "Space Works Organization <noreply@example.test>",
+    from: "Space Works Bookings <noreply@example.test>",
   }),
   assertEmailAccepted: vi.fn(),
 }));
-vi.mock("@/lib/db", () => ({ prisma: { organisation: { findUnique: vi.fn().mockResolvedValue({ name: "Private Org", slug: "private-org" }) } } }));
+vi.mock("@/lib/db", () => ({ prisma: { makerspace: { findUnique: vi.fn().mockResolvedValue({ name: "Private Makerspace", slug: "private-makerspace" }) } } }));
 
 import { sendBrandedEmail } from "@/lib/email/message";
-import { deliverOrganisationNotice, deliverOwnerInvite } from "@/lib/email/organisation";
+import { deliverMakerspaceNotice, deliverOwnerInvite } from "@/lib/email/makerspace";
 import { sendEmailVerificationEmail } from "@/lib/email/emailVerification";
 import { sendPasswordResetEmail } from "@/lib/email/passwordReset";
 
@@ -32,8 +32,8 @@ describe("mock email log safety", () => {
     const verificationToken = "secret-verification-token";
 
     await sendBrandedEmail({ to: recipient, subject: "Hi", heading: "Private heading", paragraphs: ["Private body text"], action: { label: "Open", url: `https://members.example.test/x/${inviteToken}` } });
-    await deliverOrganisationNotice({ to: recipient, organisationId: "org_1", notice: "rejected", reason: "Private reviewer note" }, "<m@x>");
-    await deliverOwnerInvite({ to: recipient, organisationId: "org_1", token: inviteToken, expiresAt: new Date(Date.now() + 86_400_000).toISOString() }, "<m@x>");
+    await deliverMakerspaceNotice({ to: recipient, makerspaceId: "org_1", notice: "rejected", reason: "Private reviewer note" }, "<m@x>");
+    await deliverOwnerInvite({ to: recipient, makerspaceId: "org_1", token: inviteToken, expiresAt: new Date(Date.now() + 86_400_000).toISOString() }, "<m@x>");
     await sendPasswordResetEmail({ to: recipient, resetUrl: `https://members.example.test/reset-password?token=${resetToken}` });
     await sendEmailVerificationEmail({ to: recipient, verificationUrl: `https://members.example.test/verify-email?token=${verificationToken}` });
 

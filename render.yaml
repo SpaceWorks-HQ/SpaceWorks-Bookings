@@ -11,7 +11,7 @@
 # migrations with DIRECT_URL before the web server starts. VPS deployment via
 # docker-compose.prod.yml (the curl installer) is the alternative.
 envVarGroups:
-  - name: sworg-prod
+  - name: swbook-prod
     envVars:
       - key: NODE_ENV
         value: production
@@ -75,27 +75,27 @@ envVarGroups:
 
 services:
   - type: web
-    name: sworg-backend
+    name: swbook-backend
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
     envVars:
-      - fromGroup: sworg-prod
+      - fromGroup: swbook-prod
       - key: MIGRATE_ON_START
         value: "1"
 
   # The scheduler: one pass a minute against the web service's internal endpoint.
   - type: worker
-    name: sworg-scheduler
+    name: swbook-scheduler
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: --role scheduler node docker/ops/scheduler.mjs
     envVars:
-      - fromGroup: sworg-prod
+      - fromGroup: swbook-prod
       # https://<your web service host>/api/internal/outbox
-      - key: SWO_SCHEDULER_TARGET
+      - key: SWB_SCHEDULER_TARGET
         sync: false

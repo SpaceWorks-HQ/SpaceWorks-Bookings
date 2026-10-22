@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { at, createPaymentsOrg, ensurePaymentKey, removePaymentsOrg, unpaidTerm } from "./payments-helpers";
+import { at, createPaymentsMakerspace, ensurePaymentKey, removePaymentsMakerspace, unpaidTerm } from "./payments-helpers";
 
 ensurePaymentKey();
 
@@ -9,8 +9,8 @@ const { createTermPayment } = await import("@/lib/payments/charges");
 const { savePaymentKeys, ensurePaymentSettings } = await import("@/lib/payments/config");
 const { webhookResponse } = await import("@/lib/payments/webhookRoute");
 
-type Ctx = Awaited<ReturnType<typeof createPaymentsOrg>>;
-let org: Ctx["org"];
+type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
+let makerspace: Ctx["makerspace"];
 let plan: Ctx["plan"];
 let code: string;
 const now = at("2026-07-01T06:00:00Z");
@@ -25,21 +25,21 @@ const post = (body: string, header: string | null = signature(body), endpoint = 
   webhookResponse("STRIPE", endpoint, new Request(`http://localhost/api/webhooks/stripe/${endpoint}`, { method: "POST", body, headers: header ? { "stripe-signature": header } : {} }));
 
 async function checkout(name: string) {
-  const term = await unpaidTerm(org, plan, name, now);
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { org, termId: term.id, provider: "STRIPE", status: "PENDING", now }));
+  const term = await unpaidTerm(makerspace, plan, name, now);
+  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "STRIPE", status: "PENDING", now }));
   const orderId = `cs_test_${payment.id.slice(-10)}`;
   await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: orderId } });
   return { term, payment, orderId };
 }
 
 beforeAll(async () => {
-  ({ org, plan } = await createPaymentsOrg());
-  await savePaymentKeys(org.id, { provider: "STRIPE", keyId: "pk_test_key", secret: "sk_test_key", webhookSecret: SECRET, testMode: true });
-  code = (await ensurePaymentSettings(org.id)).webhookPublicCode;
+  ({ makerspace, plan } = await createPaymentsMakerspace());
+  await savePaymentKeys(makerspace.id, { provider: "STRIPE", keyId: "pk_test_key", secret: "sk_test_key", webhookSecret: SECRET, testMode: true });
+  code = (await ensurePaymentSettings(makerspace.id)).webhookPublicCode;
 });
 
 afterAll(async () => {
-  if (org) await removePaymentsOrg(org.id);
+  if (makerspace) await removePaymentsMakerspace(makerspace.id);
   await prisma.$disconnect();
 });
 

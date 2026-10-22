@@ -7,13 +7,13 @@ standalone SpaceWorks install: the curl installer, `setup.sh`, `scripts/update.s
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Organization/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
 ```
 
 The installer checks the host (architecture, distribution, Docker, disk space, an existing install), asks which
 GitHub repository to follow, downloads the newest published `main` release into temporary storage and asks the
 deployment questions (see the README). Nothing changes until you confirm the summary. Then it installs missing
-packages (Docker Engine, the Compose plugin, curl, tar), copies the release to `/opt/spaceworks-organization`
+packages (Docker Engine, the Compose plugin, curl, tar), copies the release to `/opt/spaceworks-bookings`
 and runs `setup.sh`, which:
 
 1. writes the owner-only `.env` with every generated secret (`scripts/setup-write-environment.sh`);
@@ -23,29 +23,29 @@ and runs `setup.sh`, which:
 4. starts the stack with `up --wait` and runs the operator checks (`--role ops`);
 5. installs the optional GitHub Actions runner.
 
-Options: `--repo owner/name` (or `SWO_REPOSITORY`), `SWO_DIR=/path` for another install directory, `--help`.
+Options: `--repo owner/name` (or `SWB_REPOSITORY`), `SWB_DIR=/path` for another install directory, `--help`.
 
 ## What runs
 
 `scripts/spaceworks-compose.sh bundled` always uses `docker-compose.prod.yml`, the install's `.env`, the
-project name `sworg`, and the overlays the settings select:
+project name `swbook`, and the overlays the settings select:
 
 | Setting in `.env` | Overlay | Effect |
 |---|---|---|
-| `SWO_LAYER='none'` | none | Caddy serves `http://<host>` on port 80 (plain HTTP, LAN or trial). |
-| `SWO_LAYER='tls'` | `docker/compose.tls.yml` | Caddy obtains Let's Encrypt certificates and also serves 443 (TCP and QUIC). |
-| `SWO_LAYER='proxy'` | `docker/compose.proxy.yml` | No Caddy; the app listens on `127.0.0.1:8080` for your proxy. |
-| `SWO_STORAGE='external'` | `docker/compose.external-storage.yml` | No Silo; files go to the `S3_*` bucket. |
-| `SWO_COMPOSE_BUILD_LAYER=1` (shell) | `docker/compose.build.yml` | Builds the backend image from the checkout. |
+| `SWB_LAYER='none'` | none | Caddy serves `http://<host>` on port 80 (plain HTTP, LAN or trial). |
+| `SWB_LAYER='tls'` | `docker/compose.tls.yml` | Caddy obtains Let's Encrypt certificates and also serves 443 (TCP and QUIC). |
+| `SWB_LAYER='proxy'` | `docker/compose.proxy.yml` | No Caddy; the app listens on `127.0.0.1:8080` for your proxy. |
+| `SWB_STORAGE='external'` | `docker/compose.external-storage.yml` | No Silo; files go to the `S3_*` bucket. |
+| `SWB_COMPOSE_BUILD_LAYER=1` (shell) | `docker/compose.build.yml` | Builds the backend image from the checkout. |
 
 | Service | Image | Role |
 |---|---|---|
-| `db` | `postgres:16-alpine` | TLS only (`hostnossl … reject`), owner role `sworg`, runtime role `sworg_app` with data rights only |
+| `db` | `postgres:16-alpine` | TLS only (`hostnossl … reject`), owner role `swbook`, runtime role `swbook_app` with data rights only |
 | `redis` | `redis:7-alpine` | TLS only, password, append-only file |
-| `minio` | `pgsty/silo` | TLS only, private bucket `spaceworks-organization`, versioning on |
-| `createbuckets` | `pgsty/silo` | Creates the bucket and the `sworg-app` identity limited to it, then exits |
+| `minio` | `pgsty/silo` | TLS only, private bucket `spaceworks-bookings`, versioning on |
+| `createbuckets` | `pgsty/silo` | Creates the bucket and the `swbook-app` identity limited to it, then exits |
 | `migrate` | backend, `--role migrate` | `prisma migrate deploy` as the owner role, then exits |
-| `backend` | backend, `--role backend` | The app and API (Next.js) as `sworg_app`; `SCHEDULER_MODE=external` |
+| `backend` | backend, `--role backend` | The app and API (Next.js) as `swbook_app`; `SCHEDULER_MODE=external` |
 | `scheduler` | backend, `--role scheduler` | One scheduler pass a minute: email outbox, membership sweep, retention and every job in `runOutboxScheduler` |
 | `backup`, `backup-storage` | `postgres:16-alpine`, `pgsty/silo` | Scheduled database dumps and bucket mirror into `backups/` |
 | `caddy` | `caddy:2-alpine` | The web edge; blocks `/api/internal/*`; overwrites `X-Real-IP` |
@@ -63,7 +63,7 @@ scripts/spaceworks-compose.sh bundled run --rm ops      # TLS, roles, migrations
 
 | Path | Contents |
 |---|---|
-| `/opt/spaceworks-organization/` | The installed release (compose files, `deploy/`, `scripts/`) |
+| `/opt/spaceworks-bookings/` | The installed release (compose files, `deploy/`, `scripts/`) |
 | `.env` | Every setting and secret (mode 600). Back it up encrypted, off the server. |
 | `tls/` | The private CA (`ca.key` never leaves this folder) and the service certificates |
 | `backups/` | Database dumps, the bucket mirror, settings archives, replaced host files |
@@ -79,7 +79,7 @@ scripts/spaceworks-compose.sh bundled run --rm ops      # TLS, roles, migrations
 - **Before every update:** `backups/pre-update-<time>.sql.gz`.
 
 Backups contain every secret. Copy them off the server, encrypted, for example
-`tar -czf - backups | gpg --symmetric > sworg-backups.tar.gz.gpg`.
+`tar -czf - backups | gpg --symmetric > swbook-backups.tar.gz.gpg`.
 
 ```bash
 bash scripts/restore.sh backups/scheduled-20261020T020000Z.sql.gz                 # database only
@@ -139,7 +139,7 @@ The service certificates last 825 days. Renew them from the same CA, then recrea
 
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" --entrypoint sh -v "$PWD/tls:/tls" -v "$PWD/deploy/certificates.sh:/c.sh:ro" \
-  "$(grep ^SWO_BACKEND_IMAGE= .env | cut -d"'" -f2):$(cat .spaceworks-version)" /c.sh --renew
+  "$(grep ^SWB_BACKEND_IMAGE= .env | cut -d"'" -f2):$(cat .spaceworks-version)" /c.sh --renew
 scripts/spaceworks-compose.sh bundled up -d --force-recreate db redis minio backend
 ```
 
@@ -147,7 +147,7 @@ Caddy renews the public certificates by itself.
 
 ## Moving between modes
 
-- **Plain HTTP to automatic HTTPS:** point DNS at the server, then in `.env` set `SWO_LAYER='tls'`,
+- **Plain HTTP to automatic HTTPS:** point DNS at the server, then in `.env` set `SWB_LAYER='tls'`,
   `SITE_ADDRESS='<domain>'`, `TLS_EMAIL='<you>'`, `PUBLIC_APP_BASE_URL='https://<domain>'` and remove
   `ALLOW_PLAIN_HTTP`, then `scripts/spaceworks-compose.sh bundled up -d`.
 - **Website on Netlify:** set `DEPLOYMENT_MODE='backend'`, a 64-hex `FRONTEND_GATEWAY_SECRET` and

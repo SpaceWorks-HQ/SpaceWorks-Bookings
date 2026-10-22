@@ -8,7 +8,7 @@ import { GITHUB_URL, LICENSE_URL } from "@/lib/openSource";
 
 const publicLinks = [
   { label: "How it works", href: "/#how-it-works" },
-  { label: "Organisations", href: "/organisations" },
+  { label: "Makerspaces", href: "/makerspaces" },
   { label: "Self-host", href: "/#self-host" },
   { label: "Apply", href: "/start" },
   { label: "About", href: "/about" },
@@ -44,7 +44,7 @@ function SourceCredit() {
   );
 }
 
-/** Space Works Organization site footer (Figma 121:1333). */
+/** Space Works Bookings site footer (Figma 121:1333). */
 export function SiteFooter() {
   const pathname = usePathname();
   const { status } = useSession();
@@ -55,7 +55,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-[1160px] flex-col gap-5 px-4 py-10 sm:px-6 xl:px-0">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-2.5">
-            <Link href="/" className="inline-flex items-center self-start" aria-label="Space Works Organization home">
+            <Link href="/" className="inline-flex items-center self-start" aria-label="Space Works Bookings home">
               <SpaceWorksProductLogo height={32} label={null} />
             </Link>
             <p className="text-body-ui text-ink-secondary">Memberships for the groups that make things happen.</p>
@@ -83,8 +83,8 @@ export function SiteFooter() {
   );
 }
 
-/** Compact footer for an organisation's public pages: the organisation leads, Space Works steps back. */
-export function OrganisationFooter() {
+/** Compact footer for a makerspace's public pages: the makerspace leads, Space Works steps back. */
+export function MakerspaceFooter() {
   return (
     <footer className="mt-auto border-t border-line bg-canvas">
       <div className="mx-auto flex max-w-[1160px] flex-col gap-3 px-4 py-6 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">

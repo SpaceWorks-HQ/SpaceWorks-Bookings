@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, "..");
 const config: NextConfig = {
   ...shared,
   // Netlify builds without standalone output; the frontend container image needs it.
-  ...(process.env.SWO_FRONTEND_STANDALONE === "1" ? { output: "standalone" as const, outputFileTracingRoot: root } : { output: undefined }),
+  ...(process.env.SWB_FRONTEND_STANDALONE === "1" ? { output: "standalone" as const, outputFileTracingRoot: root } : { output: undefined }),
   serverExternalPackages: ["sharp"],
   turbopack: {
     root,

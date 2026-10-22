@@ -1,6 +1,6 @@
 # Design
 
-Space Works Organization follows the **Space Works brand** and **Space Works UX**, both from
+Space Works Bookings follows the **Space Works brand** and **Space Works UX**, both from
 [SpaceWorks-Design](https://github.com/SpaceWorks-HQ/SpaceWorks-Design):
 
 - **Brand:** `tokens/tokens.css` and `docs/ui-brand-spec.md` set colour, type, logo and voice.
@@ -24,7 +24,7 @@ run the tests.
 
 - **Colour mode.**
   - Light is the default. Choosing dark puts the class `dark` on `<html>`, rendered on the server from the
-    `swo.theme` cookie, so there is no flash.
+    `swb.theme` cookie, so there is no flash.
   - There is no System option, and `prefers-color-scheme` is never consulted.
 - **Palette.**
   - `@theme { --color-*: initial }` removes Tailwind's default palette. The only colours available are the kit
@@ -43,7 +43,7 @@ run the tests.
     inputs, selects and nav items.
   - Multi-line fields and cards use 16px, and tags are fully round.
   - No card shadows. Only overlays float (`shadow-float`).
-- **Accent.** Teal by default. Public organisation pages may set their own with `accentStyle()` on a
+- **Accent.** Teal by default. Public makerspace pages may set their own with `accentStyle()` on a
   `.sw-accent-scope` root. Every derived value is contrast-checked to AA.
 - **Shell dimensions.**
   - Sidebar 256px. Nav items 44px tall.
@@ -65,10 +65,10 @@ run the tests.
   PNG) draw the same boxes, palette and template decor. Cards are CR80 (85.6 × 54 mm), landscape or portrait, with
   four presets: Community, Corporate, Night and Student.
 - **Type on cards.** Gilroy Light and ExtraBold first, then OFL Noto Sans (extended Latin and ₹), Noto Sans
-  Malayalam and Noto Sans Devanagari. The browser loads the same files under one `"SWO Card"` family with
+  Malayalam and Noto Sans Devanagari. The browser loads the same files under one `"SWB Card"` family with
   unicode ranges (`components/cards/cardFonts.tsx`). Long names shrink until they fit the room kept for them,
   measured with real shaping on the server and with canvas metrics in the browser.
-- **Colour.** Card colours are brand keys plus the organisation's accent; every text colour keeps 4.5:1 against
+- **Colour.** Card colours are brand keys plus the makerspace's accent; every text colour keeps 4.5:1 against
   what it sits on, and Workshop Orange is a fill only.
 - **The designer** (Settings → Cards) is three panes from 1280px: settings, the card to scale, and the selected
   item's inspector. Below that they stack, card first. It autosaves; a sample switch shows Latin, Malayalam and
@@ -91,7 +91,7 @@ April to March. It shares its vocabulary with the sister Space Works site:
   a full-bleed Deep Ink band for money and a Maker Teal band for self-hosting.
 - **Type.** Two-line Gilroy ExtraBold headlines ending in full stops. The page's one Unbounded phrase is
   "One card." in the year section.
-- **Action.** Workshop Orange (`highlight` button) is used only for "Apply for your organisation".
+- **Action.** Workshop Orange (`highlight` button) is used only for "Apply for your makerspace".
 - **Objects.** Member card, receipt slip, reminder note, proof chips and terminal are flat brand objects.
   Every one is labelled as a sample; the page makes no customer or usage claims.
 - **Motion** (all in `components/marketing/landing.css`, all still under reduced motion). Scroll-driven reveals (`.sr-*`) give each section its own entrance: the hero deck fans apart as it leaves, headings rise, timeline rows arrive from the left, panels lift, report bars grow and the terminal slides in. Load and interaction motion:
@@ -104,11 +104,11 @@ April to March. It shares its vocabulary with the sister Space Works site:
 
 ## Member portal (`/account`)
 
-- **Wallet first.** `/account` is the membership wallet: one card per organisation (logo, member number,
+- **Wallet first.** `/account` is the membership wallet: one card per makerspace (logo, member number,
   unit, role chips), one row per plan with a status chip, a single sentence on where it stands ("Valid until
   31 Mar 2027 · 20 days left") and only the actions that apply now. Pay is the accent button; Renew is
   primary; Cancel renewal is ghost; Leave is a quiet danger link behind a confirmation.
-- **Tabs.** Memberships, Profile, Data and privacy, Organisations (team roles), Security. Each membership's
+- **Tabs.** Memberships, Profile, Data and privacy, Makerspaces (team roles), Security. Each membership's
   page (history, details, receipts) and the pay page sit under Memberships.
 - **History** reads as a timeline per term: dates and amount, then each change in plain words
   ("Active · Payment received").
@@ -120,7 +120,7 @@ April to March. It shares its vocabulary with the sister Space Works site:
 ## Public page editor (Settings → Public page)
 
 - **Two columns** from 1280px: the form on the left, a sticky live preview on the right (inert, rendered by
-  the same `PageSections` component as `/o/[slug]`, inside the page's own accent scope). Below that width
+  the same `PageSections` component as `/m/[slug]`, inside the page's own accent scope). Below that width
   the preview follows the form.
 - **Sections** are collapsible rows with a show/hide switch, move up and down buttons and remove; one is
   open at a time. Errors from the server mark the row "Needs attention".
@@ -149,15 +149,15 @@ this). The box symbol stays the logo everywhere; Patch is never put inside or be
   `label`, and rests on its first frame under reduced motion.
 - **Where Patch appears, and why.**
   - **404** (`app/not-found.tsx`): the interactive pet, the page's one bold moment.
-  - **First-time empty lists** (`EmptyState patch`): no organisations yet (dashboard), no plans yet, no
-    members yet, no payments yet, and no public organisations yet (directory). Filtered or searched empty
+  - **First-time empty lists** (`EmptyState patch`): no makerspaces yet (dashboard), no plans yet, no
+    members yet, no payments yet, and no public makerspaces yet (directory). Filtered or searched empty
     lists keep the Sleepy mood tile, so Patch only greets a list that has never had anything in it.
   - **Loading** (`BrandPageLoader`, dashboard routes): Patch walks in place above the hopping dots. In dark
     mode it sits on a Warm Cream disc, because its dark outline disappears on Deep Ink.
-  - **The sneeze vote**, saved for moments when the community decides together: an organisation's application
+  - **The sneeze vote**, saved for moments when the community decides together: a makerspace's application
     approved (`/dashboard/[org]/application` once it is active), and a manager approving a member's
     application (the member page's Memberships panel). Each sneezes once.
-  - Not on organisation-branded public pages (`/o/…`), which carry the organisation's brand, not ours.
+  - Not on makerspace-branded public pages (`/m/…`), which carry the makerspace's brand, not ours.
 - **Bold moments.** Patch counts as a layout's one bold moment, so a screen with Patch has no Unbounded phrase
   and no Workshop Orange flap. None of the screens above has either.
 
@@ -170,5 +170,5 @@ All decorative: hidden from assistive technology, never blocking a control, and 
 | **Patch on the 404** (`components/feedback/NotFoundPet.tsx`, rules in `lib/patch/pet.ts`) | Any missing page | Patch trots to the pointer (or a tap) and hops, leaves fading paw prints, wanders after 4.5 s alone and naps after 15 s. Click Patch to pat it: eyes closed happily and three orange hearts. Reduced motion: Patch sits still near the right edge. |
 | **Hopping loader** (`components/brand/BrandLoader.tsx`) | Dashboard route loading | Three brand dots hop in turn under the walking Patch. |
 | **Mood-tile wiggle** (`MoodTile`, `.sw-wiggle` in `app/styles/patch.css`) | Empty states, the invite panel | Hover a mood tile, or a `.group` card around one: the icon gives one quick wiggle. Mouse only. |
-| **Colour-mode change event** (`components/providers.tsx`) | Everywhere | Switching light or dark dispatches `swo:theme-change` on `window` in the same frame the tokens change, so anything can follow along; the new mode is revealed as a soft circle from the toggle. |
+| **Colour-mode change event** (`components/providers.tsx`) | Everywhere | Switching light or dark dispatches `swb:theme-change` on `window` in the same frame the tokens change, so anything can follow along; the new mode is revealed as a soft circle from the toggle. |
 | **The team's note** (`components/about/*`, `app/styles/eggs.css`) | `/about`, linked from the footer | Click the airmail envelope: the Workshop Orange seal cracks and tumbles, the flap swings back on its teal lining, the letter slides out and opens into a note from the team, signed by all six of us. "Skip to the letter" and reduced motion go straight to the letter. Its Unbounded title and orange seal are that page's one bold moment. |

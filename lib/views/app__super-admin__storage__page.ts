@@ -33,7 +33,7 @@ export async function loadSuperAdminStorageView() {
   } catch {
     // Some managed Postgres setups restrict these functions. We'll degrade gracefully.
   }
-  const perOrgCounts = await prisma.organisation.findMany({
+  const perMakerspaceCounts = await prisma.makerspace.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
     select: {
@@ -45,17 +45,17 @@ export async function loadSuperAdminStorageView() {
   });
   const assetTotals = await prisma.asset
     .groupBy({
-      by: ["organisationId"],
+      by: ["makerspaceId"],
       _sum: { byteSize: true },
-      where: { organisationId: { not: null }, byteSize: { not: null } },
+      where: { makerspaceId: { not: null }, byteSize: { not: null } },
     })
     .then((rows) => {
       const m = new Map<string, number>();
       for (const r of rows) {
-        const orgId = r.organisationId;
-        if (!orgId) continue;
+        const makerspaceId = r.makerspaceId;
+        if (!makerspaceId) continue;
         const bytes = r._sum.byteSize ? Number(r._sum.byteSize) : 0;
-        m.set(orgId, bytes);
+        m.set(makerspaceId, bytes);
       }
       return m;
     })
@@ -67,9 +67,9 @@ export async function loadSuperAdminStorageView() {
       orderBy: { createdAt: "desc" },
       take: 15,
       // Object keys and URLs stay private; only type, size, and owner are shown.
-      select: { id: true, contentType: true, byteSize: true, provider: true, createdAt: true, organisation: { select: { id: true, name: true } } },
+      select: { id: true, contentType: true, byteSize: true, provider: true, createdAt: true, makerspace: { select: { id: true, name: true } } },
     }),
   ]);
   const sortedTypes = [...assetsByType].sort((a, b) => Number(b._sum.byteSize ?? 0) - Number(a._sum.byteSize ?? 0));
-  return { dbSizeBytes, assetSummary, sortedTypes, recentAssets, tableSizes, perOrgCounts, assetTotals };
+  return { dbSizeBytes, assetSummary, sortedTypes, recentAssets, tableSizes, perMakerspaceCounts, assetTotals };
 }

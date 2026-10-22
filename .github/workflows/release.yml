@@ -9,9 +9,9 @@ run-name: Release ${{ github.ref_name }}@${{ github.sha }}
 #   dev   publishes both images tagged dev and <VERSION>-dev.<run>.<sha>; never
 #         latest, never a release, never a deploy.
 # Images (linux/amd64 and linux/arm64), the same for every installation:
-#   ghcr.io/<owner>/spaceworks-organization-backend   every backend role (app and
+#   ghcr.io/<owner>/spaceworks-bookings-backend   every backend role (app and
 #       API, migrate, scheduler, ops) through scripts/docker-entrypoint.sh --role
-#   ghcr.io/<owner>/spaceworks-organization-frontend  the website alone, for the split
+#   ghcr.io/<owner>/spaceworks-bookings-frontend  the website alone, for the split
 # Public origins are placeholders the entrypoint replaces at start, and each
 # installation supplies its own NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at runtime.
 on:
@@ -89,9 +89,9 @@ jobs:
         platform: [linux/amd64, linux/arm64]
         include:
           - target: runner
-            image: spaceworks-organization-backend
+            image: spaceworks-bookings-backend
           - target: frontend
-            image: spaceworks-organization-frontend
+            image: spaceworks-bookings-frontend
           - platform: linux/amd64
             runner: ubuntu-24.04
             arch: amd64
@@ -138,8 +138,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=ghcr.io/${{ needs.prepare.outputs.registry_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
           build-args: |
-            NEXT_PUBLIC_BASE_URL=https://spaceworks-organization-origin.invalid
-            NEXT_PUBLIC_BACKEND_ORIGIN=https://spaceworks-organization-backend.invalid
+            NEXT_PUBLIC_BASE_URL=https://spaceworks-bookings-origin.invalid
+            NEXT_PUBLIC_BACKEND_ORIGIN=https://spaceworks-bookings-backend.invalid
           secret-envs: |
             NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
           cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.arch }}
@@ -171,7 +171,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [spaceworks-organization-backend, spaceworks-organization-frontend]
+        image: [spaceworks-bookings-backend, spaceworks-bookings-frontend]
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -229,10 +229,10 @@ jobs:
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          # Product name then version, e.g. "Space Works Organization 0.7.0". The immutable
+          # Product name then version, e.g. "Space Works Bookings 0.7.0". The immutable
           # `tag_name` keeps its full `v<base>-main.<run>.<sha>` form: the title is what a
           # human reads on the releases page, the tag is what a deployment pins to.
-          name: Space Works Organization ${{ needs.prepare.outputs.base }}
+          name: Space Works Bookings ${{ needs.prepare.outputs.base }}
           generate_release_notes: true
           make_latest: false
           body: |
@@ -246,8 +246,8 @@ jobs:
 
             Docker images (linux/amd64, linux/arm64):
 
-            - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-organization-backend:${{ needs.prepare.outputs.version }}` (app and API, migrations, scheduler, operator checks)
-            - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-organization-frontend:${{ needs.prepare.outputs.version }}` (website only, for the split layout)
+            - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-bookings-backend:${{ needs.prepare.outputs.version }}` (app and API, migrations, scheduler, operator checks)
+            - `ghcr.io/${{ needs.prepare.outputs.registry_owner }}/spaceworks-bookings-frontend:${{ needs.prepare.outputs.version }}` (website only, for the split layout)
 
   promote-latest:
     permissions:
@@ -299,7 +299,7 @@ jobs:
           SERIES: ${{ needs.prepare.outputs.series }}
         run: |
           set -euo pipefail
-          for package in spaceworks-organization-backend spaceworks-organization-frontend; do
+          for package in spaceworks-bookings-backend spaceworks-bookings-frontend; do
             image="ghcr.io/${OWNER}/${package}"
             docker buildx imagetools create \
               --tag "${image}:${SERIES}" \
@@ -343,8 +343,8 @@ jobs:
           done <<< "$release_tags"
           python3 scripts/ghcr-retention.py \
             --owner "$OWNER" \
-            --package spaceworks-organization-backend \
-            --package spaceworks-organization-frontend \
+            --package spaceworks-bookings-backend \
+            --package spaceworks-bookings-frontend \
             --version "$VERSION" \
             --sha-tag "sha-${SHORT_SHA}" \
             --series "$SERIES" \
@@ -365,13 +365,13 @@ jobs:
   # only to this repo; restrict its runner group to release.yml on refs/heads/main
   # where available. Never target this runner from a pull_request workflow.
   # No checkout or third-party actions run here. Keep runner auto-updates enabled.
-  # SWO_DEPLOY is opt-in so repos without a runner never queue this job.
+  # SWB_DEPLOY is opt-in so repos without a runner never queue this job.
   deploy:
     needs: [prepare, publish, github-release, promote-latest]
-    if: github.ref == 'refs/heads/main' && vars.SWO_DEPLOY == 'true'
-    runs-on: [self-hosted, spaceworks-organization-prod]
+    if: github.ref == 'refs/heads/main' && vars.SWB_DEPLOY == 'true'
+    runs-on: [self-hosted, spaceworks-bookings-prod]
     environment: production
-    concurrency: { group: spaceworks-organization-prod-deploy, cancel-in-progress: false }
+    concurrency: { group: spaceworks-bookings-prod-deploy, cancel-in-progress: false }
     permissions: {}
     timeout-minutes: 60
     steps:
@@ -381,4 +381,4 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
-          bash "${SWO_DIR:-/opt/spaceworks-organization}/scripts/update.sh" --force --version "$VERSION"
+          bash "${SWB_DIR:-/opt/spaceworks-bookings}/scripts/update.sh" --force --version "$VERSION"

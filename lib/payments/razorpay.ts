@@ -31,7 +31,7 @@ export const razorpay: PaymentGateway = {
         amount: request.amountMinor,
         currency: request.currency,
         receipt: request.paymentId.slice(0, 40),
-        notes: { paymentId: request.paymentId, organisationId: request.organisationId },
+        notes: { paymentId: request.paymentId, makerspaceId: request.makerspaceId },
       }),
     });
     const orderId = str(order.id);

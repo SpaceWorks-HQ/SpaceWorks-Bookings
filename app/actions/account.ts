@@ -12,7 +12,7 @@ import { hasRecentAuthentication } from "@/lib/reauth";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { recordAuditEvent } from "@/lib/audit";
 import { flattenZodErrors } from "./utils";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 import { isUploadedImageUrl, isUserUploadUrl } from "@/lib/uploadUrl";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);

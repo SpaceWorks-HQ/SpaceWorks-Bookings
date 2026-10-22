@@ -4,7 +4,7 @@ import { lookup } from "node:dns/promises";
 import { BlockList, isIP } from "node:net";
 
 /**
- * Hosts that organisations type in (their SMTP relay, a self-hosted Mattermost) must be public, so these
+ * Hosts that makerspaces type in (their SMTP relay, a self-hosted Mattermost) must be public, so these
  * settings can't be used to reach services on the server's own network. Checked when saving and again when
  * connecting, because DNS can change in between.
  */

@@ -64,9 +64,9 @@ test("a viewer is sent back from the accounts and never offered them", async ({ 
   await expect(page.getByRole("link", { name: "Accounts" })).toHaveCount(0);
 });
 
-test("a member's portal lists their organisations", async ({ page }) => {
+test("a member's portal lists their makerspaces", async ({ page }) => {
   await signIn(page, "applicant@demo.test");
-  await page.goto("/account/organisations");
+  await page.goto("/account/makerspaces");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/Ideologists|Kunj/).first()).toBeVisible();
 });

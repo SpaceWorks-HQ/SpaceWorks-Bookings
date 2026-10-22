@@ -19,9 +19,9 @@ vi.mock("@/lib/db", () => ({ prisma: { outboxMessage: {
 } } }));
 vi.mock("@/lib/email/passwordReset", () => ({ sendPasswordResetEmail: mocks.passwordReset }));
 vi.mock("@/lib/email/emailVerification", () => ({ sendEmailVerificationEmail: mocks.verification }));
-vi.mock("@/lib/email/organisation", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/email/organisation")>()),
-  deliverOrganisationNotice: mocks.notice,
+vi.mock("@/lib/email/makerspace", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/email/makerspace")>()),
+  deliverMakerspaceNotice: mocks.notice,
   deliverAdminApplicationAlert: mocks.adminAlert,
   deliverOwnerInvite: mocks.ownerInvite,
 }));
@@ -31,7 +31,7 @@ import { deliverOutboxBatch } from "@/lib/outbox";
 function message(overrides: Record<string, unknown>) {
   return {
     id: "msg_1",
-    kind: "organisation-notice",
+    kind: "makerspace-notice",
     payload: {},
     status: OutboxStatus.PENDING,
     attempts: 0,
@@ -44,7 +44,7 @@ function message(overrides: Record<string, unknown>) {
   };
 }
 
-const invitePayload = { to: "owner@example.test", organisationId: "org_1", token: "invite-secret", expiresAt: "2035-01-01T00:00:00.000Z" };
+const invitePayload = { to: "owner@example.test", makerspaceId: "org_1", token: "invite-secret", expiresAt: "2035-01-01T00:00:00.000Z" };
 const claimedWhere = expect.objectContaining({ id: "msg_1", status: OutboxStatus.PROCESSING, lockedAt: expect.any(Date) });
 
 describe("outbox delivery", () => {
@@ -60,22 +60,22 @@ describe("outbox delivery", () => {
     mocks.findMany.mockResolvedValue([message({ kind: "owner-invite", payload: invitePayload })]);
 
     await expect(deliverOutboxBatch()).resolves.toEqual({ sent: 1, failed: 0 });
-    expect(mocks.ownerInvite).toHaveBeenCalledWith(expect.objectContaining({ token: "invite-secret" }), "<swo-msg_1@outbox.invalid>");
+    expect(mocks.ownerInvite).toHaveBeenCalledWith(expect.objectContaining({ token: "invite-secret" }), "<swb-msg_1@outbox.invalid>");
     expect(mocks.deleteMany).toHaveBeenCalledWith({ where: claimedWhere });
     expect(mocks.updateMany).not.toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: OutboxStatus.SENT }) }));
   });
 
   it("keeps a sent lifecycle notice as history without any capability", async () => {
-    mocks.findMany.mockResolvedValue([message({ payload: { to: "owner@example.test", organisationId: "org_1", notice: "approved" } })]);
+    mocks.findMany.mockResolvedValue([message({ payload: { to: "owner@example.test", makerspaceId: "org_1", notice: "approved" } })]);
 
     await expect(deliverOutboxBatch()).resolves.toEqual({ sent: 1, failed: 0 });
     expect(mocks.updateMany).toHaveBeenLastCalledWith({ where: claimedWhere, data: expect.objectContaining({ status: OutboxStatus.SENT, lockedAt: null }) });
     expect(mocks.deleteMany).not.toHaveBeenCalled();
   });
 
-  it("deletes a notice whose organisation is gone instead of counting it as failed", async () => {
+  it("deletes a notice whose makerspace is gone instead of counting it as failed", async () => {
     mocks.notice.mockResolvedValue("dropped");
-    mocks.findMany.mockResolvedValue([message({ payload: { to: "owner@example.test", organisationId: "gone", notice: "received" } })]);
+    mocks.findMany.mockResolvedValue([message({ payload: { to: "owner@example.test", makerspaceId: "gone", notice: "received" } })]);
 
     await expect(deliverOutboxBatch()).resolves.toEqual({ sent: 0, failed: 0 });
     expect(mocks.deleteMany).toHaveBeenCalledWith({ where: claimedWhere });
@@ -91,7 +91,7 @@ describe("outbox delivery", () => {
 
   it("stores only bounded failure metadata and releases the claim for a retry", async () => {
     mocks.notice.mockRejectedValue(Object.assign(new Error("private@example.test reviewer-note"), { code: "ETIMEDOUT" }));
-    mocks.findMany.mockResolvedValue([message({ payload: { to: "private@example.test", organisationId: "org_1", notice: "rejected", reason: "reviewer-note" } })]);
+    mocks.findMany.mockResolvedValue([message({ payload: { to: "private@example.test", makerspaceId: "org_1", notice: "rejected", reason: "reviewer-note" } })]);
 
     await expect(deliverOutboxBatch()).resolves.toEqual({ sent: 0, failed: 1 });
     expect(mocks.updateMany).toHaveBeenLastCalledWith({
@@ -164,7 +164,7 @@ describe("outbox delivery", () => {
 
   it("skips a message another worker already claimed", async () => {
     mocks.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 0 });
-    mocks.findMany.mockResolvedValue([message({ payload: { to: "owner@example.test", organisationId: "org_1", notice: "approved" } })]);
+    mocks.findMany.mockResolvedValue([message({ payload: { to: "owner@example.test", makerspaceId: "org_1", notice: "approved" } })]);
     await expect(deliverOutboxBatch()).resolves.toEqual({ sent: 0, failed: 0 });
     expect(mocks.notice).not.toHaveBeenCalled();
   });

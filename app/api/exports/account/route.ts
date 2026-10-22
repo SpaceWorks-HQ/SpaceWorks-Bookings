@@ -48,7 +48,7 @@ export async function GET() {
     headers: {
       ...privateHeaders,
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename="space-works-organization-account-data-${stamp}.json"`,
+      "Content-Disposition": `attachment; filename="space-works-bookings-account-data-${stamp}.json"`,
     },
   });
 }

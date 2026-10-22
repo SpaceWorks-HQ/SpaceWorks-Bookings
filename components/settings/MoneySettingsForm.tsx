@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateOrganisationPreferences } from "@/app/actions/preferences";
+import { updateMakerspacePreferences } from "@/app/actions/preferences";
 import { CURRENCIES, CURRENCY_CODES, formatMoney, type CurrencyCode } from "@/lib/money/currencies";
 import { Button } from "@/components/ui/button";
 import { CheckboxField } from "@/components/ui/choice";
@@ -36,7 +36,7 @@ export function MoneySettingsForm({ slug, initial, calendarLocked, timezones, di
         event.preventDefault();
         setStatus(null);
         startTransition(async () => {
-          const result = await updateOrganisationPreferences({ organisationSlug: slug, ...values });
+          const result = await updateMakerspacePreferences({ makerspaceSlug: slug, ...values });
           setErrors(result.ok ? {} : result.fieldErrors ?? {});
           setStatus(result.ok ? { ok: true, text: "Saved." } : { ok: false, text: result.error });
           if (result.ok) router.refresh();
@@ -69,7 +69,7 @@ export function MoneySettingsForm({ slug, initial, calendarLocked, timezones, di
         disabled={disabled}
         onCheckedChange={(checked) => setValues({ ...values, offlineConfirmationRequired: checked === true })}
         label="A second person confirms offline payments"
-        description="Cash, UPI and bank transfers recorded by one team member count only after another owner, manager or treasurer confirms them."
+        description="Cash, UPI and bank transfers recorded by one team member count only after someone else on the team confirms them."
       />
       {!disabled ? (
         <div>

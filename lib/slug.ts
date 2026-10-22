@@ -6,15 +6,15 @@ export function slugifyTitle(title: string): string {
     .toLowerCase()
     .replace(slugRegex, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "organisation";
+    .slice(0, 80) || "makerspace";
 }
 
 export function withSlugSuffix(base: string, suffix: number): string {
   return suffix === 0 ? base : `${base}-${suffix}`;
 }
 
-/** Top-level routes an organisation slug would shadow (`/<orgSlug>`). */
-export const RESERVED_ORGANISATION_SLUGS: ReadonlySet<string> = new Set([
+/** Top-level routes a makerspace slug would shadow (`/<makerspaceSlug>`). */
+export const RESERVED_MAKERSPACE_SLUGS: ReadonlySet<string> = new Set([
   "about",
   "account",
   "api",
@@ -24,12 +24,14 @@ export const RESERVED_ORGANISATION_SLUGS: ReadonlySet<string> = new Set([
   "features",
   "join",
   "login",
-  "members",
   "new",
+  "bookings",
+  "m",
+  "makerspace",
+  "makerspaces",
   "o",
   "org",
   "pay",
-  "plans",
   "privacy",
   "public",
   "receipts",
@@ -44,13 +46,6 @@ export const RESERVED_ORGANISATION_SLUGS: ReadonlySet<string> = new Set([
   "verify-email",
 ]);
 
-/** Routes under `/o/<orgSlug>/` a plan slug would shadow. */
-export const RESERVED_PLAN_SLUGS: ReadonlySet<string> = new Set(["join", "plans", "verify"]);
-
-export function isReservedOrganisationSlug(slug: string) {
-  return RESERVED_ORGANISATION_SLUGS.has(slug.trim().toLowerCase());
-}
-
-export function isReservedPlanSlug(slug: string) {
-  return RESERVED_PLAN_SLUGS.has(slug.trim().toLowerCase());
+export function isReservedMakerspaceSlug(slug: string) {
+  return RESERVED_MAKERSPACE_SLUGS.has(slug.trim().toLowerCase());
 }

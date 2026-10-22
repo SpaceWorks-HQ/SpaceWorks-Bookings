@@ -1,7 +1,7 @@
 /**
- * Organisation accent tokens (docs/DESIGN.md).
+ * Makerspace accent tokens (docs/DESIGN.md).
  *
- * Organisations can pick any colour, so every derived value is contrast-checked.
+ * Makerspaces can pick any colour, so every derived value is contrast-checked.
  * The output is a plain record of CSS custom properties that callers place in
  * an inline `style` on a public page root (with the `sw-accent-scope` class). Only a validated `#RRGGBB` value
  * ever reaches CSS; anything else falls back to the default accent.
@@ -14,7 +14,7 @@ export const DEFAULT_ORG_ACCENT = "#006E63"; // Maker Teal
 export const INK_ACCENT = "#142C2A"; // Deep Ink
 
 /**
- * Brand presets offered to organisations. The `name` values are stable keys
+ * Brand presets offered to makerspaces. The `name` values are stable keys
  * (components map them to swatch artwork); the colours are Space Works brand
  * colours. Light accents automatically get Deep Ink labels.
  */
@@ -95,7 +95,7 @@ export type AccentTokens = {
 /**
  * Label candidates in brand order: cream, then Deep Ink (light accents such as
  * Workshop Orange), then white and black as a functional fallback for
- * organisation-chosen mid-tones where neither brand neutral reaches AA.
+ * makerspace-chosen mid-tones where neither brand neutral reaches AA.
  */
 const LABELS = [CREAM, INK, "#FFFFFF", "#000000"];
 

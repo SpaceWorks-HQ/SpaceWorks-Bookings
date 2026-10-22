@@ -11,7 +11,7 @@ const RUN_EVERY_MS = 5 * MINUTE;
 const BATCH = 50;
 
 function state() {
-  return globalThis as typeof globalThis & { __sworgReconcileAt?: number };
+  return globalThis as typeof globalThis & { __swbookReconcileAt?: number };
 }
 
 async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date) {
@@ -28,8 +28,8 @@ async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date)
  */
 export async function reconcileGatewayPayments(now = new Date(), force = false) {
   const runtime = state();
-  if (!force && runtime.__sworgReconcileAt && now.getTime() - runtime.__sworgReconcileAt < RUN_EVERY_MS) return { checked: 0, settled: 0, skipped: true };
-  runtime.__sworgReconcileAt = now.getTime();
+  if (!force && runtime.__swbookReconcileAt && now.getTime() - runtime.__swbookReconcileAt < RUN_EVERY_MS) return { checked: 0, settled: 0, skipped: true };
+  runtime.__swbookReconcileAt = now.getTime();
 
   const open = await prisma.payment.findMany({
     where: {
@@ -40,17 +40,17 @@ export async function reconcileGatewayPayments(now = new Date(), force = false) 
     },
     orderBy: { updatedAt: "asc" },
     take: BATCH,
-    select: { id: true, organisationId: true, createdAt: true },
+    select: { id: true, makerspaceId: true, createdAt: true },
   });
   let settled = 0;
   for (const payment of open) {
     await prisma.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { updatedAt: now } });
     try {
-      const status = await refreshGatewayPayment(payment.organisationId, payment.id);
+      const status = await refreshGatewayPayment(payment.makerspaceId, payment.id);
       if (status === "PAID") settled += 1;
       else if (status === "PENDING") await closeIfStale(payment, now);
     } catch {
-      // One organisation's bad keys or a provider outage must not stop the others.
+      // One makerspace's bad keys or a provider outage must not stop the others.
       console.error("[payments reconcile] one payment could not be checked");
       await closeIfStale(payment, now).catch(() => undefined);
     }

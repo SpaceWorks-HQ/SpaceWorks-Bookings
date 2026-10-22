@@ -26,7 +26,7 @@ export async function enqueueEmailVerification(client: OutboxClient, payload: { 
 }
 
 function messageId(id: string) {
-  return `<swo-${id}@outbox.invalid>`;
+  return `<swb-${id}@outbox.invalid>`;
 }
 
 function retryDelayMs(kind: string, attempts: number) {

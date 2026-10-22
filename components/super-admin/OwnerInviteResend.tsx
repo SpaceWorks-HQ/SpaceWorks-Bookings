@@ -2,13 +2,13 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { resendOwnerInvite } from "@/app/actions/super-admin-organisations";
+import { resendOwnerInvite } from "@/app/actions/super-admin-makerspaces";
 import { Button } from "@/components/ui/button";
 import { Callout, Card, CardHeader } from "@/components/ui/display";
 import { Field, Input } from "@/components/ui/field";
 
-/** Shown while an organisation set up by a platform admin has no owner yet. */
-export function OwnerInviteResend({ organisationId, defaultEmail }: { organisationId: string; defaultEmail: string }) {
+/** Shown while a makerspace set up by a platform admin has no owner yet. */
+export function OwnerInviteResend({ makerspaceId, defaultEmail }: { makerspaceId: string; defaultEmail: string }) {
   const router = useRouter();
   const [email, setEmail] = useState(defaultEmail);
   const [message, setMessage] = useState<{ tone: "danger" | "success"; text: string } | null>(null);
@@ -18,7 +18,7 @@ export function OwnerInviteResend({ organisationId, defaultEmail }: { organisati
     event.preventDefault();
     setMessage(null);
     startTransition(async () => {
-      const result = await resendOwnerInvite({ organisationId, ownerEmail: email });
+      const result = await resendOwnerInvite({ makerspaceId, ownerEmail: email });
       setMessage(result.ok ? { tone: "success", text: `A new invite is on its way to ${email}. The previous link no longer works.` } : { tone: "danger", text: result.error });
       if (result.ok) router.refresh();
     });

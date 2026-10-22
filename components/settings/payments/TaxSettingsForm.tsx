@@ -34,7 +34,7 @@ export function TaxSettingsForm({ slug, initial, canEdit }: { slug: string; init
       onSubmit={(event) => {
         event.preventDefault();
         startTransition(async () => {
-          const result = await saveTaxSettings({ organisationSlug: slug, ...values });
+          const result = await saveTaxSettings({ makerspaceSlug: slug, ...values });
           setErrors(result.ok ? {} : result.fieldErrors ?? {});
           setStatus(result.ok ? { ok: true, text: "Saved. New payments use these settings; earlier receipts keep theirs." } : { ok: false, text: result.error });
           if (result.ok) router.refresh();
@@ -49,7 +49,7 @@ export function TaxSettingsForm({ slug, initial, canEdit }: { slug: string; init
         options={[{ value: "NONE", label: "No tax" }, { value: "SIMPLE", label: "One tax rate" }, { value: "GST", label: "Indian GST" }]}
       />
       <p className="text-body-ui text-ink-secondary">
-        {values.mode === "NONE" ? "Members get a plain receipt. Choose this if you aren't registered for any tax." : values.mode === "SIMPLE" ? "One named tax, such as VAT, at one rate, on plans in any currency." : "Tax invoices with CGST and SGST, or IGST for members in other states. Bills of supply when you're exempt or on the composition scheme."}
+        {values.mode === "NONE" ? "Customers get a plain receipt. Choose this if you aren't registered for any tax." : values.mode === "SIMPLE" ? "One named tax, such as VAT, at one rate, on prices in any currency." : "Tax invoices with CGST and SGST, or IGST for customers in other states. Bills of supply when you're exempt or on the composition scheme."}
       </p>
 
       {values.mode === "SIMPLE" ? (
@@ -70,7 +70,7 @@ export function TaxSettingsForm({ slug, initial, canEdit }: { slug: string; init
               </Dropdown>
             </Field>
             <Field label="Legal name" error={errors.legalName?.[0]}><Input value={values.legalName} disabled={!canEdit} onChange={(event) => set("legalName", event.target.value)} maxLength={160} /></Field>
-            <Field label="SAC" helperText="999599 covers membership of associations." error={errors.sacCode?.[0]}><Input value={values.sacCode} disabled={!canEdit} onChange={(event) => set("sacCode", event.target.value.trim())} maxLength={8} inputMode="numeric" /></Field>
+            <Field label="SAC" helperText="997212 covers renting out non-residential space." error={errors.sacCode?.[0]}><Input value={values.sacCode} disabled={!canEdit} onChange={(event) => set("sacCode", event.target.value.trim())} maxLength={8} inputMode="numeric" /></Field>
           </div>
           <Field label="Registered address" error={errors.address?.[0]}><Textarea value={values.address} disabled={!canEdit} onChange={(event) => set("address", event.target.value)} rows={2} maxLength={300} /></Field>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -88,8 +88,8 @@ export function TaxSettingsForm({ slug, initial, canEdit }: { slug: string; init
               </Field>
             ) : null}
           </div>
-          <CheckboxField checked={values.exempt} disabled={!canEdit} onCheckedChange={(checked) => set("exempt", checked === true)} label="Membership fees are exempt" description="Issue bills of supply instead of tax invoices." />
-          <Field label="Plans priced in other currencies" helperText="Members paying in USD, AED and so on.">
+          <CheckboxField checked={values.exempt} disabled={!canEdit} onCheckedChange={(checked) => set("exempt", checked === true)} label="Space rental is exempt" description="Issue bills of supply instead of tax invoices." />
+          <Field label="Prices in other currencies" helperText="Customers paying in USD, AED and so on.">
             <Dropdown value={values.foreignCurrencyTax} disabled={!canEdit} onChange={(event) => set("foreignCurrencyTax", event.target.value as TaxValues["foreignCurrencyTax"])}>
               <option value="NO_TAX">Plain receipt, no GST</option>
               <option value="EXPORT_LUT">Export of services under LUT (zero-rated tax invoice)</option>
@@ -100,7 +100,7 @@ export function TaxSettingsForm({ slug, initial, canEdit }: { slug: string; init
       ) : null}
 
       {values.mode !== "NONE" && !(gst && (values.scheme === "COMPOSITION" || values.exempt)) ? (
-        <CheckboxField checked={values.inclusive} disabled={!canEdit} onCheckedChange={(checked) => set("inclusive", checked === true)} label="Plan prices include tax" description={values.inclusive ? "Members pay the plan price; the tax is worked out of it." : "Tax is added on top of the plan price."} />
+        <CheckboxField checked={values.inclusive} disabled={!canEdit} onCheckedChange={(checked) => set("inclusive", checked === true)} label="Prices include tax" description={values.inclusive ? "Customers pay the listed price; the tax is worked out of it." : "Tax is added on top of the price."} />
       ) : null}
 
       <Field label="Receipt number prefix" optional helperText={`Up to four letters or digits. Numbers look like ${example}.`} error={errors.receiptPrefix?.[0]}>

@@ -21,7 +21,7 @@ export type AccountExportSource = {
     createdAt: Date;
     mfaEnabledAt: Date | null;
   };
-  teamMembers: Array<{ role: TeamRole; createdAt: Date; organisation: { name: string; slug: string } }>;
+  teamMembers: Array<{ role: TeamRole; createdAt: Date; makerspace: { name: string; slug: string } }>;
 };
 
 function iso(value: Date | null | undefined) {
@@ -46,14 +46,14 @@ export function buildAccountDataExport(source: AccountExportSource, generatedAt:
       accountCreatedAt: source.user.createdAt.toISOString(),
       twoFactorAuthenticationEnabled: Boolean(source.user.mfaEnabledAt),
     },
-    organisationTeams: cap(source.teamMembers).map((team) => ({
-      organisation: team.organisation.name,
-      organisationSlug: team.organisation.slug,
+    makerspaceTeams: cap(source.teamMembers).map((team) => ({
+      makerspace: team.makerspace.name,
+      makerspaceSlug: team.makerspace.slug,
       role: team.role,
       joinedAt: team.createdAt.toISOString(),
     })),
     truncated: {
-      organisationTeams: source.teamMembers.length > ACCOUNT_EXPORT_LIMIT,
+      makerspaceTeams: source.teamMembers.length > ACCOUNT_EXPORT_LIMIT,
     },
   };
 }
@@ -75,7 +75,7 @@ export async function loadAccountExportSource(userId: string): Promise<AccountEx
       where: { userId },
       orderBy: { createdAt: "asc" },
       take,
-      select: { role: true, createdAt: true, organisation: { select: { name: true, slug: true } } },
+      select: { role: true, createdAt: true, makerspace: { select: { name: true, slug: true } } },
     }),
   ]);
   if (!user) return null;

@@ -1,11 +1,11 @@
 # Tax on membership payments
 
-How Space Works Organization taxes payments and which document it issues. This follows the GST rules as
+How Space Works Bookings taxes payments and which document it issues. This follows the GST rules as
 commonly applied to membership fees, but **it is not tax advice. Check your setup with your accountant.**
 
 ## Tax modes
 
-Set per organisation under **Settings → Payments and tax**. A payment freezes the settings it was created with
+Set per makerspace under **Settings → Payments and tax**. A payment freezes the settings it was created with
 (`taxSnapshot`), so changing them never alters earlier receipts.
 
 | Mode | Use it when | Document |
@@ -23,7 +23,7 @@ Set per organisation under **Settings → Payments and tax**. A payment freezes 
 | Plan in another currency, "export under LUT" | Tax invoice, zero-rated, with the LUT note | 0% |
 | Plan in another currency, "no GST" | Receipt | None |
 
-SAC defaults to **999599** (services provided by other membership organisations). The GSTIN's first two digits
+SAC defaults to **999599** (services provided by other membership makerspaces). The GSTIN's first two digits
 must match the registered state.
 
 ## The maths
@@ -49,7 +49,7 @@ The functions are `resolveTaxSnapshot`, `splitTax`, `chargeLines`, `apportion` a
 
 ## Numbering
 
-One gapless series per organisation per financial year (April–March by default, in the organisation's
+One gapless series per makerspace per financial year (April–March by default, in the makerspace's
 timezone) for receipts, tax invoices and bills of supply, and a second series for credit notes. Numbers are at
 most 16 characters (Rule 46): an optional prefix of up to four letters or digits, the year, then a five-digit
 sequence (`KUNJ-2627-00042`, `KUNJ-2627-C00007`). Allocation uses

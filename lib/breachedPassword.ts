@@ -17,7 +17,7 @@ export async function isBreachedPassword(password: string, fetcher: typeof fetch
   const suffix = hash.slice(5);
   try {
     const response = await fetcher(`https://api.pwnedpasswords.com/range/${prefix}`, {
-      headers: { "Add-Padding": "true", "User-Agent": "SpaceWorks-Organization" },
+      headers: { "Add-Padding": "true", "User-Agent": "SpaceWorks-Bookings" },
       signal: AbortSignal.timeout(5_000),
       cache: "no-store",
       redirect: "error",

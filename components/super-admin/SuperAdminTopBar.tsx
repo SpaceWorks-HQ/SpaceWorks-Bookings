@@ -13,7 +13,7 @@ import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } fr
 
 const sections = [
   { label: "Overview", href: "/super-admin" },
-  { label: "Organisations", href: "/super-admin/orgs" },
+  { label: "Makerspaces", href: "/super-admin/makerspaces" },
   { label: "Users", href: "/super-admin/users" },
   { label: "Email", href: "/super-admin/email" },
   { label: "Audit log", href: "/super-admin/audit" },
@@ -75,7 +75,7 @@ function AccountMenu({ user }: { user: SuperAdminUser }) {
 
 /**
  * Light top bar for the instance-wide super-admin area (docs/DESIGN.md §4.13):
- * Space Works Organization logo and "Super admin" label, a way back to the dashboard and the
+ * Space Works Bookings logo and "Super admin" label, a way back to the dashboard and the
  * account menu, then a row of section links that scrolls sideways on phones.
  */
 export function SuperAdminTopBar({ user }: { user: SuperAdminUser }) {

@@ -33,7 +33,7 @@ export async function sendPasswordResetEmail(params: {
               If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
             </p>`);
 
-  const text = `Reset Your Password\n\nHello,\n\nWe received a request to reset your password. Visit the following link to set a new password (expires in 1 hour):\n\n${params.resetUrl}\n\nIf you didn't request this, you can safely ignore this email.\n\nBest regards,\nSpace Works Organization`;
+  const text = `Reset Your Password\n\nHello,\n\nWe received a request to reset your password. Visit the following link to set a new password (expires in 1 hour):\n\n${params.resetUrl}\n\nIf you didn't request this, you can safely ignore this email.\n\nBest regards,\nSpace Works Bookings`;
 
   if (!transporter) {
     // Never print reset capabilities or account identifiers, including in
@@ -46,7 +46,7 @@ export async function sendPasswordResetEmail(params: {
     messageId: params.messageId,
     from,
     to: params.to,
-    subject: "Reset your Space Works Organization password",
+    subject: "Reset your Space Works Bookings password",
     text,
     html,
   });

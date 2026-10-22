@@ -6,7 +6,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { rm } from "node:fs/promises";
 
 const system = Object.fromEntries(["PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "TERM", "SSL_CERT_FILE", "NODE_EXTRA_CA_CERTS"].filter((key) => process.env[key]).map((key) => [key, process.env[key]]));
-const frontendKeys = ["NEXT_PUBLIC_BASE_URL", "BACKEND_ORIGIN", "NEXT_PUBLIC_BACKEND_ORIGIN", "FRONTEND_GATEWAY_SECRET", "FRONTEND_TRUSTED_IP_HEADER", "CI", "ALLOW_INSECURE_PRODUCTION_TESTS", "NEXT_TELEMETRY_DISABLED", "__NEXT_PROCESSED_ENV", "SWO_DISABLE_BUILD_CACHE"];
+const frontendKeys = ["NEXT_PUBLIC_BASE_URL", "BACKEND_ORIGIN", "NEXT_PUBLIC_BACKEND_ORIGIN", "FRONTEND_GATEWAY_SECRET", "FRONTEND_TRUSTED_IP_HEADER", "CI", "ALLOW_INSECURE_PRODUCTION_TESTS", "NEXT_TELEMETRY_DISABLED", "__NEXT_PROCESSED_ENV", "SWB_DISABLE_BUILD_CACHE"];
 function frontendEnvironment(source) {
   return { ...system, ...Object.fromEntries(frontendKeys.map((key) => [key, source[key]])), NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: source.FRONTEND_ACTIONS_KEY, NODE_ENV: "production" };
 }
@@ -27,12 +27,12 @@ if (process.argv[2] === "serve-frontend") {
   });
   const [pgPort, redisPort] = await Promise.all([freePort(), freePort()]);
   const suffix = randomBytes(6).toString("hex");
-  const pg = `swo-split-pg-${suffix}`, redis = `swo-split-redis-${suffix}`;
+  const pg = `swb-split-pg-${suffix}`, redis = `swb-split-redis-${suffix}`;
   const hex = () => randomBytes(32).toString("hex"), key = () => randomBytes(32).toString("base64");
   const password = hex();
-  const env = { ...system, SWO_DISABLE_BUILD_CACHE: "1", __NEXT_PROCESSED_ENV: "true", CI: "true", ALLOW_INSECURE_PRODUCTION_TESTS: "1", NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1",
-    DATABASE_URL: `postgresql://swo_split:${password}@127.0.0.1:${pgPort}/swo_split_test`,
-    DIRECT_URL: `postgresql://swo_split:${password}@127.0.0.1:${pgPort}/swo_split_test`,
+  const env = { ...system, SWB_DISABLE_BUILD_CACHE: "1", __NEXT_PROCESSED_ENV: "true", CI: "true", ALLOW_INSECURE_PRODUCTION_TESTS: "1", NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1",
+    DATABASE_URL: `postgresql://swb_split:${password}@127.0.0.1:${pgPort}/swb_split_test`,
+    DIRECT_URL: `postgresql://swb_split:${password}@127.0.0.1:${pgPort}/swb_split_test`,
     REDIS_URL: `redis://127.0.0.1:${redisPort}`, POSTGRES_PASSWORD: password,
     AUTH_URL: "http://127.0.0.1:3100", NEXT_PUBLIC_BASE_URL: "http://127.0.0.1:3100",
     BACKEND_ORIGIN: "http://127.0.0.1:3200", NEXT_PUBLIC_BACKEND_ORIGIN: monolith ? "" : "http://127.0.0.1:3200",
@@ -52,11 +52,11 @@ if (process.argv[2] === "serve-frontend") {
   try {
     // Fail before making containers if either application's fixed test port is busy.
     for (const port of [3100, 3200]) await new Promise((resolve, reject) => { const server = createServer(); server.on("error", () => reject(new Error(`Test port ${port} is already in use.`))); server.listen(port, "127.0.0.1", () => server.close(resolve)); });
-    await run("docker", ["run", "-d", "--name", pg, "-e", "POSTGRES_USER=swo_split", "-e", "POSTGRES_DB=swo_split_test", "-e", "POSTGRES_PASSWORD", "-p", `127.0.0.1:${pgPort}:5432`, "postgres:16-alpine"], env);
+    await run("docker", ["run", "-d", "--name", pg, "-e", "POSTGRES_USER=swb_split", "-e", "POSTGRES_DB=swb_split_test", "-e", "POSTGRES_PASSWORD", "-p", `127.0.0.1:${pgPort}:5432`, "postgres:16-alpine"], env);
     await run("docker", ["run", "-d", "--name", redis, "-p", `127.0.0.1:${redisPort}:6379`, "redis:7-alpine"], env);
     let ready = false;
     for (let attempt = 0; attempt < 60; attempt++) {
-      if (spawnSync("docker", ["exec", pg, "pg_isready", "-U", "swo_split", "-d", "swo_split_test"], { stdio: "ignore", env: system }).status === 0) { ready = true; break; }
+      if (spawnSync("docker", ["exec", pg, "pg_isready", "-U", "swb_split", "-d", "swb_split_test"], { stdio: "ignore", env: system }).status === 0) { ready = true; break; }
       await delay(500);
     }
     if (!ready) throw new Error("Disposable PostgreSQL did not become ready.");

@@ -3,8 +3,8 @@
 ## Application
 
 One Next.js 16 application (App Router, React Server Components, Server Actions) with Prisma 6 on
-PostgreSQL 16. Organisations are tenants: every tenant row carries `organisationId`, every query is scoped
-through the organisation resolved for the request, and cross-tenant access returns 404. There is no database
+PostgreSQL 16. Makerspaces are tenants: every tenant row carries `makerspaceId`, every query is scoped
+through the makerspace resolved for the request, and cross-tenant access returns 404. There is no database
 row-level security; isolation is enforced in the application.
 
 | Area | Where |
@@ -37,11 +37,11 @@ Two images come from the one `Dockerfile` and are published to GHCR by `.github/
 
 | Image | Target | Roles (`scripts/docker-entrypoint.sh --role …`) |
 |---|---|---|
-| `spaceworks-organization-backend` | `runner` | `backend` (web app and API), `migrate` (`prisma migrate deploy`), `scheduler`, `ops` (operator checks) |
-| `spaceworks-organization-frontend` | `frontend` | `frontend`: the website alone for split hosting (the `frontend/` workspace) |
+| `spaceworks-bookings-backend` | `runner` | `backend` (web app and API), `migrate` (`prisma migrate deploy`), `scheduler`, `ops` (operator checks) |
+| `spaceworks-bookings-frontend` | `frontend` | `frontend`: the website alone for split hosting (the `frontend/` workspace) |
 
 Release images are identical for every installation. The public origins compiled into Next.js are placeholders
-(`spaceworks-organization-origin.invalid`, `spaceworks-organization-backend.invalid`) that the entrypoint
+(`spaceworks-bookings-origin.invalid`, `spaceworks-bookings-backend.invalid`) that the entrypoint
 replaces at start from `NEXT_PUBLIC_BASE_URL` and `NEXT_PUBLIC_BACKEND_ORIGIN`. The Server Actions key used to
 build is a throwaway; web roles refuse to start without the installation's own key. PostgreSQL, Redis, Silo and
 Caddy run from their own upstream images.
@@ -65,7 +65,7 @@ Bundled (docker-compose.prod.yml)                       Cloud (docker-compose.cl
   automatic HTTPS (`docker/compose.tls.yml`), an existing proxy (`docker/compose.proxy.yml`), an external
   bucket (`docker/compose.external-storage.yml`) and source builds (`docker/compose.build.yml`).
   PostgreSQL, Redis and Silo accept TLS only, with certificates from the install's private CA
-  (`deploy/certificates.sh`). Migrations run as the owner role `sworg`; the app runs as `sworg_app`, which can
+  (`deploy/certificates.sh`). Migrations run as the owner role `swbook`; the app runs as `swbook_app`, which can
   read and write data but cannot change the schema or roles.
 - **Cloud:** the backend image's roles on any Docker host (`scripts/spaceworks-compose.sh cloud`) or on Render
   (`render.yaml`), with managed services.
@@ -78,6 +78,6 @@ Bundled (docker-compose.prod.yml)                       Cloud (docker-compose.cl
 `VERSION` selects the series. Every push to `main` runs the tests, publishes both images (amd64 and arm64)
 tagged `<VERSION>-main.<run>.<sha>` and `sha-<sha>`, creates a GitHub release with that tag, promotes the
 images to `latest`, `main` and the series, prunes superseded image versions (keeping the previous release for
-rollback) and, with `SWO_DEPLOY=true`, deploys through a self-hosted runner. Pushes to `dev` publish images
+rollback) and, with `SWB_DEPLOY=true`, deploys through a self-hosted runner. Pushes to `dev` publish images
 tagged `dev` and `<VERSION>-dev.<run>.<sha>` only. The installer and updater accept only published,
 non-prerelease `main` releases.

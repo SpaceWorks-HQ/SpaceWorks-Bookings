@@ -20,7 +20,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           {/* eslint-disable-next-line @next/next/no-img-element -- the app stylesheet and image pipeline may be what failed */}
           <img src="/brand/logo/lockup-horizontal.svg" alt="Space Works" width={180} style={{ display: "inline-block", height: "auto", marginBottom: "2.5rem" }} />
           <h1 style={{ margin: "0 0 .75rem", fontSize: 30, fontWeight: 600, lineHeight: 1.15 }}>We couldn’t load this page.</h1>
-          <p style={{ margin: "0 0 1.75rem", fontSize: 17, lineHeight: 1.55 }}>Try again. If it keeps happening, let the team that runs this Space Works Organization site know.</p>
+          <p style={{ margin: "0 0 1.75rem", fontSize: 17, lineHeight: 1.55 }}>Try again. If it keeps happening, let the team that runs this Space Works Bookings site know.</p>
           <button type="button" onClick={reset} style={{ minHeight: 44, border: 0, borderRadius: 10, padding: ".75rem 1.25rem", color: CREAM, background: TEAL, fontSize: 16, fontWeight: 600, cursor: "pointer" }}>Try again</button>
         </main>
       </body>

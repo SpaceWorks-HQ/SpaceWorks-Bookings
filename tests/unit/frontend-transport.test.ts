@@ -59,9 +59,9 @@ describe("split frontend protocol", () => {
   });
   it("uses a fixed registry and rejects permission claims in view inputs", async () => {
     expect((await frontendRequest(await request([]), "view", "constructor")).status).toBe(404);
-    expect((await frontendRequest(await request([{ ctx: { organisation: { slug: "org" }, event: { id: "event" }, permissions: ["OWNER"] } }]), "view", "safe")).status).toBe(400);
+    expect((await frontendRequest(await request([{ ctx: { makerspace: { slug: "makerspace" }, event: { id: "event" }, permissions: ["OWNER"] } }]), "view", "safe")).status).toBe(400);
     expect(mocks.view).not.toHaveBeenCalled();
-    const response = await frontendRequest(await request([{ params: { orgSlug: "org" } }]), "view", "safe");
+    const response = await frontendRequest(await request([{ params: { makerspaceSlug: "makerspace" } }]), "view", "safe");
     expect(response.status).toBe(200); expect(response.headers.get("cache-control")).toContain("no-store");
   });
   it("converts local navigation, hides failures and rejects secret view output", async () => {

@@ -2,13 +2,13 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { can, getMembership, hasAuthenticator, organisationAllows, STAFF_AUTHENTICATOR_MESSAGE } from "@/lib/permissions";
-import { ORGANISATION_LOCKED } from "@/lib/organisationLifecycle";
+import { can, getMembership, hasAuthenticator, makerspaceAllows, STAFF_AUTHENTICATOR_MESSAGE } from "@/lib/permissions";
+import { MAKERSPACE_LOCKED } from "@/lib/makerspaceLifecycle";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { createSafeWebpDerivative } from "@/lib/imageValidation";
 import { getPublicUrl, uploadFile } from "@/lib/storage";
 import { recordAuditEvent } from "@/lib/audit";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -26,47 +26,47 @@ async function imageFile(formData: FormData) {
   return derivative;
 }
 
-export async function uploadOrganisationLogo(
+export async function uploadMakerspaceLogo(
   formData: FormData,
 ): Promise<ActionResult<{ url: string }>> {
   const session = await auth();
   if (!session?.user?.id) return { ok: false, error: "You must be signed in." };
   if (await isActionRateLimited("upload", session.user.id))
     return { ok: false, error: "Too many uploads. Please try again later." };
-  const slug = String(formData.get("organisationSlug") ?? "").trim();
-  const org = slug
-    ? await prisma.organisation.findUnique({
+  const slug = String(formData.get("makerspaceSlug") ?? "").trim();
+  const makerspace = slug
+    ? await prisma.makerspace.findUnique({
         where: { slug },
         select: { id: true, slug: true, status: true },
       })
     : null;
-  if (!org) return { ok: false, error: "Organisation not found." };
-  if (!organisationAllows(org.status, "org.settings")) return { ok: false, error: ORGANISATION_LOCKED };
-  const membership = await getMembership(session.user.id, org.id);
-  if (!membership || !can(membership.role, "org.settings"))
-    return { ok: false, error: "Only organisation owners and managers can upload logos." };
+  if (!makerspace) return { ok: false, error: "Makerspace not found." };
+  if (!makerspaceAllows(makerspace.status, "makerspace.settings")) return { ok: false, error: MAKERSPACE_LOCKED };
+  const membership = await getMembership(session.user.id, makerspace.id);
+  if (!membership || !can(membership.role, "makerspace.settings"))
+    return { ok: false, error: "Only makerspace owners and managers can upload logos." };
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   const derivative = await imageFile(formData);
   if ("error" in derivative) return { ok: false, error: derivative.error };
   try {
-    const key = `organisations/${org.id}/organisation-logos/${crypto.randomUUID()}.webp`;
+    const key = `makerspaces/${makerspace.id}/makerspace-logos/${crypto.randomUUID()}.webp`;
     await uploadFile({
       key,
       body: derivative.body,
       contentType: "image/webp",
-      organisationId: org.id,
+      makerspaceId: makerspace.id,
     });
     await recordAuditEvent({
-      action: "ORGANISATION_LOGO_UPLOADED",
+      action: "MAKERSPACE_LOGO_UPLOADED",
       actorUserId: session.user.id,
-      organisationId: org.id,
-      targetType: "Organisation",
-      targetId: org.id,
+      makerspaceId: makerspace.id,
+      targetType: "Makerspace",
+      targetId: makerspace.id,
     });
     return { ok: true, data: { url: getPublicUrl(key) } };
   } catch {
-    console.error("[media] organisation logo upload failed");
-    return { ok: false, error: "Could not upload the organisation logo." };
+    console.error("[media] makerspace logo upload failed");
+    return { ok: false, error: "Could not upload the makerspace logo." };
   }
 }
 

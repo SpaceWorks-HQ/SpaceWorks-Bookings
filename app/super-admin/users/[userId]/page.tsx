@@ -12,7 +12,7 @@ type Props = {
   params: Promise<{ userId: string; }>;
 };
 
-/** Support lookup for one person: account posture, organisation teams and their audit trail. */
+/** Support lookup for one person: account posture, makerspace teams and their audit trail. */
 export default async function SuperAdminUserDetailPage({ params }: Props) {
   await requireSuperAdmin();
   const { user, hasPassword, memberships, auditEvents, displayName, viewerId } = await loadSuperAdminUserDetailView({ params });
@@ -45,20 +45,20 @@ export default async function SuperAdminUserDetailPage({ params }: Props) {
         <AdminPanel title="Summary">
           <MetricRows
             rows={[
-              { label: "Organisation teams", value: user._count.teamMembers.toLocaleString("en-IN") },
+              { label: "Makerspace teams", value: user._count.teamMembers.toLocaleString("en-IN") },
               { label: "Known browsers", value: user._count.knownDevices.toLocaleString("en-IN") },
             ]}
           />
         </AdminPanel>
 
-        <AdminPanel title="Organisations">
+        <AdminPanel title="Makerspaces">
           {memberships.length === 0 ? (
-            <EmptyState mood="sleepy">Not on any organisation&rsquo;s team.</EmptyState>
+            <EmptyState mood="sleepy">Not on any makerspace&rsquo;s team.</EmptyState>
           ) : (
-            <Table label="Organisation teams">
+            <Table label="Makerspace teams">
               <THead>
                 <tr>
-                  <TH>Organisation</TH>
+                  <TH>Makerspace</TH>
                   <TH>Role</TH>
                   <TH>Joined</TH>
                 </tr>
@@ -66,7 +66,7 @@ export default async function SuperAdminUserDetailPage({ params }: Props) {
               <TBody>
                 {memberships.map((membership) => (
                   <TR key={membership.id}>
-                    <TD><NameCell href={`/super-admin/orgs/${membership.organisation.id}`} name={membership.organisation.name} sub={`/o/${membership.organisation.slug}`} /></TD>
+                    <TD><NameCell href={`/super-admin/makerspaces/${membership.makerspace.id}`} name={membership.makerspace.name} sub={`/m/${membership.makerspace.slug}`} /></TD>
                     <TD><Chip size="sm" tone={membership.role === "OWNER" ? "ink" : "neutral"}>{ROLE_LABELS[membership.role]}</Chip></TD>
                     <TD className="whitespace-nowrap text-ink-secondary">{membership.createdAt.toLocaleDateString()}</TD>
                   </TR>

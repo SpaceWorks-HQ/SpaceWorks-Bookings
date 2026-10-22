@@ -8,7 +8,7 @@ import {
 
 describe("account tabs", () => {
   it("lists the account tabs in order", () => {
-    expect(ACCOUNT_TABS.map((tab) => tab.href)).toEqual(["/account/profile", "/account/privacy", "/account/organisations", "/account/security"]);
+    expect(ACCOUNT_TABS.map((tab) => tab.href)).toEqual(["/account/profile", "/account/privacy", "/account/makerspaces", "/account/security"]);
   });
 
   it("matches nested paths for other tabs without prefix collisions", () => {
@@ -19,7 +19,7 @@ describe("account tabs", () => {
   });
 
   it("keeps exactly one tab active per account path", () => {
-    for (const path of ["/account/profile", "/account/privacy/", "/account/organisations", "/account/security", "/account/security/x"]) {
+    for (const path of ["/account/profile", "/account/privacy/", "/account/makerspaces", "/account/security", "/account/security/x"]) {
       expect(ACCOUNT_TABS.filter((tab) => isAccountTabActive(path, tab.href))).toHaveLength(1);
     }
   });

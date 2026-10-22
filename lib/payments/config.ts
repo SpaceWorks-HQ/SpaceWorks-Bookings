@@ -1,7 +1,7 @@
 import "server-only";
 
 import crypto from "crypto";
-import type { GatewayProvider, OrgPaymentSettings, PaymentProvider } from "@prisma/client";
+import type { GatewayProvider, MakerspacePaymentSettings, PaymentProvider } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { GatewayCredentials, PaymentGateway } from "./gateway";
 import { razorpay } from "./razorpay";
@@ -22,26 +22,26 @@ export function newWebhookCode() {
   return crypto.randomBytes(24).toString("base64url");
 }
 
-/** The organisation's settings row, created on first use with a fresh webhook code. */
-export async function ensurePaymentSettings(organisationId: string) {
-  const existing = await prisma.orgPaymentSettings.findUnique({ where: { organisationId } });
+/** The makerspace's settings row, created on first use with a fresh webhook code. */
+export async function ensurePaymentSettings(makerspaceId: string) {
+  const existing = await prisma.makerspacePaymentSettings.findUnique({ where: { makerspaceId } });
   if (existing) return existing;
-  return prisma.orgPaymentSettings.upsert({ where: { organisationId }, create: { organisationId, webhookPublicCode: newWebhookCode() }, update: {} });
+  return prisma.makerspacePaymentSettings.upsert({ where: { makerspaceId }, create: { makerspaceId, webhookPublicCode: newWebhookCode() }, update: {} });
 }
 
-export function credentialsOf(settings: OrgPaymentSettings): GatewayCredentials | null {
+export function credentialsOf(settings: MakerspacePaymentSettings): GatewayCredentials | null {
   if (settings.provider === "NONE" || !settings.secretEncrypted) return null;
   return {
     keyId: settings.keyId,
-    secret: decryptPaymentSecret(settings.secretEncrypted, settings.organisationId),
-    webhookSecret: settings.webhookSecretEncrypted ? decryptPaymentSecret(settings.webhookSecretEncrypted, settings.organisationId) : null,
+    secret: decryptPaymentSecret(settings.secretEncrypted, settings.makerspaceId),
+    webhookSecret: settings.webhookSecretEncrypted ? decryptPaymentSecret(settings.webhookSecretEncrypted, settings.makerspaceId) : null,
     testMode: settings.testMode,
   };
 }
 
-/** The organisation's live gateway, or null when online payments are off or keys are missing. */
-export async function loadGateway(organisationId: string) {
-  const settings = await prisma.orgPaymentSettings.findUnique({ where: { organisationId } });
+/** The makerspace's live gateway, or null when online payments are off or keys are missing. */
+export async function loadGateway(makerspaceId: string) {
+  const settings = await prisma.makerspacePaymentSettings.findUnique({ where: { makerspaceId } });
   if (!settings || settings.provider === "NONE") return null;
   const credentials = credentialsOf(settings);
   if (!credentials) return null;
@@ -54,12 +54,12 @@ export type GatewayKeysInput = { provider: GatewayProvider; keyId?: string | nul
  * Save gateway keys. A blank secret keeps the saved one, so managers never have to re-enter it to change
  * other fields. Switching provider clears the old keys.
  */
-export async function savePaymentKeys(organisationId: string, input: GatewayKeysInput) {
-  const current = await ensurePaymentSettings(organisationId);
+export async function savePaymentKeys(makerspaceId: string, input: GatewayKeysInput) {
+  const current = await ensurePaymentSettings(makerspaceId);
   const switching = current.provider !== input.provider;
-  const encrypt = (value: string | null | undefined, previous: string | null) => (value ? encryptPaymentSecret(value, organisationId) : switching ? null : previous);
-  return prisma.orgPaymentSettings.update({
-    where: { organisationId },
+  const encrypt = (value: string | null | undefined, previous: string | null) => (value ? encryptPaymentSecret(value, makerspaceId) : switching ? null : previous);
+  return prisma.makerspacePaymentSettings.update({
+    where: { makerspaceId },
     data: {
       provider: input.provider,
       keyId: input.provider === "RAZORPAY" ? input.keyId?.trim() || (switching ? null : current.keyId) : null,

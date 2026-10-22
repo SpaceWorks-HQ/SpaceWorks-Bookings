@@ -52,7 +52,7 @@ describe("GSTR-1 JSON", () => {
     expect(json.hsn.hsn_b2c[0]).toMatchObject({ hsn_sc: "999599", uqc: "NA", rt: 18, txval: 2000, camt: 180 });
   });
 
-  it("formats dates in the organisation's timezone", () => {
+  it("formats dates in the makerspace's timezone", () => {
     expect(gstDate(new Date("2026-04-30T20:00:00Z"), "Asia/Kolkata")).toBe("01-05-2026");
   });
 });

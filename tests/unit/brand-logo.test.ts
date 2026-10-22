@@ -58,10 +58,10 @@ describe("SpaceWorksLogo", () => {
     expect(render(createElement(SpaceWorksLogo, { variant: "symbol", height: 48, clearSpace: true }))).toContain("padding:12px");
   });
 
-  it("pairs the lockup with an Organization label for product headers", () => {
+  it("pairs the lockup with a Makerspace label for product headers", () => {
     const html = render(createElement(SpaceWorksProductLogo, {}));
-    expect(html).toContain('aria-label="Space Works Organization"');
-    expect(html).toContain(">Organization</span>");
+    expect(html).toContain('aria-label="Space Works Bookings"');
+    expect(html).toContain(">Makerspace</span>");
     expect(images(html)[0]!.width).toBeGreaterThanOrEqual(180);
   });
 });

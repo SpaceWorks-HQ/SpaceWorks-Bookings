@@ -16,7 +16,7 @@ const buckets = () => mocks.checkRateLimit.mock.calls.map((call) => call[1]);
 
 describe("proxy response headers", () => {
   it("denies framing on every page and API response", async () => {
-    const page = await proxy(new NextRequest("https://members.example.test/o/acme"));
+    const page = await proxy(new NextRequest("https://members.example.test/m/acme"));
     expect(page.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
     expect(page.headers.get("x-frame-options")).toBe("DENY");
     expect(page.headers.get("cache-control")).toContain("no-transform");

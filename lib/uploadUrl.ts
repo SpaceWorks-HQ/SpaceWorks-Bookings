@@ -15,14 +15,14 @@ export function uploadKeyFromUrl(value: string) {
   }
 }
 
-export function isOrganisationUploadUrl(
+export function isMakerspaceUploadUrl(
   value: string,
-  organisationId: string,
+  makerspaceId: string,
   category: string,
 ) {
   return (
     uploadKeyFromUrl(value)?.startsWith(
-      `organisations/${organisationId}/${category}/`,
+      `makerspaces/${makerspaceId}/${category}/`,
     ) ?? false
   );
 }

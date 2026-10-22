@@ -10,7 +10,7 @@ function encryptionKey() {
   }
   // A domain-separated subkey prevents configuration ciphertext from being
   // interchangeable with MFA seed ciphertext.
-  return Buffer.from(crypto.hkdfSync("sha256", key, Buffer.alloc(0), "spaceworks-org-instance-service-settings-v1", 32));
+  return Buffer.from(crypto.hkdfSync("sha256", key, Buffer.alloc(0), "spaceworks-bookings-instance-service-settings-v1", 32));
 }
 
 export function encryptInstanceConfigSecret(value: string) {

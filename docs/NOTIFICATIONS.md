@@ -6,23 +6,23 @@ Two kinds of email go out, through two routes.
 
 | Kind | Examples | Sent through |
 |---|---|---|
-| Account emails | password reset, email verification, sign-in codes, new-device alerts, owner invites, organisation review notices, monthly report digest | the platform's SMTP (Super admin → Settings, or `SMTP_*`) |
-| Member emails | membership notices and reminders, receipts and credit notes, member invites, ID cards, refund and erasure replies | the organisation's own SMTP when set up and on; otherwise the platform's |
+| Account emails | password reset, email verification, sign-in codes, new-device alerts, owner invites, makerspace review notices, monthly report digest | the platform's SMTP (Super admin → Settings, or `SMTP_*`) |
+| Member emails | membership notices and reminders, receipts and credit notes, member invites, ID cards, refund and erasure replies | the makerspace's own SMTP when set up and on; otherwise the platform's |
 
-**An organisation's own email** lives in Settings → Email (owners and managers): sender name and address,
+**A makerspace's own email** lives in Settings → Email (owners and managers): sender name and address,
 reply-to, SMTP host, port (587 or 2525 STARTTLS, 465 TLS, 25), login and password. The password is stored
 encrypted (`PAYMENT_SECRETS_KEY`, a key derived for email). **Send test email** sends to the person testing and
 records when it last went through. In production TLS is required and the host must resolve to public addresses.
 
-Without its own settings an organisation's member emails come from the platform address but in the
-organisation's name (`"Kunj Company" <noreply@platform>`), with replies going to its contact email.
+Without its own settings a makerspace's member emails come from the platform address but in the
+makerspace's name (`"Kunj Company" <noreply@platform>`), with replies going to its contact email.
 
-Code: `sendBrandedEmail({ organisationId, … })` in `lib/email/message.ts` picks the route through
-`organisationEmailTransport` (`lib/email/orgTransport.ts`); emails without `organisationId` use the platform.
+Code: `sendBrandedEmail({ makerspaceId, … })` in `lib/email/message.ts` picks the route through
+`makerspaceEmailTransport` (`lib/email/makerspaceTransport.ts`); emails without `makerspaceId` use the platform.
 
 ## Chat alerts
 
-Settings → Notifications (owners and managers) holds up to ten chat channels per organisation. Each picks
+Settings → Notifications (owners and managers) holds up to ten chat channels per makerspace. Each picks
 its alerts:
 
 | Alert | When |

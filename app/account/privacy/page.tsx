@@ -14,7 +14,7 @@ export default function AccountPrivacyPage() {
         <CardHeader
           titleAs="h3"
           title="Download your data"
-          description="Your profile and your team roles in every organisation. Up to 5 downloads an hour."
+          description="Your profile and your team roles in every makerspace. Up to 5 downloads an hour."
         />
         <div className="flex flex-wrap gap-2">
           {/* A plain link: this is a file download, not a page navigation. */}

@@ -12,7 +12,7 @@ a plain-text database or Redis connection, or mismatched public origins.
 | Variable | Required | Description |
 |---|---|---|
 | `NODE_ENV` | production | `production` turns on the start-up validation, secure cookies and HSTS. |
-| `DATABASE_URL` | yes | Runtime PostgreSQL URL. Production needs `sslmode=require`, `verify-ca` or `verify-full`; a transaction pooler on `:6543` needs `pgbouncer=true`. The bundled stack uses the least-privilege role `sworg_app`. |
+| `DATABASE_URL` | yes | Runtime PostgreSQL URL. Production needs `sslmode=require`, `verify-ca` or `verify-full`; a transaction pooler on `:6543` needs `pgbouncer=true`. The bundled stack uses the least-privilege role `swbook_app`. |
 | `DIRECT_URL` | no | Direct or session connection for `prisma migrate` (a role that owns the schema). Defaults to `DATABASE_URL`. Same TLS rule. |
 | `REDIS_URL` | production | Rate limits. Production requires `rediss://`. |
 | `AUTH_SECRET` | yes | Auth.js secret, 32+ characters. |
@@ -68,22 +68,22 @@ integration tests at a disposable database. `DEMO_PASSWORD` and `DEMO_MFA_SECRET
 
 | Variable | Default | Description |
 |---|---|---|
-| `SWO_REPOSITORY` | `SpaceWorks-HQ/SpaceWorks-Organization` | Repository the installer, updater and runner follow (a fork works). |
-| `SWO_BACKEND_IMAGE`, `SWO_FRONTEND_IMAGE` | `ghcr.io/<owner>/spaceworks-organization-backend` / `-frontend` | Image names, derived from the repository owner. |
-| `SWO_IMAGE_TAG` | `.spaceworks-version`, else `latest` | The release the stack runs. |
-| `SWO_LAYER` | `none` | `none` plain HTTP through Caddy, `tls` automatic HTTPS, `proxy` your own proxy on `127.0.0.1:8080`. |
-| `SWO_STORAGE` | `bundled` | `external` drops Silo for the `S3_*` bucket. |
+| `SWB_REPOSITORY` | `SpaceWorks-HQ/SpaceWorks-Bookings` | Repository the installer, updater and runner follow (a fork works). |
+| `SWB_BACKEND_IMAGE`, `SWB_FRONTEND_IMAGE` | `ghcr.io/<owner>/spaceworks-bookings-backend` / `-frontend` | Image names, derived from the repository owner. |
+| `SWB_IMAGE_TAG` | `.spaceworks-version`, else `latest` | The release the stack runs. |
+| `SWB_LAYER` | `none` | `none` plain HTTP through Caddy, `tls` automatic HTTPS, `proxy` your own proxy on `127.0.0.1:8080`. |
+| `SWB_STORAGE` | `bundled` | `external` drops Silo for the `S3_*` bucket. |
 | `PUBLIC_APP_BASE_URL` | | The public origin; becomes `AUTH_URL` and `NEXT_PUBLIC_BASE_URL`. |
 | `SITE_ADDRESS` | | Caddy's site: `<domain>` for automatic HTTPS, `http://<host>` for plain HTTP. |
-| `TLS_EMAIL` | | Let's Encrypt account email (`SWO_LAYER=tls`). |
+| `TLS_EMAIL` | | Let's Encrypt account email (`SWB_LAYER=tls`). |
 | `HTTP_PORT`, `HTTP_PORT_BIND`, `TLS_HTTPS_PORT` | `80`, `0.0.0.0`, `443` | Caddy's published ports. |
-| `API_BIND`, `API_PORT` | `127.0.0.1`, `8080` | Where the app listens for your proxy (`SWO_LAYER=proxy`). |
+| `API_BIND`, `API_PORT` | `127.0.0.1`, `8080` | Where the app listens for your proxy (`SWB_LAYER=proxy`). |
 | `APP_BIND`, `APP_PORT` | `127.0.0.1`, `8080` | Where the cloud stack's app listens. |
-| `POSTGRES_PASSWORD` | generated | Owner role `sworg` (migrations, backups). |
-| `POSTGRES_APP_PASSWORD` | generated | Runtime role `sworg_app` (data only). |
+| `POSTGRES_PASSWORD` | generated | Owner role `swbook` (migrations, backups). |
+| `POSTGRES_APP_PASSWORD` | generated | Runtime role `swbook_app` (data only). |
 | `REDIS_PASSWORD` | generated | Redis `requirepass`. |
 | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | generated | Silo administrator. |
-| `S3_APP_PASSWORD` | generated | Secret of the `sworg-app` storage identity, limited to the bucket. |
+| `S3_APP_PASSWORD` | generated | Secret of the `swbook-app` storage identity, limited to the bucket. |
 | `BACKUP_INTERVAL_HOURS` | `24` | Scheduled database dump and bucket mirror interval. |
 | `SILO_IMAGE_TAG` | pinned | Silo release. |
 
@@ -91,18 +91,18 @@ integration tests at a disposable database. `DEMO_PASSWORD` and `DEMO_MFA_SECRET
 
 | Variable | Used by | Description |
 |---|---|---|
-| `SWO_DIR` | `install.sh`, deploy job | Install directory (`/opt/spaceworks-organization`). |
-| `SWO_INSTALL_REPOSITORY_PINNED` | installer | Set when the repository was chosen before download. |
-| `SWO_STATIC_ENV_FILE` | wrapper | Settings file (`<install>/.env` bundled, `/etc/spaceworks-organization/cloud.env` cloud). |
-| `SWO_UPDATE_INSTALL_DIR` | wrapper, updater | The install a staged updater works on. |
-| `SWO_COMPOSE_BUILD_LAYER` | wrapper, `setup.sh --build` | `1` builds the backend image from the checkout. |
-| `SWO_BUILD_KEY` | wrapper | Throwaway Server Actions key for local builds (generated per run). |
-| `SWO_COMPOSE_PROJECT` | wrapper | Compose project (`sworg`, `sworg-cloud`, `sworg-smoke`). |
-| `SWO_TLS_DIR`, `SWO_BACKUP_DIR` | compose | Certificate and backup directories (`./tls`, `./backups`). |
-| `SWO_RUNNER_DIR` | `install-runner.sh` | Runner directory (`/opt/spaceworks-organization-runner`). |
-| `SWO_DEPLOY` | GitHub repository variable | `true` enables the release workflow's `deploy` job. |
-| `SWO_SCHEDULER_TARGET` | scheduler role | The pass endpoint (`http://backend:3000/api/internal/outbox`). |
-| `SWO_TOPOLOGY` | ops role | `bundled` or `cloud`; the runtime-role check runs only for bundled. |
-| `SWO_NEXT_DIR` | entrypoint | Where the web build is (`/app/.next`, frontend `/app/frontend/.next`). |
-| `SWO_DISABLE_BUILD_CACHE`, `SWO_FRONTEND_STANDALONE` | Dockerfile | Image build switches. |
-| `SWO_SMOKE_PORT` | `compose-smoke.sh` | The smoke test's edge port (18080). |
+| `SWB_DIR` | `install.sh`, deploy job | Install directory (`/opt/spaceworks-bookings`). |
+| `SWB_INSTALL_REPOSITORY_PINNED` | installer | Set when the repository was chosen before download. |
+| `SWB_STATIC_ENV_FILE` | wrapper | Settings file (`<install>/.env` bundled, `/etc/spaceworks-bookings/cloud.env` cloud). |
+| `SWB_UPDATE_INSTALL_DIR` | wrapper, updater | The install a staged updater works on. |
+| `SWB_COMPOSE_BUILD_LAYER` | wrapper, `setup.sh --build` | `1` builds the backend image from the checkout. |
+| `SWB_BUILD_KEY` | wrapper | Throwaway Server Actions key for local builds (generated per run). |
+| `SWB_COMPOSE_PROJECT` | wrapper | Compose project (`swbook`, `swbook-cloud`, `swbook-smoke`). |
+| `SWB_TLS_DIR`, `SWB_BACKUP_DIR` | compose | Certificate and backup directories (`./tls`, `./backups`). |
+| `SWB_RUNNER_DIR` | `install-runner.sh` | Runner directory (`/opt/spaceworks-bookings-runner`). |
+| `SWB_DEPLOY` | GitHub repository variable | `true` enables the release workflow's `deploy` job. |
+| `SWB_SCHEDULER_TARGET` | scheduler role | The pass endpoint (`http://backend:3000/api/internal/outbox`). |
+| `SWB_TOPOLOGY` | ops role | `bundled` or `cloud`; the runtime-role check runs only for bundled. |
+| `SWB_NEXT_DIR` | entrypoint | Where the web build is (`/app/.next`, frontend `/app/frontend/.next`). |
+| `SWB_DISABLE_BUILD_CACHE`, `SWB_FRONTEND_STANDALONE` | Dockerfile | Image build switches. |
+| `SWB_SMOKE_PORT` | `compose-smoke.sh` | The smoke test's edge port (18080). |

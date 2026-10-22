@@ -6,7 +6,7 @@ import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { prisma } from "@/lib/db";
 import { deliverOutboxBatch } from "@/lib/outbox";
 import { recordAuditEvent } from "@/lib/audit";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 
 export async function deliverInstanceOutbox(): Promise<ActionResult<{ sent: number; failed: number }>> {
   const session = await requireSuperAdmin();

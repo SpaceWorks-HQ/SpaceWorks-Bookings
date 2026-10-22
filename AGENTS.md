@@ -4,9 +4,9 @@ Guidance for Claude Code (and other agents, via `AGENTS.md`) in this repository.
 
 ## Project
 
-**Space Works Organization** is a self-hostable (AGPL-3.0-or-later), multi-tenant platform for running an
-organisation's **memberships**: plans, join forms and approvals, members, renewals, payments (Razorpay, Stripe
-and offline), GST receipts, ID cards and reports. Organisations are tenants. The platform super-admin creates
+**Space Works Bookings** is a self-hostable (AGPL-3.0-or-later), multi-tenant platform for running an
+makerspace's **memberships**: plans, join forms and approvals, members, renewals, payments (Razorpay, Stripe
+and offline), GST receipts, ID cards and reports. Makerspaces are tenants. The platform super-admin creates
 them, or reviews the ones that sign up. There are **no events** in this product.
 
 - **Rebuild in progress:** the phased plan is in `docs/plans/2026-10-19-membership-rebuild.md`. Follow it phase
@@ -59,11 +59,11 @@ Operations (bash; see `docs/DEPLOYMENT_VPS.md`, `docs/DEPLOYMENT_CLOUD.md`, `doc
 bash setup.sh [--build]                                  # guided install from a checkout (setup.ps1 on Windows)
 scripts/spaceworks-compose.sh bundled up -d              # the only way to run docker-compose.prod.yml
 scripts/spaceworks-compose.sh bundled run --rm ops       # operator checks
-scripts/spaceworks-compose.sh cloud up -d                # docker-compose.cloud.yml with /etc/spaceworks-organization/cloud.env
+scripts/spaceworks-compose.sh cloud up -d                # docker-compose.cloud.yml with /etc/spaceworks-bookings/cloud.env
 bash scripts/update.sh --force [--version V | --rollback]
 bash scripts/backup.sh && bash scripts/restore.sh backups/<dump>.sql.gz [--with-storage]
 bash scripts/admin.sh create|set-password|reset-mfa|revoke|list --email <address>   # super admins (server only)
-SWO_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh  # bundled stack end to end (disposable)
+SWB_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh  # bundled stack end to end (disposable)
 ```
 
 Run one unit test file:
@@ -75,12 +75,12 @@ npx vitest run tests/unit/health.test.ts
 ## Conventions
 
 - **Tenant isolation is enforced in the application** (there is no RLS):
-  - Every tenant row carries `organisationId`, with composite FKs to its parent.
-  - Every query is scoped through the organisation resolved for the request.
+  - Every tenant row carries `makerspaceId`, with composite FKs to its parent.
+  - Every query is scoped through the makerspace resolved for the request.
   - Cross-tenant access returns 404.
 - **Money:**
   - Amounts are integer paise.
-  - Receipt numbers are gapless per organisation per financial year (April–March, in the organisation's timezone).
+  - Receipt numbers are gapless per makerspace per financial year (April–March, in the makerspace's timezone).
   - Paid rows are never edited or deleted; reverse them with credit notes.
   - Payments live in `lib/payments/*` (see `docs/PAYMENTS.md` and `docs/GST.md`). Settle money only through
     `settlePayment` (lock order payment → term → counter); triggers in migration 0005 enforce immutability.
@@ -94,18 +94,18 @@ npx vitest run tests/unit/health.test.ts
   - Super admins sign in with email and password only, and are created, revoked and given passwords only on
     the server (`docker/ops/admin.mjs` through `scripts/admin.sh`). Never add an in-app or emailed way to make
     a super admin or reset their password; `requireSuperAdmin` checks only `User.isSuperAdmin`.
-  - Staff (any `TeamMember`) need an authenticator before the dashboard opens: `requireOrgTeam`,
-    `orgActionAccess` and the export and document routes check `hasAuthenticator`. Members never need one.
+  - Staff (any `TeamMember`) need an authenticator before the dashboard opens: `requireMakerspaceTeam`,
+    `makerspaceActionAccess` and the export and document routes check `hasAuthenticator`. Members never need one.
   - New browsers: `lib/loginSecurity.ts` (known-device cookie, emailed code for accounts without an
     authenticator, new-device alert). Failed sign-ins feed `lib/ipBlock.ts`. Every new password passes
     `isBreachedPassword` (`lib/breachedPassword.ts`).
 - **Notifications** (`docs/NOTIFICATIONS.md`):
-  - Member-facing emails pass `organisationId` to `sendBrandedEmail`, which uses the organisation's own SMTP
-    (`OrgEmailSettings`) or the platform's in its name. Account emails never pass it.
+  - Member-facing emails pass `makerspaceId` to `sendBrandedEmail`, which uses the makerspace's own SMTP
+    (`MakerspaceEmailSettings`) or the platform's in its name. Account emails never pass it.
   - Team chat alerts (Slack, Discord, Mattermost, Telegram, WhatsApp) are queued with `queueChatAlerts` in the
-    event's transaction (`lib/chat/*`). Organisation secrets use `encryptOrgSecret`; hosts an organisation types
+    event's transaction (`lib/chat/*`). Makerspace secrets use `encryptMakerspaceSecret`; hosts a makerspace types
     in must pass `assertPublicHost`.
-- **Member accounts switch:** `Organisation.memberPortal`. Off, portal queries skip the organisation, member
+- **Member accounts switch:** `Makerspace.memberPortal`. Off, portal queries skip the makerspace, member
   emails link to the public page or a signed pay link (`lib/payments/payLink.ts`, `/pay/<token>`), and `/verify`
   is unaffected.
 - **Member cards** (`lib/cards/*`):
@@ -120,13 +120,13 @@ npx vitest run tests/unit/health.test.ts
     the `withdraw` action), so every change writes a status event and an audit row.
   - Erasure anonymises in one place, `anonymiseMember` in `lib/portal/erasure.ts`; money rows are never deleted.
 - **User content on public pages** is rendered from parsed trees as React text (`lib/publicPage/markdown.ts`),
-  never as HTML strings. Links must pass `isSafeLink`; page images must be this organisation's
+  never as HTML strings. Links must pass `isSafeLink`; page images must be this makerspace's
   `page-images` uploads. The page document schema lives in `lib/publicPage/sections.ts`.
 - **Reports:** definitions live in `docs/REPORTS.md`; the engine in `lib/reports/*` is pure over rows and unit-tested. Finance reports read only `lib/reports/finance/source.ts`. Never add money across currencies.
 - **File size:** no source file over 300 lines (owner rule). Split by responsibility; `tests/unit/file-length.test.ts` enforces it, skipping generated files.
 - **Operations:**
-  - Two images from one `Dockerfile`: `spaceworks-organization-backend` (`runner`; every backend role through
-    `scripts/docker-entrypoint.sh --role backend|migrate|scheduler|ops`) and `spaceworks-organization-frontend`
+  - Two images from one `Dockerfile`: `spaceworks-bookings-backend` (`runner`; every backend role through
+    `scripts/docker-entrypoint.sh --role backend|migrate|scheduler|ops`) and `spaceworks-bookings-frontend`
     (`frontend`). Public origins are placeholders replaced at start; never bake an installation's key or origin.
   - Periodic work belongs in `runOutboxScheduler` (`lib/outboxWorker.ts`); Compose stacks run it from the
     `scheduler` role (`SCHEDULER_MODE=external`).

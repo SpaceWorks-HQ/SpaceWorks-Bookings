@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Demo data for local QA: platform admin, team accounts and organisations in every review state.
+// Demo data for local QA: platform admin, team accounts and makerspaces in every review state.
 //
 //   DEMO_PASSWORD=<12+ chars> [DEMO_MFA_SECRET=<base32> MFA_ENCRYPTION_KEY=<base64 32 bytes>] npm run db:seed-demo
 //
@@ -42,7 +42,7 @@ const treasurer = await user("treasurer@demo.test", "Abdul Samad MJ", mfa);
 const applicant = await user("applicant@demo.test", "Midlaj C");
 
 const base = { country: "IN", timezone: "Asia/Kolkata", currency: "INR", stateCode: "KL" };
-const organisations = [
+const makerspaces = [
   {
     slug: "spaceworks", name: "SpaceWorks", kind: "Community", status: "ACTIVE", city: "Kochi",
     description: "Open-source tools and a community of makers who build them together, with chapters across Kerala.",
@@ -69,16 +69,16 @@ const organisations = [
   },
 ];
 
-for (const { team, reviews, ...data } of organisations) {
-  const existing = await prisma.organisation.findUnique({ where: { slug: data.slug }, select: { id: true } });
+for (const { team, reviews, ...data } of makerspaces) {
+  const existing = await prisma.makerspace.findUnique({ where: { slug: data.slug }, select: { id: true } });
   if (existing) continue;
-  const org = await prisma.organisation.create({ data: { ...base, ...data } });
-  for (const [member, role] of team) await prisma.teamMember.create({ data: { organisationId: org.id, userId: member.id, role } });
+  const makerspace = await prisma.makerspace.create({ data: { ...base, ...data } });
+  for (const [member, role] of team) await prisma.teamMember.create({ data: { makerspaceId: makerspace.id, userId: member.id, role } });
   let at = Date.now() - reviews.length * 3_600_000;
   for (const [action, actor, reason] of reviews) {
-    await prisma.organisationReview.create({ data: { organisationId: org.id, action, actorUserId: actor.id, reason, createdAt: new Date((at += 3_600_000)) } });
+    await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action, actorUserId: actor.id, reason, createdAt: new Date((at += 3_600_000)) } });
   }
 }
 
 await prisma.$disconnect();
-console.log(`seed-demo: ${organisations.length} organisations and 4 accounts (admin, owner, treasurer, applicant @demo.test) ready.`);
+console.log(`seed-demo: ${makerspaces.length} makerspaces and 4 accounts (admin, owner, treasurer, applicant @demo.test) ready.`);

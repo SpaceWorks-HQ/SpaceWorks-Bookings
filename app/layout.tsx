@@ -8,11 +8,11 @@ import { COLOR_MODE_COOKIE, resolveColorMode } from "@/lib/colorMode";
 
 export const metadata: Metadata = {
   title: {
-    default: "Space Works Organization",
-    template: "%s · Space Works Organization",
+    default: "Space Works Bookings",
+    template: "%s · Space Works Bookings",
   },
-  description: "Run your organisation's teamMembers: plans, members, renewals, payments and ID cards.",
-  applicationName: "Space Works Organization",
+  description: "Run your makerspace's teamMembers: plans, members, renewals, payments and ID cards.",
+  applicationName: "Space Works Bookings",
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   icons: {
     icon: [
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     apple: "/brand/icons/icon-180.png",
   },
   openGraph: {
-    siteName: "Space Works Organization",
+    siteName: "Space Works Bookings",
     images: [{ url: "/brand/icons/og-1200x630.png", width: 1200, height: 630, alt: "Space Works" }],
   },
   twitter: { card: "summary_large_image", images: ["/brand/icons/og-1200x630.png"] },

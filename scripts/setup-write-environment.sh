@@ -9,7 +9,7 @@ env_setting() {
 
 write_setup_environment() {
   [[ "${ANSWERS_CONFIRMED:-}" == yes ]] || die 'Confirm the deployment questions first.'
-  SETUP_ENV_FILE="${SWO_STATIC_ENV_FILE:-$ROOT/.env}"
+  SETUP_ENV_FILE="${SWB_STATIC_ENV_FILE:-$ROOT/.env}"
   (umask 077; set -o noclobber; : > "$SETUP_ENV_FILE")
   chmod 600 "$SETUP_ENV_FILE"
   local scheme=https layer=none app_url
@@ -20,11 +20,11 @@ write_setup_environment() {
   # Backend for a Netlify website: links, sign-in and Server Actions use the website's origin.
   [[ -z "$SITE_ORIGIN" ]] || app_url="$SITE_ORIGIN"
   configure_release_repository || die 'Invalid GitHub repository.'
-  env_setting SWO_REPOSITORY "$SWO_REPOSITORY"
-  env_setting SWO_BACKEND_IMAGE "$SWO_BACKEND_IMAGE"
-  env_setting SWO_FRONTEND_IMAGE "$SWO_FRONTEND_IMAGE"
-  env_setting SWO_LAYER "$layer"
-  env_setting SWO_STORAGE "$([[ "$STORAGE" == 1 ]] && echo bundled || echo external)"
+  env_setting SWB_REPOSITORY "$SWB_REPOSITORY"
+  env_setting SWB_BACKEND_IMAGE "$SWB_BACKEND_IMAGE"
+  env_setting SWB_FRONTEND_IMAGE "$SWB_FRONTEND_IMAGE"
+  env_setting SWB_LAYER "$layer"
+  env_setting SWB_STORAGE "$([[ "$STORAGE" == 1 ]] && echo bundled || echo external)"
   env_setting PUBLIC_APP_BASE_URL "$app_url"
   env_setting SITE_ADDRESS "$([[ "$HTTPS_MODE" == 2 ]] && echo "$WEBHOST" || echo "http://$WEBHOST")"
   [[ "$HTTPS_MODE" != 1 ]] || env_setting ALLOW_PLAIN_HTTP 1
@@ -38,7 +38,7 @@ write_setup_environment() {
   env_setting POSTGRES_PASSWORD "$(rand_key 40)"
   env_setting POSTGRES_APP_PASSWORD "$(rand_key 40)"
   env_setting REDIS_PASSWORD "$(rand_key 40)"
-  env_setting MINIO_ROOT_USER "sworg-$(rand_key 12)"
+  env_setting MINIO_ROOT_USER "swbook-$(rand_key 12)"
   env_setting MINIO_ROOT_PASSWORD "$(rand_key 40)"
   env_setting S3_APP_PASSWORD "$(rand_key 40)"
   env_setting AUTH_SECRET "$(rand_key 64)"

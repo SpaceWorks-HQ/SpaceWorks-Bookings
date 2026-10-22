@@ -12,17 +12,17 @@ export type UploadInput = {
   key: string;
   body: Buffer | Uint8Array | Blob;
   contentType?: string;
-  organisationId?: string;
+  makerspaceId?: string;
   userId?: string;
 };
 
-const ORGANISATION_DERIVATIVE_KEY =
-  /^organisations\/([A-Za-z0-9_-]{1,128})\/(certificate-backgrounds|certificate-assets|event-covers|event-speakers|event-sponsors|organisation-logos|event-page-logos|member-id-photos|member-id-watermarks|page-images)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/i;
+const MAKERSPACE_DERIVATIVE_KEY =
+  /^makerspaces\/([A-Za-z0-9_-]{1,128})\/(certificate-backgrounds|certificate-assets|event-covers|event-speakers|event-sponsors|makerspace-logos|event-page-logos|member-id-photos|member-id-watermarks|page-images)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/i;
 const USER_DERIVATIVE_KEY =
   /^users\/([A-Za-z0-9_-]{1,128})\/profile-images\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/i;
 
 export function isPublicDerivativeKey(key: string) {
-  return ORGANISATION_DERIVATIVE_KEY.test(key) || USER_DERIVATIVE_KEY.test(key);
+  return MAKERSPACE_DERIVATIVE_KEY.test(key) || USER_DERIVATIVE_KEY.test(key);
 }
 
 function storageConfigured() {
@@ -49,11 +49,11 @@ async function bytes(input: UploadInput["body"]) {
 }
 
 export async function uploadFile(input: UploadInput): Promise<{ key: string }> {
-  const organisationKeyMatch = ORGANISATION_DERIVATIVE_KEY.exec(input.key);
+  const makerspaceKeyMatch = MAKERSPACE_DERIVATIVE_KEY.exec(input.key);
   const userKeyMatch = USER_DERIVATIVE_KEY.exec(input.key);
   const validOwner =
-    (organisationKeyMatch &&
-      input.organisationId === organisationKeyMatch[1]) ||
+    (makerspaceKeyMatch &&
+      input.makerspaceId === makerspaceKeyMatch[1]) ||
     (userKeyMatch && input.userId === userKeyMatch[1]);
   if (!validOwner || input.contentType !== "image/webp") {
     throw new Error("Invalid public derivative storage metadata.");
@@ -76,14 +76,14 @@ export async function uploadFile(input: UploadInput): Promise<{ key: string }> {
         contentType: input.contentType || "application/octet-stream",
         byteSize: BigInt(uploadBody.length),
         provider: "s3",
-        organisationId: input.organisationId || null,
+        makerspaceId: input.makerspaceId || null,
       },
       update: {
         contentType: input.contentType || "application/octet-stream",
         byteSize: BigInt(uploadBody.length),
         provider: "s3",
         fileData: null,
-        organisationId: input.organisationId || null,
+        makerspaceId: input.makerspaceId || null,
       },
     });
     return { key: input.key };
@@ -98,14 +98,14 @@ export async function uploadFile(input: UploadInput): Promise<{ key: string }> {
       byteSize: BigInt(uploadBody.length),
       provider: "database",
       fileData: new Uint8Array(uploadBody),
-      organisationId: input.organisationId || null,
+      makerspaceId: input.makerspaceId || null,
     },
     update: {
       contentType: input.contentType || "application/octet-stream",
       byteSize: BigInt(uploadBody.length),
       provider: "database",
       fileData: new Uint8Array(uploadBody),
-      organisationId: input.organisationId || null,
+      makerspaceId: input.makerspaceId || null,
     },
   });
   return { key: input.key };

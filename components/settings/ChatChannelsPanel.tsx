@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 
 type Row = ChannelRow & { lastDelivered: string | null; lastError: string | null };
 
-/** The organisation's chat channels: add, edit, test or remove, with each one's last delivery. */
+/** The makerspace's chat channels: add, edit, test or remove, with each one's last delivery. */
 export function ChatChannelsPanel({ slug, channels, canEdit, secretsReady }: { slug: string; channels: Row[]; canEdit: boolean; secretsReady: boolean }) {
   const router = useRouter();
   const [editing, setEditing] = useState<ChannelRow | "new" | null>(null);
@@ -53,7 +53,7 @@ export function ChatChannelsPanel({ slug, channels, canEdit, secretsReady }: { s
               </span>
               {canEdit ? (
                 <span className="flex flex-wrap gap-1">
-                  <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => testChatChannel({ organisationSlug: slug, channelId: channel.id }), `Test sent to ${channel.name}.`)}>Send test</Button>
+                  <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => testChatChannel({ makerspaceSlug: slug, channelId: channel.id }), `Test sent to ${channel.name}.`)}>Send test</Button>
                   <Button size="sm" variant="quiet" onClick={() => setEditing(channel)}>Edit</Button>
                   <Button size="sm" variant="dangerQuiet" onClick={() => setRemoving(channel)}>Remove</Button>
                 </span>
@@ -70,7 +70,7 @@ export function ChatChannelsPanel({ slug, channels, canEdit, secretsReady }: { s
         confirmLabel="Remove channel"
         loading={pending}
         onCancel={() => setRemoving(null)}
-        onConfirm={() => removing && run(() => deleteChatChannel({ organisationSlug: slug, channelId: removing.id }), "Channel removed.")}
+        onConfirm={() => removing && run(() => deleteChatChannel({ makerspaceSlug: slug, channelId: removing.id }), "Channel removed.")}
       />
     </Card>
   );

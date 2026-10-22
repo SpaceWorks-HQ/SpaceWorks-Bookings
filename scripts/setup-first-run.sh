@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034 # FIRST_RUN is read by setup.sh
 # Sourced only after the deployment questionnaire has been confirmed.
 FIRST_RUN=0
-if [[ -f "${SWO_STATIC_ENV_FILE:-$ROOT/.env}" ]]; then
+if [[ -f "${SWB_STATIC_ENV_FILE:-$ROOT/.env}" ]]; then
   say 'Found an existing .env - keeping your settings and secrets.'
   [[ "${ANSWERS_CONFIRMED:-}" != yes ]] || FIRST_RUN=1
 else

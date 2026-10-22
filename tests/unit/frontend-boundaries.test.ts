@@ -7,7 +7,7 @@ const source = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("frontend production boundaries", () => {
   it("pages the team list and sends emails only to admin viewers", () => {
-    const team = source("lib/views/app__dashboard__orgSlug__team__page.ts");
+    const team = source("lib/views/app__dashboard__makerspaceSlug__team__page.ts");
     expect(team).toContain("take: MEMBERS_PAGE_SIZE");
     expect(team).toContain("email: adminView");
   });
@@ -38,7 +38,7 @@ describe("frontend production boundaries", () => {
 
   it("requires confirmations for destructive team and security actions", () => {
     expect(source("components/team/MemberRoleActions.tsx")).toContain("from the team?");
-    expect(source("components/team/OrgInviteLinkPanel.tsx")).toContain('title="Revoke invite link?"');
+    expect(source("components/team/MakerspaceInviteLinkPanel.tsx")).toContain('title="Revoke invite link?"');
     expect(source("components/security/SignOutEverywhereCard.tsx")).toContain('title="Revoke all sessions?"');
     expect(source("components/security/AccountSecurityClient.tsx")).toContain('title="Turn off two-step verification?"');
   });

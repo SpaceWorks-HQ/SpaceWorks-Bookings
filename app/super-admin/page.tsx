@@ -3,7 +3,7 @@ import { loadSuperAdminOverviewView } from "@/lib/views/app__super-admin__page";
 import Link from "next/link";
 import { SparklineCard } from "@/components/super-admin/Sparkline";
 import { AdminPanel, MetricRows, NameCell } from "@/components/super-admin/AdminPanel";
-import { OrganisationStatusChip } from "@/components/org/OrganisationStatusChip";
+import { MakerspaceStatusChip } from "@/components/makerspace/MakerspaceStatusChip";
 import { PageHeader, StatTile } from "@/components/ui/display";
 import { Table, TBody, TD, TR } from "@/components/ui/table";
 
@@ -12,7 +12,7 @@ export default async function SuperAdminOverviewPage() {
   const { stats, attention, activity7d, recentOrgs } = await loadSuperAdminOverviewView();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Overview" description="The platform at a glance: organisations, people and the signals that need you." />
+      <PageHeader title="Overview" description="The platform at a glance: makerspaces, people and the signals that need you." />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {stats.map((stat) => (
@@ -30,17 +30,17 @@ export default async function SuperAdminOverviewPage() {
       </AdminPanel>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <SparklineCard title="Organisations (7 days)" subtitle="Created per day" points={activity7d.map((d) => ({ xLabel: d.day, y: d.orgs }))} />
+        <SparklineCard title="Makerspaces (7 days)" subtitle="Created per day" points={activity7d.map((d) => ({ xLabel: d.day, y: d.makerspaces }))} />
         <SparklineCard title="Users (7 days)" subtitle="Signed up per day" points={activity7d.map((d) => ({ xLabel: d.day, y: d.users }))} />
       </div>
 
-      <AdminPanel title="Recent organisations">
-        <Table label="Recent organisations">
+      <AdminPanel title="Recent makerspaces">
+        <Table label="Recent makerspaces">
           <TBody>
             {recentOrgs.map((o) => (
               <TR key={o.id}>
-                <TD><NameCell href={`/super-admin/orgs/${o.id}`} name={o.name} sub={`/o/${o.slug} · ${o._count.teamMembers} on the team`} /></TD>
-                <TD><OrganisationStatusChip status={o.status} /></TD>
+                <TD><NameCell href={`/super-admin/makerspaces/${o.id}`} name={o.name} sub={`/m/${o.slug} · ${o._count.teamMembers} on the team`} /></TD>
+                <TD><MakerspaceStatusChip status={o.status} /></TD>
                 <TD className="text-right text-ink-secondary">{o.createdAt.toLocaleDateString("en-GB")}</TD>
               </TR>
             ))}

@@ -20,7 +20,7 @@ export function AccountEmailCard({ email, verified, canResend }: { email: string
     <AccountCard
       id="account-email"
       title="Email"
-      description="Where Space Works Organization sends your receipts, cards and account emails."
+      description="Where Space Works Bookings sends your receipts, cards and account emails."
       action={verified ? (
         <Chip size="sm" tone="success" icon={<MailCheck />}>Verified</Chip>
       ) : (

@@ -44,7 +44,7 @@ function pollutedSource(): AccountExportSource {
       sessionVersion: SECRETS.sessionVersion,
     },
     sessions: [{ access_token: SECRETS.access_token, refresh_token: SECRETS.refresh_token, id_token: SECRETS.id_token }],
-    teamMembers: [{ role: "OWNER", createdAt: new Date("2030-01-03T00:00:00Z"), organisation: { name: "Analytical Society", slug: "analytical" } }],
+    teamMembers: [{ role: "OWNER", createdAt: new Date("2030-01-03T00:00:00Z"), makerspace: { name: "Analytical Society", slug: "analytical" } }],
   };
   return source as unknown as AccountExportSource;
 }
@@ -60,16 +60,16 @@ describe("account data export shaping", () => {
       accountCreatedAt: "2029-12-01T00:00:00.000Z",
       twoFactorAuthenticationEnabled: true,
     });
-    expect(data.organisationTeams).toEqual([{ organisation: "Analytical Society", organisationSlug: "analytical", role: "OWNER", joinedAt: "2030-01-03T00:00:00.000Z" }]);
-    expect(data.truncated.organisationTeams).toBe(false);
+    expect(data.makerspaceTeams).toEqual([{ makerspace: "Analytical Society", makerspaceSlug: "analytical", role: "OWNER", joinedAt: "2030-01-03T00:00:00.000Z" }]);
+    expect(data.truncated.makerspaceTeams).toBe(false);
   });
 
   it("caps each collection and says so", () => {
     const source = pollutedSource();
     source.teamMembers = Array.from({ length: ACCOUNT_EXPORT_LIMIT + 1 }, () => source.teamMembers[0]);
     const data = buildAccountDataExport(source);
-    expect(data.organisationTeams).toHaveLength(ACCOUNT_EXPORT_LIMIT);
-    expect(data.truncated.organisationTeams).toBe(true);
+    expect(data.makerspaceTeams).toHaveLength(ACCOUNT_EXPORT_LIMIT);
+    expect(data.truncated.makerspaceTeams).toBe(true);
   });
 
   it("never copies secrets, hashes, or bearer tokens into the file", () => {
@@ -115,7 +115,7 @@ describe("account data export route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("application/json; charset=utf-8");
-    expect(response.headers.get("content-disposition")).toMatch(/^attachment; filename="space-works-organization-account-data-\d{4}-\d{2}-\d{2}\.json"$/);
+    expect(response.headers.get("content-disposition")).toMatch(/^attachment; filename="space-works-bookings-account-data-\d{4}-\d{2}-\d{2}\.json"$/);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
 
     expect(mocks.user.mock.calls[0][0].where).toEqual({ id: "user_1" });

@@ -5,9 +5,9 @@
 # the private CA, starts every service through scripts/spaceworks-compose.sh, runs
 # the operator checks, proves the scheduler and edge, backs up and restores the
 # database, then removes the stack, its volumes and its files.
-#   SWO_IMAGE_TAG=<tag> bash scripts/compose-smoke.sh     use already built/pulled images
-#   SWO_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh   build from this checkout
-# Its own project name (sworg-smoke) and port (18080) keep it apart from real stacks.
+#   SWB_IMAGE_TAG=<tag> bash scripts/compose-smoke.sh     use already built/pulled images
+#   SWB_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh   build from this checkout
+# Its own project name (swbook-smoke) and port (18080) keep it apart from real stacks.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -15,12 +15,12 @@ say() { printf '[compose smoke] %s\n' "$*"; }
 die() { printf '[compose smoke] ERROR: %s\n' "$*" >&2; exit 1; }
 host_path() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
 
-port="${SWO_SMOKE_PORT:-18080}"
+port="${SWB_SMOKE_PORT:-18080}"
 work="$(mktemp -d)"
-export SWO_COMPOSE_PROJECT="${SWO_COMPOSE_PROJECT:-sworg-smoke}"
+export SWB_COMPOSE_PROJECT="${SWB_COMPOSE_PROJECT:-swbook-smoke}"
 work_host="$(host_path "$work")"
-export SWO_STATIC_ENV_FILE="$work_host/.env" SWO_TLS_DIR="$work_host/tls" SWO_BACKUP_DIR="$work_host/backups"
-export SWO_IMAGE_TAG="${SWO_IMAGE_TAG:-local}"
+export SWB_STATIC_ENV_FILE="$work_host/.env" SWB_TLS_DIR="$work_host/tls" SWB_BACKUP_DIR="$work_host/backups"
+export SWB_IMAGE_TAG="${SWB_IMAGE_TAG:-local}"
 COMPOSE=("$SCRIPT_DIR/spaceworks-compose.sh" bundled)
 cleanup() {
   local status=$?
@@ -40,17 +40,17 @@ source "$SCRIPT_DIR/setup-question-input.sh"
 source "$SCRIPT_DIR/spaceworks-repository.sh"
 # shellcheck source=scripts/setup-write-environment.sh
 source "$SCRIPT_DIR/setup-write-environment.sh"
-RUN_FRONTEND=1 SITE_ORIGIN='' HTTPS_MODE=1 WEBHOST=sworg.localhost TLS_EMAIL='' STORAGE=1
-SUPER_ADMIN_EMAIL=admin@example.test EMAIL_FROM='Space Works Organization <noreply@example.test>'
+RUN_FRONTEND=1 SITE_ORIGIN='' HTTPS_MODE=1 WEBHOST=swbook.localhost TLS_EMAIL='' STORAGE=1
+SUPER_ADMIN_EMAIL=admin@example.test EMAIL_FROM='Space Works Bookings <noreply@example.test>'
 SMTP_HOST=smtp.example.test SMTP_PORT=587 SMTP_USER=smoke SMTP_PASSWORD="$(rand_key 24)"
 GOOGLE_CLIENT_ID='' GITHUB_CLIENT_ID='' ANSWERS_CONFIRMED=yes
 write_setup_environment
-sed -i "s/^HTTP_PORT=.*/HTTP_PORT='$port'/" "$SWO_STATIC_ENV_FILE"
+sed -i "s/^HTTP_PORT=.*/HTTP_PORT='$port'/" "$SWB_STATIC_ENV_FILE"
 mkdir -p "$work/tls" "$work/backups"
-if [[ "${SWO_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then "${COMPOSE[@]}" build backend; fi
+if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then "${COMPOSE[@]}" build backend; fi
 MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --entrypoint sh \
-  -v "$SWO_TLS_DIR:/tls" -v "$(host_path "$ROOT/deploy/certificates.sh"):/certificates.sh:ro" \
-  "$SWO_BACKEND_IMAGE:$SWO_IMAGE_TAG" /certificates.sh
+  -v "$SWB_TLS_DIR:/tls" -v "$(host_path "$ROOT/deploy/certificates.sh"):/certificates.sh:ro" \
+  "$SWB_BACKEND_IMAGE:$SWB_IMAGE_TAG" /certificates.sh
 
 say 'Starting the bundled stack.'
 "${COMPOSE[@]}" up -d --wait --wait-timeout 300
@@ -59,8 +59,8 @@ say 'Migrations ran:'
 "${COMPOSE[@]}" run --rm ops
 
 say 'The web edge serves the app and hides the scheduler endpoint.'
-curl --fail --silent --show-error --header 'Host: sworg.localhost' "http://127.0.0.1:$port/api/health" >/dev/null
-status="$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST --header 'Host: sworg.localhost' "http://127.0.0.1:$port/api/internal/outbox")"
+curl --fail --silent --show-error --header 'Host: swbook.localhost' "http://127.0.0.1:$port/api/health" >/dev/null
+status="$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST --header 'Host: swbook.localhost' "http://127.0.0.1:$port/api/internal/outbox")"
 [[ "$status" == 404 ]] || die "The edge exposed /api/internal/outbox (HTTP $status)."
 
 say 'Waiting for the scheduler to complete a pass.'
@@ -73,9 +73,9 @@ done
 "${COMPOSE[@]}" logs scheduler | tail -n 3
 
 say 'Backing up and restoring the database.'
-SWO_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/backup.sh" --prefix smoke
+SWB_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/backup.sh" --prefix smoke
 dump="$(find "$work/backups" -maxdepth 1 -name 'smoke-*.sql.gz' -exec basename {} \; | head -n 1)"
 [[ -n "$dump" ]] || die 'No database dump was written.'
-SWO_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/restore.sh" "backups/$dump" --yes
+SWB_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/restore.sh" "backups/$dump" --yes
 "${COMPOSE[@]}" run --rm ops
 say 'Bundled stack smoke test passed.'

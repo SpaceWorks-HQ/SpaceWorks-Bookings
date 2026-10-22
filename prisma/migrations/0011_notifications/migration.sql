@@ -2,11 +2,11 @@
 CREATE TYPE "ChatChannelKind" AS ENUM ('SLACK', 'DISCORD', 'MATTERMOST', 'TELEGRAM', 'WHATSAPP');
 
 -- AlterTable
-ALTER TABLE "Organisation" ADD COLUMN     "memberPortal" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Makerspace" ADD COLUMN     "memberPortal" BOOLEAN NOT NULL DEFAULT true;
 
 -- CreateTable
-CREATE TABLE "OrgEmailSettings" (
-    "organisationId" TEXT NOT NULL,
+CREATE TABLE "MakerspaceEmailSettings" (
+    "makerspaceId" TEXT NOT NULL,
     "enabled" BOOLEAN NOT NULL DEFAULT false,
     "fromName" TEXT NOT NULL DEFAULT '',
     "fromAddress" TEXT,
@@ -19,13 +19,13 @@ CREATE TABLE "OrgEmailSettings" (
     "verifiedAt" TIMESTAMP(3),
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OrgEmailSettings_pkey" PRIMARY KEY ("organisationId")
+    CONSTRAINT "MakerspaceEmailSettings_pkey" PRIMARY KEY ("makerspaceId")
 );
 
 -- CreateTable
 CREATE TABLE "ChatChannel" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "kind" "ChatChannelKind" NOT NULL,
     "name" TEXT NOT NULL,
     "configEncrypted" TEXT NOT NULL,
@@ -56,10 +56,10 @@ CREATE TABLE "KnownDevice" (
 );
 
 -- CreateIndex
-CREATE INDEX "ChatChannel_organisationId_idx" ON "ChatChannel"("organisationId");
+CREATE INDEX "ChatChannel_makerspaceId_idx" ON "ChatChannel"("makerspaceId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ChatChannel_organisationId_id_key" ON "ChatChannel"("organisationId", "id");
+CREATE UNIQUE INDEX "ChatChannel_makerspaceId_id_key" ON "ChatChannel"("makerspaceId", "id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "KnownDevice_tokenHash_key" ON "KnownDevice"("tokenHash");
@@ -68,20 +68,20 @@ CREATE UNIQUE INDEX "KnownDevice_tokenHash_key" ON "KnownDevice"("tokenHash");
 CREATE INDEX "KnownDevice_userId_lastSeenAt_idx" ON "KnownDevice"("userId", "lastSeenAt");
 
 -- AddForeignKey
-ALTER TABLE "OrgEmailSettings" ADD CONSTRAINT "OrgEmailSettings_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspaceEmailSettings" ADD CONSTRAINT "MakerspaceEmailSettings_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ChatChannel" ADD CONSTRAINT "ChatChannel_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ChatChannel" ADD CONSTRAINT "ChatChannel_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "KnownDevice" ADD CONSTRAINT "KnownDevice_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 -- Hand-written rules (not expressible in the Prisma schema).
-ALTER TABLE "OrgEmailSettings"
-  ADD CONSTRAINT "OrgEmailSettings_port" CHECK ("smtpPort" IN (25, 465, 587, 2525)),
-  ADD CONSTRAINT "OrgEmailSettings_enabled_complete" CHECK (NOT "enabled" OR ("fromAddress" IS NOT NULL AND "smtpHost" IS NOT NULL)),
-  ADD CONSTRAINT "OrgEmailSettings_from_name_length" CHECK (char_length("fromName") <= 120);
+ALTER TABLE "MakerspaceEmailSettings"
+  ADD CONSTRAINT "MakerspaceEmailSettings_port" CHECK ("smtpPort" IN (25, 465, 587, 2525)),
+  ADD CONSTRAINT "MakerspaceEmailSettings_enabled_complete" CHECK (NOT "enabled" OR ("fromAddress" IS NOT NULL AND "smtpHost" IS NOT NULL)),
+  ADD CONSTRAINT "MakerspaceEmailSettings_from_name_length" CHECK (char_length("fromName") <= 120);
 
 ALTER TABLE "ChatChannel"
   ADD CONSTRAINT "ChatChannel_name_length" CHECK (char_length("name") BETWEEN 1 AND 80),

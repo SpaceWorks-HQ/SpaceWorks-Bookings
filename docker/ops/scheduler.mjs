@@ -19,7 +19,7 @@ if (process.argv[2] === "--healthcheck") {
   }
 }
 
-const target = process.env.SWO_SCHEDULER_TARGET || "http://backend:3000/api/internal/outbox";
+const target = process.env.SWB_SCHEDULER_TARGET || "http://backend:3000/api/internal/outbox";
 if (!process.env.CRON_SECRET) {
   console.error("[scheduler] CRON_SECRET is required.");
   process.exit(1);

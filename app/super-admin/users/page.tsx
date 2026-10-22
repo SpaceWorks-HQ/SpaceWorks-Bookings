@@ -27,7 +27,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
   const filterHref = (key: FilterKey) => `/super-admin/users?q=${encodeURIComponent(q)}${key === "all" ? "" : `&filter=${key}`}`;
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Users" description="Every account on this platform, with verification, MFA, organisation teams, sign-in accounts and sessions." />
+      <PageHeader title="Users" description="Every account on this platform, with verification, MFA, makerspace teams, sign-in accounts and sessions." />
       <AdminSearchForm action="/super-admin/users" label="Search by name or email" defaultValue={q}>
         {filter === "all" ? null : <input type="hidden" name="filter" value={filter} />}
       </AdminSearchForm>
@@ -55,7 +55,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
             <TH>Email</TH>
             <TH>Verified</TH>
             <TH>MFA</TH>
-            <TH className="text-right">Orgs</TH>
+            <TH className="text-right">Makerspaces</TH>
             <TH className="text-right">Browsers</TH>
             <TH>Created</TH>
           </tr>

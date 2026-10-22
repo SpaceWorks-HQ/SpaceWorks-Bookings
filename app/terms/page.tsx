@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description: "The rules for running and joining memberships on this Space Works Organization site.",
+  description: "The rules for running and joining memberships on this Space Works Bookings site.",
 };
 
 const sections: LegalSection[] = [
@@ -11,15 +11,15 @@ const sections: LegalSection[] = [
     id: "about-these-terms",
     title: "About these terms",
     body: [
-      "These terms apply when you use this Space Works Organization site, whether you create an account, run an organisation, join as a member or simply browse. By using it, you agree to them.",
-      "Space Works Organization is open-source software from Space Works. This site is run by [Operator legal name — to be filled in by the operator], called the “operator”. Memberships are run by clubs, associations, societies and other groups, called “organisations”. The operator runs the service. Each organisation runs its own memberships.",
-      "Organisations may add their own rules for their members, such as a constitution or code of conduct. Those rules apply to their members alongside these terms.",
+      "These terms apply when you use this Space Works Bookings site, whether you create an account, run a makerspace, join as a member or simply browse. By using it, you agree to them.",
+      "Space Works Bookings is open-source software from Space Works. This site is run by [Operator legal name — to be filled in by the operator], called the “operator”. Memberships are run by clubs, associations, societies and other groups, called “makerspaces”. The operator runs the service. Each makerspace runs its own memberships.",
+      "Makerspaces may add their own rules for their members, such as a constitution or code of conduct. Those rules apply to their members alongside these terms.",
     ],
   },
   {
     id: "who-can-use-it",
-    title: "Who can use Space Works Organization",
-    body: "You must be able to agree to these terms where you live. If you are under that age, a parent or guardian must agree for you, including when you join an organisation.",
+    title: "Who can use Space Works Bookings",
+    body: "You must be able to agree to these terms where you live. If you are under that age, a parent or guardian must agree for you, including when you join a makerspace.",
   },
   {
     id: "your-account",
@@ -30,21 +30,21 @@ const sections: LegalSection[] = [
     ],
   },
   {
-    id: "organisations",
-    title: "Running an organisation",
+    id: "makerspaces",
+    title: "Running a makerspace",
     body: [
-      "Organisations either apply and are reviewed by the operator, or are added by the operator directly. The operator may approve, ask for changes to, or decline an application, and may suspend or archive an organisation that breaks these terms or the law.",
-      "You are responsible for your organisation and everything you publish or send through Space Works Organization, including plans and prices, join form questions, approvals, member records, cards, receipts and emails. Keep your details accurate and tell members promptly if plans or prices change.",
-      "Owners decide who joins the team and what each person can do, and are responsible for their actions. Remove access promptly when someone leaves. Deleting an organisation permanently deletes its plans, members, cards and team, except records the law requires to be kept.",
+      "Makerspaces either apply and are reviewed by the operator, or are added by the operator directly. The operator may approve, ask for changes to, or decline an application, and may suspend or archive a makerspace that breaks these terms or the law.",
+      "You are responsible for your makerspace and everything you publish or send through Space Works Bookings, including plans and prices, join form questions, approvals, member records, cards, receipts and emails. Keep your details accurate and tell members promptly if plans or prices change.",
+      "Owners decide who joins the team and what each person can do, and are responsible for their actions. Remove access promptly when someone leaves. Deleting a makerspace permanently deletes its plans, members, cards and team, except records the law requires to be kept.",
     ],
   },
   {
     id: "memberships-and-payments",
     title: "Memberships and payments",
     body: [
-      "When you join or renew, you are dealing with the organisation, not the operator. The organisation decides who may join, its prices and periods, whether applications need approval, and its refund rules.",
-      "Online payments go straight to the organisation’s own account with its payment provider, such as Razorpay or Stripe, under that provider’s terms. The operator does not hold or handle members’ money. Offline payments are arranged directly with the organisation, which records them here.",
-      "Receipts and tax invoices are issued by the organisation, in its name. Organisations are responsible for their own tax registration, the rates they charge and their filings. Space Works Organization helps produce the documents but is not tax advice.",
+      "When you join or renew, you are dealing with the makerspace, not the operator. The makerspace decides who may join, its prices and periods, whether applications need approval, and its refund rules.",
+      "Online payments go straight to the makerspace’s own account with its payment provider, such as Razorpay or Stripe, under that provider’s terms. The operator does not hold or handle members’ money. Offline payments are arranged directly with the makerspace, which records them here.",
+      "Receipts and tax invoices are issued by the makerspace, in its name. Makerspaces are responsible for their own tax registration, the rates they charge and their filings. Space Works Bookings helps produce the documents but is not tax advice.",
       "Your membership card is personal. Anyone who has its QR code can check whether it is valid, so show it only when you need to.",
     ],
   },
@@ -52,8 +52,8 @@ const sections: LegalSection[] = [
     id: "acceptable-use",
     title: "Acceptable use",
     body: [
-      "Do not use Space Works Organization to break the law, harass or harm others, publish hateful, misleading, sexually explicit or infringing content, or collect money under false pretences.",
-      "Do not send spam or emails unrelated to a membership, collect members’ information for other purposes, try to access another organisation’s data, get around security or rate limits, upload malware, overload the service, or scrape it.",
+      "Do not use Space Works Bookings to break the law, harass or harm others, publish hateful, misleading, sexually explicit or infringing content, or collect money under false pretences.",
+      "Do not send spam or emails unrelated to a membership, collect members’ information for other purposes, try to access another makerspace’s data, get around security or rate limits, upload malware, overload the service, or scrape it.",
     ],
   },
   {
@@ -66,31 +66,31 @@ const sections: LegalSection[] = [
     title: "The service",
     body: [
       "The operator works to keep the service available and secure but may change, pause or stop parts of it, for example for maintenance or updates.",
-      "Space Works Organization is open-source software licensed under the GNU Affero General Public License v3.0 or later. Its source code is available to anyone who uses it over a network.",
+      "Space Works Bookings is open-source software licensed under the GNU Affero General Public License v3.0 or later. Its source code is available to anyone who uses it over a network.",
     ],
   },
   {
     id: "suspension-and-ending",
     title: "Suspension and ending",
-    body: "You can stop using the service and ask for your account to be deleted at any time. The operator may suspend or close accounts or organisations that break these terms or the law, or that put others at risk. Records the law requires to be kept, such as receipts, are kept after closure.",
+    body: "You can stop using the service and ask for your account to be deleted at any time. The operator may suspend or close accounts or makerspaces that break these terms or the law, or that put others at risk. Records the law requires to be kept, such as receipts, are kept after closure.",
   },
   {
     id: "liability",
     title: "Disclaimers and liability",
     body: [
-      "As far as the law allows, the operator gives no warranties about the service, and is not responsible for what organisations or members do, for organisations’ prices, refunds or tax treatment, or for any indirect loss. The operator’s total liability is limited as far as the law allows.",
+      "As far as the law allows, the operator gives no warranties about the service, and is not responsible for what makerspaces or members do, for makerspaces’ prices, refunds or tax treatment, or for any indirect loss. The operator’s total liability is limited as far as the law allows.",
       "Nothing in these terms limits liability that the law does not allow to be limited, or removes rights you have as a consumer.",
     ],
   },
   {
     id: "changes",
     title: "Changes to these terms",
-    body: "The operator may update these terms when the service or the law changes. The date at the top of this page shows when they last changed. Significant changes will be announced where reasonable. If you keep using Space Works Organization after a change takes effect, you accept the updated terms.",
+    body: "The operator may update these terms when the service or the law changes. The date at the top of this page shows when they last changed. Significant changes will be announced where reasonable. If you keep using Space Works Bookings after a change takes effect, you accept the updated terms.",
   },
   {
     id: "law-and-contact",
     title: "Governing law and contact",
-    body: "These terms are governed by the laws of [governing law and jurisdiction — to be filled in by the operator], unless the law where you live gives you other rights. For questions about these terms, your account or the privacy policy, contact the operator at [operator contact email — to be filled in by the operator]. For questions about a particular membership, contact its organisation.",
+    body: "These terms are governed by the laws of [governing law and jurisdiction — to be filled in by the operator], unless the law where you live gives you other rights. For questions about these terms, your account or the privacy policy, contact the operator at [operator contact email — to be filled in by the operator]. For questions about a particular membership, contact its makerspace.",
   },
 ];
 
@@ -100,7 +100,7 @@ export default function TermsPage() {
       current="terms"
       title="Terms of use"
       updated="19 October 2026"
-      notice="These terms are a starting point for any Space Works Organization site. Each operator must replace the bracketed placeholders with its legal name, contact details and governing law, add how disputes are handled, and should have them reviewed by a lawyer. They are not legal advice."
+      notice="These terms are a starting point for any Space Works Bookings site. Each operator must replace the bracketed placeholders with its legal name, contact details and governing law, add how disputes are handled, and should have them reviewed by a lawyer. They are not legal advice."
       sections={sections}
     />
   );

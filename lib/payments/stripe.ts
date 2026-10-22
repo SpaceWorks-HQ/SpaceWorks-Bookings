@@ -30,7 +30,7 @@ function captured(eventId: string, session: Record<string, unknown>) {
   };
 }
 
-/** Stripe Checkout Sessions (mode: payment) by redirect, on the organisation's own Stripe account. */
+/** Stripe Checkout Sessions (mode: payment) by redirect, on the makerspace's own Stripe account. */
 function stripeRefund(refund: Record<string, unknown>) {
   const status = refund.status === "succeeded" ? "processed" as const : refund.status === "failed" || refund.status === "canceled" ? "failed" as const : "pending" as const;
   return { gatewayRefundId: str(refund.id) ?? "", status };
@@ -57,7 +57,7 @@ export const stripe: PaymentGateway = {
         "line_items[0][price_data][unit_amount]": request.amountMinor,
         "line_items[0][price_data][product_data][name]": request.description.slice(0, 250),
         "metadata[paymentId]": request.paymentId,
-        "metadata[organisationId]": request.organisationId,
+        "metadata[makerspaceId]": request.makerspaceId,
         "payment_intent_data[metadata][paymentId]": request.paymentId,
       }),
     });

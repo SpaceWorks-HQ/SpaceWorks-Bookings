@@ -1,15 +1,15 @@
-import type { OrganisationReviewAction } from "@prisma/client";
-import { REVIEW_ACTION_LABELS } from "@/lib/organisationLifecycle";
+import type { MakerspaceReviewAction } from "@prisma/client";
+import { REVIEW_ACTION_LABELS } from "@/lib/makerspaceLifecycle";
 
 export type ReviewRow = {
   id: string;
-  action: OrganisationReviewAction;
+  action: MakerspaceReviewAction;
   reason: string | null;
   createdAt: Date;
   actor?: { name: string | null; email: string | null } | null;
 };
 
-/** An organisation's lifecycle timeline: the decision, who made it, when and why. */
+/** A makerspace's lifecycle timeline: the decision, who made it, when and why. */
 export function ReviewHistory({ reviews, showActor = true }: { reviews: ReviewRow[]; showActor?: boolean }) {
   if (reviews.length === 0) return <p className="text-body-ui text-ink-muted">Nothing yet.</p>;
   return (

@@ -56,7 +56,7 @@ export function ChatChannelDialog({ slug, channel, onClose }: { slug: string; ch
   return (
     <Dialog open onOpenChange={(open) => (!open && !pending ? onClose() : undefined)}>
       <DialogContent size="md">
-        <DialogHeader title={channel ? `Edit ${channel.name}` : "Add a chat channel"} description="Team alerts only. Members never get messages here." />
+        <DialogHeader title={channel ? `Edit ${channel.name}` : "Add a chat channel"} description="Team alerts only. Customers never get messages here." />
         <DialogBody className="flex flex-col gap-4">
           {error ? <Callout tone="danger" role="alert">{error}</Callout> : null}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -84,13 +84,13 @@ export function ChatChannelDialog({ slug, channel, onClose }: { slug: string; ch
               <CheckboxField key={event} label={CHAT_EVENT_LABELS[event]} checked={events.includes(event)} onCheckedChange={(checked) => setEvents((current) => (checked === true ? [...current, event] : current.filter((item) => item !== event)))} />
             ))}
           </fieldset>
-          <SwitchRow label="Show member names" description="Off: alerts name members by number only. Erasure requests never show a name." checked={includeNames} onCheckedChange={(checked) => setIncludeNames(checked === true)} />
+          <SwitchRow label="Show customer names" description="Off: alerts leave names out." checked={includeNames} onCheckedChange={(checked) => setIncludeNames(checked === true)} />
           <SwitchRow label="Channel on" checked={enabled} onCheckedChange={(checked) => setEnabled(checked === true)} />
         </DialogBody>
         <DialogFooter>
           <Button variant="secondary" disabled={pending} onClick={onClose}>Cancel</Button>
           <Button variant="primary" loading={pending} onClick={() => startTransition(async () => {
-            const result = await saveChatChannel({ organisationSlug: slug, channelId: channel?.id, kind, name, events, includeNames, enabled, config: config() });
+            const result = await saveChatChannel({ makerspaceSlug: slug, channelId: channel?.id, kind, name, events, includeNames, enabled, config: config() });
             if (!result.ok) return setError(result.error);
             router.refresh();
             onClose();

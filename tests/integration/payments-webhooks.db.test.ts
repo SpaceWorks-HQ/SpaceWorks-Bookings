@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { at, createPaymentsOrg, ensurePaymentKey, people, removePaymentsOrg, unpaidTerm } from "./payments-helpers";
+import { at, createPaymentsMakerspace, ensurePaymentKey, people, removePaymentsMakerspace, unpaidTerm } from "./payments-helpers";
 
 ensurePaymentKey();
 
@@ -10,8 +10,8 @@ const { savePaymentKeys, ensurePaymentSettings } = await import("@/lib/payments/
 const { handleWebhook } = await import("@/lib/payments/webhooks");
 const { releaseHeldDocument } = await import("@/lib/payments/settle");
 
-type Ctx = Awaited<ReturnType<typeof createPaymentsOrg>>;
-let org: Ctx["org"];
+type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
+let makerspace: Ctx["makerspace"];
 let plan: Ctx["plan"];
 let code: string;
 let reviewer: { id: string };
@@ -24,22 +24,22 @@ const deliver = (body: string, eventId: string, signature = sign(body)) =>
   handleWebhook("RAZORPAY", code, body, new Headers({ "x-razorpay-signature": signature, "x-razorpay-event-id": eventId }));
 
 async function gatewayPayment(name: string) {
-  const term = await unpaidTerm(org, plan, name, now);
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { org, termId: term.id, provider: "RAZORPAY", status: "PENDING", now }));
+  const term = await unpaidTerm(makerspace, plan, name, now);
+  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "RAZORPAY", status: "PENDING", now }));
   const orderId = `order_${payment.id.slice(-8)}`;
   await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: orderId } });
   return { term, payment, orderId };
 }
 
 beforeAll(async () => {
-  ({ org, plan } = await createPaymentsOrg());
-  await savePaymentKeys(org.id, { provider: "RAZORPAY", keyId: "rzp_test_key", secret: "secret_key", webhookSecret: "hook_secret", testMode: true });
-  code = (await ensurePaymentSettings(org.id)).webhookPublicCode;
+  ({ makerspace, plan } = await createPaymentsMakerspace());
+  await savePaymentKeys(makerspace.id, { provider: "RAZORPAY", keyId: "rzp_test_key", secret: "secret_key", webhookSecret: "hook_secret", testMode: true });
+  code = (await ensurePaymentSettings(makerspace.id)).webhookPublicCode;
   [reviewer] = await people(1);
 });
 
 afterAll(async () => {
-  if (org) await removePaymentsOrg(org.id, reviewer ? [reviewer.id] : []);
+  if (makerspace) await removePaymentsMakerspace(makerspace.id, reviewer ? [reviewer.id] : []);
   await prisma.$disconnect();
 });
 
@@ -73,14 +73,14 @@ describe.sequential("gateway webhooks", () => {
     expect(held.flagReason).toMatch(/differs/);
     expect(await prisma.taxDocument.count({ where: { paymentId: payment.id } })).toBe(0);
 
-    const document = await prisma.$transaction((tx) => releaseHeldDocument(tx, { org, paymentId: payment.id, actorUserId: reviewer.id }));
+    const document = await prisma.$transaction((tx) => releaseHeldDocument(tx, { makerspace, paymentId: payment.id, actorUserId: reviewer.id }));
     expect(document.totalMinor).toBe(100_000);
     expect(document.cgstMinor + document.sgstMinor + document.taxableMinor).toBe(100_000);
   });
 
   it("receipts and flags a capture that arrives after the membership was already paid", async () => {
     const first = await gatewayPayment("tinker");
-    const second = await prisma.$transaction((tx) => createTermPayment(tx, { org, termId: first.term.id, provider: "RAZORPAY", status: "PENDING", now }));
+    const second = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: first.term.id, provider: "RAZORPAY", status: "PENDING", now }));
     await prisma.payment.update({ where: { id: second.id }, data: { gatewayOrderId: `order_${second.id.slice(-8)}` } });
     // The first attempt was replaced, so it is CANCELLED; it then captures, and the second captures too.
     expect((await deliver(captured(second.id, `order_${second.id.slice(-8)}`, 118_000), "evt_3")).status).toBe(200);
@@ -92,13 +92,13 @@ describe.sequential("gateway webhooks", () => {
   });
 
   it("receipts and flags money for a membership that can no longer start, instead of failing the webhook", async () => {
-    const ended = await prisma.membershipPlan.create({ data: { organisationId: org.id, name: "Season", slug: `season-${org.id.slice(-6)}`, currency: "INR", priceNewMinor: 118_000, joinMode: "OPEN", durationType: "FIXED_END", fixedEndDate: at("2026-07-31T18:30:00Z") } });
-    const term = await unpaidTerm(org, ended, "late-season", now);
-    const payment = await prisma.$transaction((tx) => createTermPayment(tx, { org, termId: term.id, provider: "RAZORPAY", status: "PENDING", now }));
+    const ended = await prisma.membershipPlan.create({ data: { makerspaceId: makerspace.id, name: "Season", slug: `season-${makerspace.id.slice(-6)}`, currency: "INR", priceNewMinor: 118_000, joinMode: "OPEN", durationType: "FIXED_END", fixedEndDate: at("2026-07-31T18:30:00Z") } });
+    const term = await unpaidTerm(makerspace, ended, "late-season", now);
+    const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "RAZORPAY", status: "PENDING", now }));
     await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: `order_${payment.id.slice(-8)}` } });
     // The capture is only processed after the season has ended.
     const { settlePayment } = await import("@/lib/payments/settle");
-    const settled = await prisma.$transaction((tx) => settlePayment(tx, { org, paymentId: payment.id, capture: { gatewayPaymentId: "pay_late", amountMinor: 118_000, currency: "INR", method: "upi" }, now: at("2026-08-02T06:00:00Z") }));
+    const settled = await prisma.$transaction((tx) => settlePayment(tx, { makerspace, paymentId: payment.id, capture: { gatewayPaymentId: "pay_late", amountMinor: 118_000, currency: "INR", method: "upi" }, now: at("2026-08-02T06:00:00Z") }));
     expect(settled.payment.status).toBe("PAID");
     expect(settled.flagged).toMatch(/couldn't start/);
     expect(await prisma.taxDocument.count({ where: { paymentId: payment.id } })).toBe(1);

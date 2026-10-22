@@ -65,7 +65,7 @@ async function bannerHtml(theme) {
     .panel { position: absolute; right: 40px; top: 40px; width: 420px; height: 320px; border-radius: 32px; background: ${BRAND.citron}; display: grid; place-items: center; }
     .panel img { width: ${PATCH}px; height: ${PATCH}px; display: block; }
   </style></head><body>
-    <div class="brand"><img src="${lockup}" alt=""><span class="rule"></span><span class="product">Organization</span></div>
+    <div class="brand"><img src="${lockup}" alt=""><span class="rule"></span><span class="product">Makerspace</span></div>
     <h1>Your members.<br>In good standing.</h1>
     <p class="sub">Free, open-source membership software for clubs, associations and alumni bodies.</p>
     <div class="panel"><img src="${patch}" alt=""></div>

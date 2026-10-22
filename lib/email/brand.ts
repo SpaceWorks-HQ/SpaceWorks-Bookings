@@ -1,5 +1,5 @@
 /**
- * Space Works Organization brand for transactional email. Email clients get the
+ * Space Works Bookings brand for transactional email. Email clients get the
  * hosted PNG lockup (never inline SVG), from the public base URL, with fixed
  * dimensions and alt text so it degrades to "Space Works" when images are
  * blocked. Colours are the Space Works palette: Deep Ink text, Maker Teal
@@ -40,7 +40,7 @@ export function emailBrandHeader(): string {
 
 export function emailBrandFooter(): string {
   return `<div style="background-color: ${EMAIL_COLORS.cream}; padding: 16px; text-align: center; font-size: 12px; line-height: 1.6; color: ${EMAIL_COLORS.inkMuted}; border-top: 1px solid ${EMAIL_COLORS.line};">
-            This email was sent by Space Works Organization.<br>
+            This email was sent by Space Works Bookings.<br>
             &copy; ${new Date().getFullYear()} Space Works
           </div>`;
 }

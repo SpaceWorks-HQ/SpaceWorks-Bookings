@@ -41,7 +41,7 @@ export function BarList({ items, label, max, ordinal = false, empty = "Nothing t
         return (
           <li key={item.key}>
             {item.href ? (
-              <Link href={item.href} className={cn("block rounded-md px-2 py-1.5 -mx-2 transition-colors duration-[120ms] hover:bg-subtle")} aria-label={`${item.label}: ${item.display ?? item.value}. See these members`}>
+              <Link href={item.href} className={cn("block rounded-md px-2 py-1.5 -mx-2 transition-colors duration-[120ms] hover:bg-subtle")} aria-label={`${item.label}: ${item.display ?? item.value}. See these`}>
                 {body}
               </Link>
             ) : (

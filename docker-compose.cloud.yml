@@ -1,8 +1,8 @@
 # The cloud topology: the app, its migrations and the scheduler on one host, with
 # managed PostgreSQL, Redis, S3/R2 and SMTP. Start it only through the wrapper:
 #   scripts/spaceworks-compose.sh cloud up -d
-# which reads the static settings from /etc/spaceworks-organization/cloud.env
-# (SWO_STATIC_ENV_FILE overrides; start from .env.production.example).
+# which reads the static settings from /etc/spaceworks-bookings/cloud.env
+# (SWB_STATIC_ENV_FILE overrides; start from .env.production.example).
 # HTTPS is terminated in front of APP_PORT by your platform or reverse proxy.
 x-logging: &default-logging
   driver: json-file
@@ -10,7 +10,7 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 x-restart: &default-restart unless-stopped
-x-backend-image: &backend-image "${SWO_BACKEND_IMAGE:-ghcr.io/spaceworks-hq/spaceworks-organization-backend}:${SWO_IMAGE_TAG:-latest}"
+x-backend-image: &backend-image "${SWB_BACKEND_IMAGE:-ghcr.io/spaceworks-hq/spaceworks-bookings-backend}:${SWB_IMAGE_TAG:-latest}"
 x-app-env: &app-env
   NODE_ENV: production
   AUTH_URL: ${PUBLIC_APP_BASE_URL:?set PUBLIC_APP_BASE_URL}
@@ -93,4 +93,4 @@ services:
     command: ["--role", "ops", "node", "docker/ops/check.mjs"]
     environment:
       <<: *app-env
-      SWO_TOPOLOGY: cloud
+      SWB_TOPOLOGY: cloud

@@ -1,5 +1,5 @@
 <#
-  Space Works Organization - first-run setup for a local or desktop install (Windows).
+  Space Works Bookings - first-run setup for a local or desktop install (Windows).
   Right-click -> "Run with PowerShell", or run:  powershell -ExecutionPolicy Bypass -File setup.ps1 [--build]
   Needs Docker Desktop (running) and Git for Windows; the setup itself is setup.sh, run
   through Git Bash, so Windows and Linux installs share one questionnaire and one stack.

@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "OrganisationVisibility" AS ENUM ('UNLISTED', 'PUBLIC');
+CREATE TYPE "MakerspaceVisibility" AS ENUM ('UNLISTED', 'PUBLIC');
 
 -- CreateEnum
-CREATE TYPE "PlanDurationType" AS ENUM ('ROLLING', 'ORG_YEAR', 'FIXED_END', 'LIFETIME');
+CREATE TYPE "PlanDurationType" AS ENUM ('ROLLING', 'MAKERSPACE_YEAR', 'FIXED_END', 'LIFETIME');
 
 -- CreateEnum
 CREATE TYPE "RejoinFeeRule" AS ENUM ('NEVER', 'ONCE', 'EACH_JOIN', 'AFTER_LAPSE');
@@ -26,17 +26,17 @@ CREATE TYPE "TermStatus" AS ENUM ('PENDING_APPROVAL', 'PENDING_PAYMENT', 'UPCOMI
 CREATE TYPE "TermKind" AS ENUM ('NEW', 'RENEWAL', 'REINSTATEMENT');
 
 -- AlterTable
-ALTER TABLE "Organisation" ADD COLUMN     "locale" TEXT,
+ALTER TABLE "Makerspace" ADD COLUMN     "locale" TEXT,
 ADD COLUMN     "unitLevels" TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN     "visibility" "OrganisationVisibility" NOT NULL DEFAULT 'UNLISTED';
+ADD COLUMN     "visibility" "MakerspaceVisibility" NOT NULL DEFAULT 'UNLISTED';
 
 -- AlterTable
 ALTER TABLE "TeamMember" ADD COLUMN     "unitId" TEXT;
 
 -- CreateTable
-CREATE TABLE "OrgUnit" (
+CREATE TABLE "MakerspaceUnit" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "parentId" TEXT,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -46,13 +46,13 @@ CREATE TABLE "OrgUnit" (
     "archivedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "OrgUnit_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "MakerspaceUnit_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "MemberRole" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL DEFAULT '',
     "color" TEXT NOT NULL DEFAULT 'teal',
@@ -67,12 +67,12 @@ CREATE TABLE "MemberRole" (
 -- CreateTable
 CREATE TABLE "MembershipPlan" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "description" TEXT NOT NULL DEFAULT '',
     "currency" TEXT NOT NULL DEFAULT 'INR',
-    "durationType" "PlanDurationType" NOT NULL DEFAULT 'ORG_YEAR',
+    "durationType" "PlanDurationType" NOT NULL DEFAULT 'MAKERSPACE_YEAR',
     "durationMonths" INTEGER,
     "fixedEndDate" TIMESTAMP(3),
     "priceNewMinor" INTEGER NOT NULL DEFAULT 0,
@@ -98,7 +98,7 @@ CREATE TABLE "MembershipPlan" (
 
 -- CreateTable
 CREATE TABLE "PlanUnit" (
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "planId" TEXT NOT NULL,
     "unitId" TEXT NOT NULL,
 
@@ -108,7 +108,7 @@ CREATE TABLE "PlanUnit" (
 -- CreateTable
 CREATE TABLE "PlanField" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "planId" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "label" TEXT NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE "PlanField" (
 -- CreateTable
 CREATE TABLE "Member" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "userId" TEXT,
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE "Member" (
 
 -- CreateTable
 CREATE TABLE "MemberRoleAssignment" (
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
     "roleId" TEXT NOT NULL,
     "isPrimary" BOOLEAN NOT NULL DEFAULT false,
@@ -163,7 +163,7 @@ CREATE TABLE "MemberRoleAssignment" (
 -- CreateTable
 CREATE TABLE "MembershipTerm" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
     "planId" TEXT NOT NULL,
     "status" "TermStatus" NOT NULL,
@@ -188,7 +188,7 @@ CREATE TABLE "MembershipTerm" (
 -- CreateTable
 CREATE TABLE "TermStatusEvent" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "termId" TEXT NOT NULL,
     "from" "TermStatus",
     "to" "TermStatus" NOT NULL,
@@ -212,7 +212,7 @@ CREATE TABLE "ReminderLog" (
 -- CreateTable
 CREATE TABLE "ConsentRecord" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
     "purpose" TEXT NOT NULL,
     "noticeVersion" TEXT NOT NULL,
@@ -224,18 +224,18 @@ CREATE TABLE "ConsentRecord" (
 );
 
 -- CreateTable
-CREATE TABLE "OrgCounter" (
-    "organisationId" TEXT NOT NULL,
+CREATE TABLE "MakerspaceCounter" (
+    "makerspaceId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "next" INTEGER NOT NULL DEFAULT 1,
 
-    CONSTRAINT "OrgCounter_pkey" PRIMARY KEY ("organisationId","name")
+    CONSTRAINT "MakerspaceCounter_pkey" PRIMARY KEY ("makerspaceId","name")
 );
 
 -- CreateTable
 CREATE TABLE "MemberInvite" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "planId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "email" TEXT,
@@ -251,25 +251,25 @@ CREATE TABLE "MemberInvite" (
 );
 
 -- CreateIndex
-CREATE INDEX "OrgUnit_organisationId_path_idx" ON "OrgUnit"("organisationId", "path");
+CREATE INDEX "MakerspaceUnit_makerspaceId_path_idx" ON "MakerspaceUnit"("makerspaceId", "path");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "OrgUnit_organisationId_id_key" ON "OrgUnit"("organisationId", "id");
+CREATE UNIQUE INDEX "MakerspaceUnit_makerspaceId_id_key" ON "MakerspaceUnit"("makerspaceId", "id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "OrgUnit_organisationId_slug_key" ON "OrgUnit"("organisationId", "slug");
+CREATE UNIQUE INDEX "MakerspaceUnit_makerspaceId_slug_key" ON "MakerspaceUnit"("makerspaceId", "slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MemberRole_organisationId_id_key" ON "MemberRole"("organisationId", "id");
+CREATE UNIQUE INDEX "MemberRole_makerspaceId_id_key" ON "MemberRole"("makerspaceId", "id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MemberRole_organisationId_name_key" ON "MemberRole"("organisationId", "name");
+CREATE UNIQUE INDEX "MemberRole_makerspaceId_name_key" ON "MemberRole"("makerspaceId", "name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MembershipPlan_organisationId_id_key" ON "MembershipPlan"("organisationId", "id");
+CREATE UNIQUE INDEX "MembershipPlan_makerspaceId_id_key" ON "MembershipPlan"("makerspaceId", "id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MembershipPlan_organisationId_slug_key" ON "MembershipPlan"("organisationId", "slug");
+CREATE UNIQUE INDEX "MembershipPlan_makerspaceId_slug_key" ON "MembershipPlan"("makerspaceId", "slug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PlanField_planId_key_key" ON "PlanField"("planId", "key");
@@ -278,37 +278,37 @@ CREATE UNIQUE INDEX "PlanField_planId_key_key" ON "PlanField"("planId", "key");
 CREATE INDEX "Member_userId_idx" ON "Member"("userId");
 
 -- CreateIndex
-CREATE INDEX "Member_organisationId_unitId_idx" ON "Member"("organisationId", "unitId");
+CREATE INDEX "Member_makerspaceId_unitId_idx" ON "Member"("makerspaceId", "unitId");
 
 -- CreateIndex
-CREATE INDEX "Member_organisationId_createdAt_idx" ON "Member"("organisationId", "createdAt");
+CREATE INDEX "Member_makerspaceId_createdAt_idx" ON "Member"("makerspaceId", "createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Member_organisationId_id_key" ON "Member"("organisationId", "id");
+CREATE UNIQUE INDEX "Member_makerspaceId_id_key" ON "Member"("makerspaceId", "id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Member_organisationId_email_key" ON "Member"("organisationId", "email");
+CREATE UNIQUE INDEX "Member_makerspaceId_email_key" ON "Member"("makerspaceId", "email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Member_organisationId_memberNumber_key" ON "Member"("organisationId", "memberNumber");
+CREATE UNIQUE INDEX "Member_makerspaceId_memberNumber_key" ON "Member"("makerspaceId", "memberNumber");
 
 -- CreateIndex
-CREATE INDEX "MemberRoleAssignment_organisationId_roleId_idx" ON "MemberRoleAssignment"("organisationId", "roleId");
+CREATE INDEX "MemberRoleAssignment_makerspaceId_roleId_idx" ON "MemberRoleAssignment"("makerspaceId", "roleId");
 
 -- CreateIndex
-CREATE INDEX "MembershipTerm_organisationId_status_endsAt_idx" ON "MembershipTerm"("organisationId", "status", "endsAt");
+CREATE INDEX "MembershipTerm_makerspaceId_status_endsAt_idx" ON "MembershipTerm"("makerspaceId", "status", "endsAt");
 
 -- CreateIndex
 CREATE INDEX "MembershipTerm_memberId_planId_idx" ON "MembershipTerm"("memberId", "planId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MembershipTerm_organisationId_id_key" ON "MembershipTerm"("organisationId", "id");
+CREATE UNIQUE INDEX "MembershipTerm_makerspaceId_id_key" ON "MembershipTerm"("makerspaceId", "id");
 
 -- CreateIndex
 CREATE INDEX "TermStatusEvent_termId_recordedAt_idx" ON "TermStatusEvent"("termId", "recordedAt");
 
 -- CreateIndex
-CREATE INDEX "TermStatusEvent_organisationId_effectiveAt_idx" ON "TermStatusEvent"("organisationId", "effectiveAt");
+CREATE INDEX "TermStatusEvent_makerspaceId_effectiveAt_idx" ON "TermStatusEvent"("makerspaceId", "effectiveAt");
 
 -- CreateIndex
 CREATE INDEX "ConsentRecord_memberId_idx" ON "ConsentRecord"("memberId");
@@ -317,61 +317,61 @@ CREATE INDEX "ConsentRecord_memberId_idx" ON "ConsentRecord"("memberId");
 CREATE UNIQUE INDEX "MemberInvite_token_key" ON "MemberInvite"("token");
 
 -- CreateIndex
-CREATE INDEX "MemberInvite_organisationId_planId_idx" ON "MemberInvite"("organisationId", "planId");
+CREATE INDEX "MemberInvite_makerspaceId_planId_idx" ON "MemberInvite"("makerspaceId", "planId");
 
 -- CreateIndex
-CREATE INDEX "Organisation_visibility_status_idx" ON "Organisation"("visibility", "status");
+CREATE INDEX "Makerspace_visibility_status_idx" ON "Makerspace"("visibility", "status");
 
 -- AddForeignKey
-ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_organisationId_unitId_fkey" FOREIGN KEY ("organisationId", "unitId") REFERENCES "OrgUnit"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_makerspaceId_unitId_fkey" FOREIGN KEY ("makerspaceId", "unitId") REFERENCES "MakerspaceUnit"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "OrgUnit" ADD CONSTRAINT "OrgUnit_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspaceUnit" ADD CONSTRAINT "MakerspaceUnit_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrgUnit" ADD CONSTRAINT "OrgUnit_organisationId_parentId_fkey" FOREIGN KEY ("organisationId", "parentId") REFERENCES "OrgUnit"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "MakerspaceUnit" ADD CONSTRAINT "MakerspaceUnit_makerspaceId_parentId_fkey" FOREIGN KEY ("makerspaceId", "parentId") REFERENCES "MakerspaceUnit"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "MemberRole" ADD CONSTRAINT "MemberRole_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MemberRole" ADD CONSTRAINT "MemberRole_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberRole" ADD CONSTRAINT "MemberRole_organisationId_unitId_fkey" FOREIGN KEY ("organisationId", "unitId") REFERENCES "OrgUnit"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "MemberRole" ADD CONSTRAINT "MemberRole_makerspaceId_unitId_fkey" FOREIGN KEY ("makerspaceId", "unitId") REFERENCES "MakerspaceUnit"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "MembershipPlan" ADD CONSTRAINT "MembershipPlan_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MembershipPlan" ADD CONSTRAINT "MembershipPlan_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlanUnit" ADD CONSTRAINT "PlanUnit_organisationId_planId_fkey" FOREIGN KEY ("organisationId", "planId") REFERENCES "MembershipPlan"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlanUnit" ADD CONSTRAINT "PlanUnit_makerspaceId_planId_fkey" FOREIGN KEY ("makerspaceId", "planId") REFERENCES "MembershipPlan"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlanUnit" ADD CONSTRAINT "PlanUnit_organisationId_unitId_fkey" FOREIGN KEY ("organisationId", "unitId") REFERENCES "OrgUnit"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "PlanUnit" ADD CONSTRAINT "PlanUnit_makerspaceId_unitId_fkey" FOREIGN KEY ("makerspaceId", "unitId") REFERENCES "MakerspaceUnit"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "PlanField" ADD CONSTRAINT "PlanField_organisationId_planId_fkey" FOREIGN KEY ("organisationId", "planId") REFERENCES "MembershipPlan"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlanField" ADD CONSTRAINT "PlanField_makerspaceId_planId_fkey" FOREIGN KEY ("makerspaceId", "planId") REFERENCES "MembershipPlan"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Member" ADD CONSTRAINT "Member_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Member" ADD CONSTRAINT "Member_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Member" ADD CONSTRAINT "Member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Member" ADD CONSTRAINT "Member_organisationId_unitId_fkey" FOREIGN KEY ("organisationId", "unitId") REFERENCES "OrgUnit"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "Member" ADD CONSTRAINT "Member_makerspaceId_unitId_fkey" FOREIGN KEY ("makerspaceId", "unitId") REFERENCES "MakerspaceUnit"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "MemberRoleAssignment" ADD CONSTRAINT "MemberRoleAssignment_organisationId_memberId_fkey" FOREIGN KEY ("organisationId", "memberId") REFERENCES "Member"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MemberRoleAssignment" ADD CONSTRAINT "MemberRoleAssignment_makerspaceId_memberId_fkey" FOREIGN KEY ("makerspaceId", "memberId") REFERENCES "Member"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberRoleAssignment" ADD CONSTRAINT "MemberRoleAssignment_organisationId_roleId_fkey" FOREIGN KEY ("organisationId", "roleId") REFERENCES "MemberRole"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MemberRoleAssignment" ADD CONSTRAINT "MemberRoleAssignment_makerspaceId_roleId_fkey" FOREIGN KEY ("makerspaceId", "roleId") REFERENCES "MemberRole"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_organisationId_memberId_fkey" FOREIGN KEY ("organisationId", "memberId") REFERENCES "Member"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_makerspaceId_memberId_fkey" FOREIGN KEY ("makerspaceId", "memberId") REFERENCES "Member"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_organisationId_planId_fkey" FOREIGN KEY ("organisationId", "planId") REFERENCES "MembershipPlan"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_makerspaceId_planId_fkey" FOREIGN KEY ("makerspaceId", "planId") REFERENCES "MembershipPlan"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "MembershipTerm" ADD CONSTRAINT "MembershipTerm_renewedFromId_fkey" FOREIGN KEY ("renewedFromId") REFERENCES "MembershipTerm"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -383,13 +383,13 @@ ALTER TABLE "TermStatusEvent" ADD CONSTRAINT "TermStatusEvent_termId_fkey" FOREI
 ALTER TABLE "ReminderLog" ADD CONSTRAINT "ReminderLog_termId_fkey" FOREIGN KEY ("termId") REFERENCES "MembershipTerm"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConsentRecord" ADD CONSTRAINT "ConsentRecord_organisationId_memberId_fkey" FOREIGN KEY ("organisationId", "memberId") REFERENCES "Member"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ConsentRecord" ADD CONSTRAINT "ConsentRecord_makerspaceId_memberId_fkey" FOREIGN KEY ("makerspaceId", "memberId") REFERENCES "Member"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrgCounter" ADD CONSTRAINT "OrgCounter_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspaceCounter" ADD CONSTRAINT "MakerspaceCounter_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberInvite" ADD CONSTRAINT "MemberInvite_organisationId_planId_fkey" FOREIGN KEY ("organisationId", "planId") REFERENCES "MembershipPlan"("organisationId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MemberInvite" ADD CONSTRAINT "MemberInvite_makerspaceId_planId_fkey" FOREIGN KEY ("makerspaceId", "planId") REFERENCES "MembershipPlan"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 -- ---------------------------------------------------------------------------------------------------
@@ -425,15 +425,15 @@ ALTER TABLE "MembershipPlan"
   ADD CONSTRAINT "MembershipPlan_duration_shape" CHECK (
     ("durationType" = 'ROLLING' AND "durationMonths" BETWEEN 1 AND 120)
     OR ("durationType" = 'FIXED_END' AND "fixedEndDate" IS NOT NULL)
-    OR ("durationType" IN ('ORG_YEAR', 'LIFETIME'))
+    OR ("durationType" IN ('MAKERSPACE_YEAR', 'LIFETIME'))
   ),
   ADD CONSTRAINT "MembershipPlan_days_sane" CHECK ("graceDays" BETWEEN 0 AND 365 AND "renewalWindowDays" BETWEEN 0 AND 365),
   ADD CONSTRAINT "MembershipPlan_rejoin_days" CHECK ("rejoinFeeRule" <> 'AFTER_LAPSE' OR "rejoinAfterDays" IS NOT NULL);
 
-ALTER TABLE "OrgUnit"
-  ADD CONSTRAINT "OrgUnit_slug_format" CHECK ("slug" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
-  ADD CONSTRAINT "OrgUnit_level_range" CHECK ("level" BETWEEN 0 AND 3),
-  ADD CONSTRAINT "OrgUnit_not_own_parent" CHECK ("parentId" IS NULL OR "parentId" <> "id");
+ALTER TABLE "MakerspaceUnit"
+  ADD CONSTRAINT "MakerspaceUnit_slug_format" CHECK ("slug" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
+  ADD CONSTRAINT "MakerspaceUnit_level_range" CHECK ("level" BETWEEN 0 AND 3),
+  ADD CONSTRAINT "MakerspaceUnit_not_own_parent" CHECK ("parentId" IS NULL OR "parentId" <> "id");
 
 ALTER TABLE "Member"
   ADD CONSTRAINT "Member_number_positive" CHECK ("memberNumber" > 0),
@@ -442,7 +442,7 @@ ALTER TABLE "Member"
 -- One primary role per member.
 CREATE UNIQUE INDEX "MemberRoleAssignment_one_primary" ON "MemberRoleAssignment" ("memberId") WHERE "isPrimary";
 
-ALTER TABLE "OrgCounter" ADD CONSTRAINT "OrgCounter_next_positive" CHECK ("next" > 0);
+ALTER TABLE "MakerspaceCounter" ADD CONSTRAINT "MakerspaceCounter_next_positive" CHECK ("next" > 0);
 
 ALTER TABLE "MemberInvite"
   ADD CONSTRAINT "MemberInvite_uses_bounded" CHECK ("maxUses" BETWEEN 1 AND 10000 AND "uses" BETWEEN 0 AND "maxUses");

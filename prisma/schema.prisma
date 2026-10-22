@@ -14,7 +14,7 @@ datasource db {
 
 // ─── Platform ────────────────────────────────────────────────────────────────
 
-/// Organisation staff roles. OWNER and ADMIN run everything; TREASURER runs money; VIEWER reads.
+/// Makerspace staff roles. OWNER and ADMIN run everything; TREASURER runs money; VIEWER reads.
 enum TeamRole {
   OWNER
   ADMIN
@@ -54,7 +54,7 @@ model User {
   teamInvitesCreated TeamInvite[] @relation("TeamInviteCreatedBy")
   teamInvitesUsed    TeamInvite[] @relation("TeamInviteUsedBy")
   auditEvents       AuditEvent[]
-  organisationReviews OrganisationReview[]
+  makerspaceReviews MakerspaceReview[]
 }
 
 model VerificationToken {
@@ -67,7 +67,7 @@ model VerificationToken {
 
 // ─── Tenants ─────────────────────────────────────────────────────────────────
 
-enum OrganisationStatus {
+enum MakerspaceStatus {
   PENDING_REVIEW
   CHANGES_REQUESTED
   ACTIVE
@@ -76,17 +76,17 @@ enum OrganisationStatus {
   ARCHIVED
 }
 
-enum OrganisationSource {
+enum MakerspaceSource {
   SELF_SIGNUP
   SUPERADMIN
 }
 
-enum OrganisationVisibility {
+enum MakerspaceVisibility {
   UNLISTED
   PUBLIC
 }
 
-enum OrganisationReviewAction {
+enum MakerspaceReviewAction {
   SUBMITTED
   RESUBMITTED
   APPROVED
@@ -98,17 +98,17 @@ enum OrganisationReviewAction {
   CREATED
 }
 
-/// A tenant. Only ACTIVE organisations take bookings; see organisationAllows in lib/permissionRoles.ts.
-model Organisation {
+/// A tenant. Only ACTIVE makerspaces take bookings; see makerspaceAllows in lib/permissionRoles.ts.
+model Makerspace {
   id          String             @id @default(cuid())
   name        String
   slug        String             @unique
   description String             @default("")
   logoUrl     String?
-  /// Organisation accent for its public pages (validated #RRGGBB).
+  /// Makerspace accent for its public pages (validated #RRGGBB).
   accentColor String?
-  status      OrganisationStatus @default(PENDING_REVIEW)
-  source      OrganisationSource @default(SELF_SIGNUP)
+  status      MakerspaceStatus @default(PENDING_REVIEW)
+  source      MakerspaceSource @default(SELF_SIGNUP)
   /// Free-text kind, e.g. "Club", "Association", "Student society".
   kind        String             @default("")
   contactEmail String?
@@ -120,7 +120,7 @@ model Organisation {
   postalCode  String?
   country     String             @default("IN")
   website     String?
-  /// Month (1–12) the organisation's financial year starts. India: April.
+  /// Month (1–12) the makerspace's financial year starts. India: April.
   financialYearStartMonth Int    @default(4)
   timezone    String             @default("Asia/Kolkata")
   currency    String             @default("INR")
@@ -128,8 +128,8 @@ model Organisation {
   managerLimit Int?
   /// Maker-checker for offline payments: the confirmer must differ from the recorder.
   offlineConfirmationRequired Boolean @default(false)
-  /// PUBLIC organisations are listed at /organisations and take applications from anyone.
-  visibility  OrganisationVisibility @default(UNLISTED)
+  /// PUBLIC makerspaces are listed at /makerspaces and take applications from anyone.
+  visibility  MakerspaceVisibility @default(UNLISTED)
   /// Number formatting override, e.g. "en-IN"; null uses the currency's own locale.
   locale      String?
   createdAt   DateTime           @default(now())
@@ -137,27 +137,27 @@ model Organisation {
 
   teamMembers   TeamMember[]
   teamInvites   TeamInvite[]
-  reviews       OrganisationReview[]
+  reviews       MakerspaceReview[]
   assets        Asset[]
   auditEvents   AuditEvent[]
-  paymentSettings OrgPaymentSettings?
-  taxSettings     OrgTaxSettings?
+  paymentSettings MakerspacePaymentSettings?
+  taxSettings     MakerspaceTaxSettings?
   payments        Payment[]
   refunds         Refund[]
   taxDocuments    TaxDocument[]
   documentCounters DocumentCounter[]
-  emailSettings  OrgEmailSettings?
+  emailSettings  MakerspaceEmailSettings?
   chatChannels   ChatChannel[]
 
   @@index([status, createdAt])
   @@index([visibility, status])
 }
 
-/// Append-only history of an organisation's application and lifecycle decisions.
-model OrganisationReview {
+/// Append-only history of a makerspace's application and lifecycle decisions.
+model MakerspaceReview {
   id             String                   @id @default(cuid())
-  organisationId String
-  action         OrganisationReviewAction
+  makerspaceId String
+  action         MakerspaceReviewAction
   actorUserId    String?
   /// Required for REJECTED and CHANGES_REQUESTED; shown to the applicant.
   reason         String?
@@ -165,48 +165,48 @@ model OrganisationReview {
   applicationSnapshot Json?
   createdAt      DateTime                 @default(now())
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
   actor        User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
-  @@index([organisationId, createdAt])
+  @@index([makerspaceId, createdAt])
   @@index([action, createdAt])
 }
 
 model TeamInvite {
   id              String   @id @default(cuid())
-  organisationId  String
+  makerspaceId  String
   token           String   @unique
   role            TeamRole @default(VIEWER)
   createdByUserId String?
-  /// Set when the platform super-admin creates an organisation for someone: only this email may accept.
+  /// Set when the platform super-admin creates a makerspace for someone: only this email may accept.
   email           String?
   createdAt       DateTime @default(now())
   expiresAt       DateTime?
   usedAt          DateTime?
   usedByUserId    String?
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
   createdBy    User?        @relation("TeamInviteCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   usedBy       User?        @relation("TeamInviteUsedBy", fields: [usedByUserId], references: [id], onDelete: SetNull)
 
-  @@index([organisationId])
-  @@index([organisationId, createdAt])
+  @@index([makerspaceId])
+  @@index([makerspaceId, createdAt])
   @@index([usedAt])
 }
 
-/// A person on an organisation's team (staff). Customers who book are not team members.
+/// A person on a makerspace's team (staff). Customers who book are not team members.
 model TeamMember {
   id             String   @id @default(cuid())
   userId         String
-  organisationId String
+  makerspaceId String
   role           TeamRole
   createdAt      DateTime @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, organisationId])
-  @@index([organisationId])
+  @@unique([userId, makerspaceId])
+  @@index([makerspaceId])
 }
 
 // ─── Operations ──────────────────────────────────────────────────────────────
@@ -215,16 +215,16 @@ model AuditEvent {
   id               String   @id @default(cuid())
   action           String
   actorUserId      String?
-  organisationId   String?
+  makerspaceId   String?
   targetType       String?
   targetId         String?
   metadata         Json?
   createdAt        DateTime @default(now())
 
   actor          User?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
-  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  makerspace   Makerspace? @relation(fields: [makerspaceId], references: [id], onDelete: SetNull)
 
-  @@index([organisationId, createdAt])
+  @@index([makerspaceId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([action, createdAt])
 }
@@ -260,8 +260,8 @@ model OperationalHeartbeat {
 model InstanceSetting {
   id                    String   @id
   allowNewUserSignups   Boolean  @default(true)
-  /// Self-service organisation applications (/start). Super-admins can always create organisations.
-  allowOrganisationApplications Boolean @default(true)
+  /// Self-service makerspace applications (/start). Super-admins can always create makerspaces.
+  allowMakerspaceApplications Boolean @default(true)
   emailFrom             String?
   smtpService           String?
   smtpHost              String?
@@ -276,10 +276,10 @@ model InstanceSetting {
   updatedAt             DateTime @updatedAt
 }
 
-/// Stored files (Silo/S3/R2) for per-organisation storage accounting, or the database fallback.
+/// Stored files (Silo/S3/R2) for per-makerspace storage accounting, or the database fallback.
 model Asset {
   id             String   @id @default(cuid())
-  organisationId String?
+  makerspaceId String?
   /// Provider-specific object key (or path).
   key            String   @unique
   publicUrl      String?
@@ -289,9 +289,9 @@ model Asset {
   fileData       Bytes?
   createdAt      DateTime @default(now())
 
-  organisation Organisation? @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace? @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
-  @@index([organisationId])
+  @@index([makerspaceId])
   @@index([createdAt])
   @@index([provider])
 }
@@ -342,7 +342,7 @@ enum GstScheme {
   COMPOSITION
 }
 
-/// How a GST-registered organisation treats plans priced in other currencies.
+/// How a GST-registered makerspace treats plans priced in other currencies.
 enum ForeignCurrencyTax {
   EXPORT_LUT
   NO_TAX
@@ -355,15 +355,15 @@ enum TaxDocumentKind {
   CREDIT_NOTE
 }
 
-/// The organisation's payment gateway. Secrets are AES-GCM encrypted with PAYMENT_SECRETS_KEY.
-model OrgPaymentSettings {
-  organisationId         String          @id
+/// The makerspace's payment gateway. Secrets are AES-GCM encrypted with PAYMENT_SECRETS_KEY.
+model MakerspacePaymentSettings {
+  makerspaceId         String          @id
   provider               GatewayProvider @default(NONE)
   /// Razorpay key id (public). Stripe needs only the secret key.
   keyId                  String?
   secretEncrypted        String?
   webhookSecretEncrypted String?
-  /// Unguessable code in the webhook URL that identifies the organisation.
+  /// Unguessable code in the webhook URL that identifies the makerspace.
   webhookPublicCode      String          @unique
   testMode               Boolean         @default(true)
   verifiedAt             DateTime?
@@ -372,11 +372,11 @@ model OrgPaymentSettings {
   offlineInstructions    String          @default("")
   updatedAt              DateTime        @updatedAt
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 }
 
-model OrgTaxSettings {
-  organisationId     String             @id
+model MakerspaceTaxSettings {
+  makerspaceId     String             @id
   mode               TaxMode            @default(NONE)
   scheme             GstScheme          @default(REGULAR)
   gstin              String?
@@ -396,12 +396,12 @@ model OrgTaxSettings {
   receiptPrefix      String             @default("")
   updatedAt          DateTime           @updatedAt
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
   id               String          @id @default(cuid())
-  organisationId   String
+  makerspaceId   String
   /// The booking this payment is for. Phase 2 turns it into a relation to Booking.
   bookingId        String?
   /// Who paid, as typed at the time (also the tax document's recipient).
@@ -438,21 +438,21 @@ model Payment {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
-  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  makerspace Makerspace    @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
   lines        PaymentLine[]
   refunds      Refund[]
   documents    TaxDocument[]
 
-  @@unique([organisationId, id])
+  @@unique([makerspaceId, id])
   @@unique([provider, gatewayOrderId])
-  @@index([organisationId, status, createdAt])
-  @@index([organisationId, paidAt])
-  @@index([organisationId, bookingId])
+  @@index([makerspaceId, status, createdAt])
+  @@index([makerspaceId, paidAt])
+  @@index([makerspaceId, bookingId])
 }
 
 model PaymentLine {
   id             String          @id @default(cuid())
-  organisationId String
+  makerspaceId String
   paymentId      String
   kind           PaymentLineKind
   description    String
@@ -464,7 +464,7 @@ model PaymentLine {
   igstMinor      Int             @default(0)
   otherTaxMinor  Int             @default(0)
 
-  payment Payment @relation(fields: [organisationId, paymentId], references: [organisationId, id], onDelete: Restrict)
+  payment Payment @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict)
 
   @@index([paymentId])
 }
@@ -473,16 +473,16 @@ model PaymentLine {
 model ProcessedWebhookEvent {
   provider       PaymentProvider
   eventId        String
-  organisationId String
+  makerspaceId String
   receivedAt     DateTime        @default(now())
 
   @@id([provider, eventId])
-  @@index([organisationId, receivedAt])
+  @@index([makerspaceId, receivedAt])
 }
 
 model Refund {
   id              String       @id @default(cuid())
-  organisationId  String
+  makerspaceId  String
   paymentId       String
   status          RefundStatus @default(PENDING)
   currency        String
@@ -496,25 +496,25 @@ model Refund {
   /// When the scheduler last asked the gateway about this pending refund.
   lastCheckedAt   DateTime?
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  payment      Payment      @relation(fields: [organisationId, paymentId], references: [organisationId, id], onDelete: Restrict)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
+  payment      Payment      @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict)
   document     TaxDocument?
 
-  @@unique([organisationId, id])
-  @@index([organisationId, createdAt])
+  @@unique([makerspaceId, id])
+  @@index([makerspaceId, createdAt])
   @@index([paymentId])
 }
 
 /// Receipts, tax invoices, bills of supply and credit notes. The PDF is rendered from `snapshot`.
 model TaxDocument {
   id              String          @id @default(cuid())
-  organisationId  String
+  makerspaceId  String
   paymentId       String?
   refundId        String?         @unique
   kind            TaxDocumentKind
   /// "R" for payment documents, "C" for credit notes.
   series          String
-  /// "2026-27" in the organisation's financial year.
+  /// "2026-27" in the makerspace's financial year.
   financialYear   String
   sequence        Int
   number          String
@@ -532,33 +532,33 @@ model TaxDocument {
   issuedAt        DateTime        @default(now())
   cancelledAt     DateTime?
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  payment      Payment?     @relation(fields: [organisationId, paymentId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
+  payment      Payment?     @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict, onUpdate: Restrict)
   refund       Refund?      @relation(fields: [refundId], references: [id], onDelete: Restrict)
 
-  @@unique([organisationId, number])
-  @@unique([organisationId, series, financialYear, sequence])
-  @@index([organisationId, issuedAt])
+  @@unique([makerspaceId, number])
+  @@unique([makerspaceId, series, financialYear, sequence])
+  @@index([makerspaceId, issuedAt])
   @@index([paymentId])
 }
 
-/// Gapless document numbering per organisation, series and financial year.
+/// Gapless document numbering per makerspace, series and financial year.
 model DocumentCounter {
-  organisationId String
+  makerspaceId String
   series         String
   financialYear  String
   next           Int    @default(1)
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
-  @@id([organisationId, series, financialYear])
+  @@id([makerspaceId, series, financialYear])
 }
 
-/// An organisation's own outgoing email for customer emails. Without it (or while disabled) customer emails go
-/// through the platform's SMTP, sent as the organisation's name with replies to its contact email. Account
+/// A makerspace's own outgoing email for customer emails. Without it (or while disabled) customer emails go
+/// through the platform's SMTP, sent as the makerspace's name with replies to its contact email. Account
 /// emails (password reset, verification) always use the platform's.
-model OrgEmailSettings {
-  organisationId        String    @id
+model MakerspaceEmailSettings {
+  makerspaceId        String    @id
   enabled               Boolean   @default(false)
   fromName              String    @default("")
   fromAddress           String?
@@ -572,7 +572,7 @@ model OrgEmailSettings {
   verifiedAt            DateTime?
   updatedAt             DateTime  @updatedAt
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 }
 
 enum ChatChannelKind {
@@ -587,7 +587,7 @@ enum ChatChannelKind {
 /// `configEncrypted`; `target` is a safe, non-secret description for the settings page.
 model ChatChannel {
   id              String          @id @default(cuid())
-  organisationId  String
+  makerspaceId  String
   kind            ChatChannelKind
   name            String
   configEncrypted String
@@ -601,10 +601,10 @@ model ChatChannel {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
-  @@unique([organisationId, id])
-  @@index([organisationId])
+  @@unique([makerspaceId, id])
+  @@index([makerspaceId])
 }
 
 /// A browser that has signed in to an account before, recognised by a long-lived cookie stored only as a hash.

@@ -34,7 +34,7 @@ const limits: Record<Bucket, { max: number; windowMs: number; }> = {
   signup: { max: 5, windowMs: 60 * 60_000 },
   emailVerification: { max: 5, windowMs: 60 * 60_000 },
   passwordReset: { max: 5, windowMs: 60 * 60_000 },
-  // Organisation applications (/start): a handful per person per day is plenty.
+  // Makerspace applications (/start): a handful per person per day is plenty.
   application: { max: 3, windowMs: 24 * 60 * 60_000 },
   join: { max: 10, windowMs: 60 * 60_000 },
   payment: { max: 20, windowMs: 60 * 60_000 },

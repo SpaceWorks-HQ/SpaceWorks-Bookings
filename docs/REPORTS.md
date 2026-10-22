@@ -1,6 +1,6 @@
 # Reports
 
-How Space Works Organization counts members and money. Every figure on every report follows these
+How Space Works Bookings counts members and money. Every figure on every report follows these
 definitions. They are unit-tested: see `tests/unit/reports-*.test.ts` and `tests/integration/reports.db.test.ts`.
 
 ## How it works
@@ -9,17 +9,17 @@ definitions. They are unit-tested: see `tests/unit/reports-*.test.ts` and `tests
   - The engine is pure: `lib/reports/dataset.ts` and `lib/reports/metrics/*`.
   - `lib/reports/source.ts` loads the rows for one scope.
 - **Scope.** Every query is limited in three ways:
-  - to the organisation;
+  - to the makerspace;
   - to the viewer's unit subtree (`TeamMember.unitId`), narrowed further by the report's unit filter, which can never widen it;
   - optionally to one plan.
-  A unit or plan id from another organisation is ignored. Cross-tenant URLs return 404.
+  A unit or plan id from another makerspace is ignored. Cross-tenant URLs return 404.
 - **Periods.** A period is a half-open range of instants `[from, to)`.
-  - Its boundaries are local midnights in the organisation's timezone. FY 2026-27 in Asia/Kolkata runs from 31 Mar 2026 18:30 UTC to 31 Mar 2027 18:30 UTC.
+  - Its boundaries are local midnights in the makerspace's timezone. FY 2026-27 in Asia/Kolkata runs from 31 Mar 2026 18:30 UTC to 31 Mar 2027 18:30 UTC.
   - "This financial year" and the rolling presets stop at the end of today.
   - The previous period, used for deltas, has the same length and ends where this one starts.
-- **Financial-year labels.** "FY 2026-27" for a year starting in April. A calendar-year organisation gets "FY 2026". Built on `lib/membership/periods.ts financialYearLabel`.
+- **Financial-year labels.** "FY 2026-27" for a year starting in April. A calendar-year makerspace gets "FY 2026". Built on `lib/membership/periods.ts financialYearLabel`.
 - **Money.** Reports never add different currencies together.
-  - Every money figure is a list of per-currency totals, with the organisation's default currency first.
+  - Every money figure is a list of per-currency totals, with the makerspace's default currency first.
   - Helpers: `lib/reports/money.ts` (`totals`, `groupTotals`, `subtractTotals`, `formatTotals`, `csvAmount`), built on `lib/money/currencies.ts` `totalsByCurrency`.
   - A chart plots one currency (`format="money:INR"`).
 - **Contact details.** Roles without `members.contact` (Viewer) see masked contact details everywhere, exports included: `s•••@e•••.com` and `•••• 45`.
@@ -111,26 +111,26 @@ A term is **held** once it was activated (paid, approved or free): status `UPCOM
   - Cell k is the share of the cohort active at the end of the k-th month after joining; month 0 is the joining month.
   - Future cells are empty.
 
-### Daily rollup (`OrgDailyStats`)
+### Daily rollup (`MakerspaceDailyStats`)
 
 **Rows and fields**
-- The sweep (`runMembershipSweep` → `lib/reports/rollup.ts runStatsRollup`) writes one set of rows per organisation per **local day**.
+- The sweep (`runMembershipSweep` → `lib/reports/rollup.ts runStatsRollup`) writes one set of rows per makerspace per **local day**.
 - There is one row per (unit, plan), plus an all-plans row (`planId` null) per unit with distinct members. A unit subtree sums its rows, and a plan filter picks that plan's rows.
 - Stocks (`active`, `grace`) are taken at the end of the day; today's row is taken at now.
 - Flows:
-  - `joined`: new to the organisation on the all-plans row, new to the plan on a plan row.
+  - `joined`: new to the makerspace on the all-plans row, new to the plan on a plan row.
   - `reactivated`, `lapsed` and `applications`.
   - `due`: terms ending that day.
   - `renewed`: renewal terms activated that day.
 
 **Recomputation**
 - A day is recomputed whole: delete, then rewrite from source rows. Running it twice gives the same rows.
-- **Dirty days.** `markStatsDirty(client, organisationId, since)` marks every day from `since` to today. P7 calls it for backdated offline payments, late captures and refunds.
+- **Dirty days.** `markStatsDirty(client, makerspaceId, since)` marks every day from `since` to today. P7 calls it for backdated offline payments, late captures and refunds.
 - The sweep also marks days dirty itself when it finds status events recorded since the last run with an earlier `effectiveAt`.
 
 **Each run**
 - It rebuilds dirty days, yesterday (once the day ends) and today (every 15 minutes).
-- It backfills missing history up to 730 days, 120 days per organisation per run.
+- It backfills missing history up to 730 days, 120 days per makerspace per run.
 - Heartbeat: `OperationalHeartbeat` key `report-rollup`.
 
 **Readers**
@@ -178,16 +178,16 @@ The register is laid out like the returns, but the figures must be checked with 
 
 | Report | What it shows |
 | --- | --- |
-| A1 Tenant pipeline | Organisations by status, applications and decisions in the window, median time to approve, oldest waiting. |
-| A2 Tenant base | Organisations with active members per month end; largest organisations (rollup). |
-| A3 Members across tenants | Active and in grace across all organisations per month end (rollup). |
-| A4 Payment volume | Paid per currency, never converted, by provider, with organisation count. |
+| A1 Tenant pipeline | Makerspaces by status, applications and decisions in the window, median time to approve, oldest waiting. |
+| A2 Tenant base | Makerspaces with active members per month end; largest makerspaces (rollup). |
+| A3 Members across tenants | Active and in grace across all makerspaces per month end (rollup). |
+| A4 Payment volume | Paid per currency, never converted, by provider, with makerspace count. |
 | A5 Usage vs limits | Members and team against `memberLimit` and `managerLimit`, fullest first. |
 | A6 Outbox health | Messages by status, queued over 15 minutes, 14-day failure rate (details: Email). |
 | A7 System health | Scheduler and rollup heartbeats, database size, stored files; webhook backlog once P7 lands (details: Operations, Storage). |
-| A8 Platform audit | Platform-admin actions. Opening an organisation's page writes `SUPER_ADMIN_ORG_VIEWED`, throttled to once per 30 minutes. |
+| A8 Platform audit | Platform-admin actions. Opening a makerspace's page writes `SUPER_ADMIN_ORG_VIEWED`, throttled to once per 30 minutes. |
 
-### Organisation (`/dashboard/[org]/reports`)
+### Makerspace (`/dashboard/[org]/reports`)
 
 **Membership tabs**
 
@@ -213,7 +213,7 @@ The register is laid out like the returns, but the figures must be checked with 
 
 **Filters and the bulk reminder**
 - Filters on every tab: period (this FY, last FY, 12 months, 90 days, 30 days, this month, custom), plan and unit subtree.
-- **Bulk reminder (B3).** `sendRenewalReminders({ organisationSlug, termIds })` needs `members.manage`. It queues the existing `renewal-reminder` outbox kind with a `ReminderLog` key `before-manual-<day>` or `after-manual-<day>`, so there is one manual reminder per membership per day.
+- **Bulk reminder (B3).** `sendRenewalReminders({ makerspaceSlug, termIds })` needs `members.manage`. It queues the existing `renewal-reminder` outbox kind with a `ReminderLog` key `before-manual-<day>` or `after-manual-<day>`, so there is one manual reminder per membership per day.
   - The server re-checks scope and renewability, and skips anything else.
   - It is audited as `RENEWAL_REMINDERS_SENT`.
 
@@ -227,7 +227,7 @@ The register is laid out like the returns, but the figures must be checked with 
 | C2 History | `memberHistory(terms, events, plans)`: every status change in words, newest first. |
 | C3 Payments and receipts | `memberPayments(financeRows, memberId, primaryCurrency)`: payments newest first with their documents and refunds, totals paid (net of refunds) and outstanding per currency. |
 
-`lib/reports/memberSource.ts` has `loadMemberReport(organisationId, memberId, now?)`, which returns `{ membership, history, payments }`, or `null` when the member is not in that organisation.
+`lib/reports/memberSource.ts` has `loadMemberReport(makerspaceId, memberId, now?)`, which returns `{ membership, history, payments }`, or `null` when the member is not in that makerspace.
 - **Callers prove access first.** The portal checks `member.userId === session user`. A dashboard page checks capability and unit scope.
 - **Render it with** `components/reports/MemberHistoryList.tsx`.
 
@@ -242,12 +242,12 @@ loadRefunds(scope: ReportScope): Promise<FinanceRefund[]>
 loadTaxDocuments(scope: ReportScope): Promise<FinanceTaxDocument[]>
 loadUnpaidTerms(scope: ReportScope): Promise<UnpaidTerm[]>          // already works; add `payments: { none: {} }`
 loadFinanceRows(scope: ReportScope): Promise<FinanceRows>           // all five
-loadFinancePlans(organisationId: string): Promise<FinancePlan[]>    // already works
-loadPlatformPayments(window: { from: Date; to: Date }): Promise<Array<FinancePayment & { organisationId: string }>>
+loadFinancePlans(makerspaceId: string): Promise<FinancePlan[]>    // already works
+loadPlatformPayments(window: { from: Date; to: Date }): Promise<Array<FinancePayment & { makerspaceId: string }>>
 export const FINANCE_TABLES_READY = false                           // flip to true once wired
 
-type ReportScope = { organisationId: string; unitPath: string | null; unitId: string | null; planId: string | null; scoped: boolean; memberId?: string }
-// Scope every query with: organisationId, member: { is: scopedMemberWhere(scope) } (handles unit subtree and memberId), and term.planId when planId is set.
+type ReportScope = { makerspaceId: string; unitPath: string | null; unitId: string | null; planId: string | null; scoped: boolean; memberId?: string }
+// Scope every query with: makerspaceId, member: { is: scopedMemberWhere(scope) } (handles unit subtree and memberId), and term.planId when planId is set.
 ```
 
 | Type | Fields |
@@ -291,7 +291,7 @@ Once wired, P7 also calls `markStatsDirty` (`lib/reports/rollup.ts`) inside back
   equals fees earned in the year. Fees are earned day by day over the membership; joining fees and lifetime
   memberships count when received. Taxable values only, net of processed refunds, per currency. The identity
   holds to the paisa (`lib/reports/finance/subscriptionIncome.ts`, tested).
-- **GSTR-1 JSON** (Tax tab, organisation-wide finance roles only, audited): the month's B2B, B2CL, B2CS,
+- **GSTR-1 JSON** (Tax tab, makerspace-wide finance roles only, audited): the month's B2B, B2CL, B2CS,
   credit notes, nil/exempt, SAC summary (Table 12, B2B and B2C) and documents issued (Table 13, codes 1
   and 5) in the GST offline tool's layout (`version` GST3.2.4, `hash`), rupees with two decimals,
   dd-mm-yyyy dates and two-digit GST state codes; B2CL carries its place of supply on the group only
@@ -303,9 +303,9 @@ Once wired, P7 also calls `markStatsDirty` (`lib/reports/rollup.ts`) inside back
   end of that year and the four after it.
 - **Monthly summary email**: on the first scheduler pass of each month, every owner, manager and treasurer
   gets last month's members, renewals, money (finance roles only) and waiting applications, for what they
-  can see. Each person switches it off on the organisation overview. One claim per organisation and month.
+  can see. Each person switches it off on the makerspace overview. One claim per makerspace and month.
 
-- **Receipts and payments account** (Accounts, organisation-wide finance roles): one statement per currency
+- **Receipts and payments account** (Accounts, makerspace-wide finance roles): one statement per currency
   and financial year, cash basis, split into cash and bank. Receipts are membership fees, joining fees and
   tax collected (from paid payments, by `paidAt`) plus recorded receipts; payments are processed refunds (by
   `processedAt`) plus recorded expenses. Opening balance plus receipts less payments is the closing balance.

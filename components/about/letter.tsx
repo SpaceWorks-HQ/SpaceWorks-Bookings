@@ -7,17 +7,17 @@ export const LETTER = {
   intro: [
     "Space Works started as a room with workbenches and a kettle. The people who kept it going were volunteers: a secretary with a spreadsheet, a treasurer with a folder of UPI screenshots, and a committee that met once a month to work out who had paid.",
     "Every club, association and alumni body we knew ran the same way. Renewals were chased by phone, receipts were typed by hand, and nobody was quite sure who was still a member.",
-    "So we built Space Works Organization, one calm place for the whole year of a membership, and we run our own organisation on it first.",
+    "So we built Space Works Bookings, one calm place for the whole year of a membership, and we run our own makerspace on it first.",
   ],
   list: [
-    "Plans and join forms in your organisation’s colours",
+    "Plans and join forms in your makerspace’s colours",
     "Approvals, renewals and reminders that send themselves",
     "Online and offline payments with GST-correct receipts",
     "Member cards anyone can check with a scan",
     "Reports the committee can read at a glance",
   ],
   outro: [
-    "It is open source under the AGPL, so any organisation can read the code, run its own copy and keep its register on its own server.",
+    "It is open source under the AGPL, so any makerspace can read the code, run its own copy and keep its register on its own server.",
     "If you look after members, for a living or for love, we hope it gives you your evenings back.",
   ],
   closing: ["Fewer spreadsheets.", "More members.", "See you at the next general meeting."],
@@ -78,7 +78,7 @@ export function ReadingLetter() {
               </li>
             ))}
           </ul>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] opacity-60">Space Works Organization · open source</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] opacity-60">Space Works Bookings · open source</p>
         </footer>
       </div>
     </article>

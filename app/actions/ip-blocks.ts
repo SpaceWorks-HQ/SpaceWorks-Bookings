@@ -6,7 +6,7 @@ import { trackedRevalidation } from "@/lib/frontend/revalidation";
 import { requireSuperAdmin } from "@/lib/permissions";
 import { recordAuditEvent } from "@/lib/audit";
 import { unblockIp } from "@/lib/ipBlock";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 

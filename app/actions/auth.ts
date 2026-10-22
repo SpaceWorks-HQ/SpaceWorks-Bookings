@@ -7,7 +7,7 @@ import { BREACHED_PASSWORD_MESSAGE, isBreachedPassword } from "@/lib/breachedPas
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
 import { issueEmailVerification, verifyEmail } from "@/lib/emailVerification";
 import { isNewUserRegistrationEnabled } from "@/lib/instanceSettings";

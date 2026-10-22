@@ -12,8 +12,8 @@ export async function viewArguments(args: unknown[]) {
     if (!root || typeof root !== "object" || Array.isArray(root)) return root;
     const input = root as Record<string, unknown>;
     if (input.ctx && typeof input.ctx === "object") {
-      const ctx = input.ctx as { organisation?: { slug?: string; }; event?: { id?: string; }; };
-      return { ctx: { organisation: { slug: ctx.organisation?.slug }, event: { id: ctx.event?.id } } };
+      const ctx = input.ctx as { makerspace?: { slug?: string; }; event?: { id?: string; }; };
+      return { ctx: { makerspace: { slug: ctx.makerspace?.slug }, event: { id: ctx.event?.id } } };
     }
     return Object.fromEntries(Object.entries(input).filter(([key]) => key !== "children"));
   }));

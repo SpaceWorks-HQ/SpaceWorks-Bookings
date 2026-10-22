@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Pinned, no-git Space Works Organization installer:
-#   curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Organization/main/install.sh | bash
+# Pinned, no-git Space Works Bookings installer:
+#   curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
 # Mirrors the main SpaceWorks installer. It is fetched alone (curl | bash), so it is one
 # self-contained file by necessity and may exceed the ~300-line ceiling for that reason.
 set -euo pipefail
 show_guide() {
   cat <<'EOF'
 
-Space Works Organization installer - installs the latest release built from GitHub main.
+Space Works Bookings installer - installs the latest release built from GitHub main.
 
 What you need first
   - A 64-bit machine (x86_64 or arm64) running Linux (Debian/Ubuntu, Fedora/RHEL/Alma/
@@ -28,8 +28,8 @@ What it does
   2. Downloads the pinned release into temporary storage and asks all deployment questions:
      website, HTTPS, storage, super admin, email, sign-in, GitHub repository and optional Actions runner.
   3. Shows answers, services and host actions; proceeds only after confirmation.
-  4. Installs dependencies, copies the release into /opt/spaceworks-organization
-     (SWO_DIR overrides it), writes private settings and TLS certificates, and starts
+  4. Installs dependencies, copies the release into /opt/spaceworks-bookings
+     (SWB_DIR overrides it), writes private settings and TLS certificates, and starts
      PostgreSQL, Redis, Silo storage, migrations, the app, the scheduler, backups and Caddy.
   Run it again later to update, back up or roll back; it detects the existing install.
 
@@ -49,11 +49,11 @@ while (($# > 0)); do
   esac
   shift
 done
-# One command for everyone: --repo (or SWO_REPOSITORY) picks a fork up front;
+# One command for everyone: --repo (or SWB_REPOSITORY) picks a fork up front;
 # otherwise a fresh install asks below, defaulting to the main project.
-[[ -z "$REPO_ARG" ]] || SWO_REPOSITORY="$REPO_ARG"
-REPOSITORY="${SWO_REPOSITORY:-SpaceWorks-HQ/SpaceWorks-Organization}"
-INSTALL_DIR="${SWO_DIR:-/opt/spaceworks-organization}"
+[[ -z "$REPO_ARG" ]] || SWB_REPOSITORY="$REPO_ARG"
+REPOSITORY="${SWB_REPOSITORY:-SpaceWorks-HQ/SpaceWorks-Bookings}"
+INSTALL_DIR="${SWB_DIR:-/opt/spaceworks-bookings}"
 MIN_FREE_KB=$((8 * 1024 * 1024))
 RUN_ROOT=()
 SUDO=()
@@ -75,7 +75,7 @@ prompt() {
   printf '%s' "${reply%$'\r'}"
 }
 cleanup() {
-  if [[ -n "$STAGE_DIR" && "$STAGE_DIR" == */.sworg-stage.* ]]; then
+  if [[ -n "$STAGE_DIR" && "$STAGE_DIR" == */.swbook-stage.* ]]; then
     rm -rf -- "$STAGE_DIR" 2>/dev/null || true
   fi
   [[ -z "$ARCHIVE" ]] || rm -f -- "$ARCHIVE"
@@ -85,10 +85,10 @@ cleanup() {
 }
 trap cleanup EXIT
 case "$INSTALL_DIR" in
-  ""|/|*"'"*|*$'\n'*) die "SWO_DIR must be a specific path without single quotes or newlines." ;;
+  ""|/|*"'"*|*$'\n'*) die "SWB_DIR must be a specific path without single quotes or newlines." ;;
 esac
 while [[ "$INSTALL_DIR" == */ ]]; do INSTALL_DIR="${INSTALL_DIR%/}"; done
-[[ -n "$INSTALL_DIR" ]] || die "SWO_DIR cannot be the filesystem root."
+[[ -n "$INSTALL_DIR" ]] || die "SWB_DIR cannot be the filesystem root."
 [[ "$INSTALL_DIR" == /* ]] || INSTALL_DIR="$PWD/$INSTALL_DIR"
 show_guide
 say "Preflight only—nothing will be installed until all checks pass."
@@ -170,7 +170,7 @@ if command -v docker >/dev/null 2>&1 && ! docker info >/dev/null 2>&1; then
 fi
 if ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} test -f "$INSTALL_DIR/.spaceworks-version"; then
   ACTION="$(prompt "
-Space Works Organization is already installed in $INSTALL_DIR (version $(${RUN_ROOT[@]+"${RUN_ROOT[@]}"} cat "$INSTALL_DIR/.spaceworks-version" 2>/dev/null || echo unknown)).
+Space Works Bookings is already installed in $INSTALL_DIR (version $(${RUN_ROOT[@]+"${RUN_ROOT[@]}"} cat "$INSTALL_DIR/.spaceworks-version" 2>/dev/null || echo unknown)).
 What do you want to do?
   1) Update to the latest release - backs up the database, moves to the newest main
      release, runs migrations and restarts. Your settings and data stay as they are.
@@ -235,24 +235,24 @@ available_kb="$(df -Pk "$disk_path" | awk 'NR == 2 {print $4}')"
 say "Disk-space check passed."
 # The repository selects the questionnaire archive itself, so this first question
 # precedes its download and every host change. The full summary repeats the choice.
-if [[ -z "${SWO_REPOSITORY:-}" ]] && ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} test -f "$INSTALL_DIR/.env"; then
-  configured="$(${RUN_ROOT[@]+"${RUN_ROOT[@]}"} sed -n 's/^SWO_REPOSITORY=//p' "$INSTALL_DIR/.env" | tail -n 1 | tr -d '\r')"
+if [[ -z "${SWB_REPOSITORY:-}" ]] && ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} test -f "$INSTALL_DIR/.env"; then
+  configured="$(${RUN_ROOT[@]+"${RUN_ROOT[@]}"} sed -n 's/^SWB_REPOSITORY=//p' "$INSTALL_DIR/.env" | tail -n 1 | tr -d '\r')"
   configured="${configured#\'}"; configured="${configured%\'}"
   configured="${configured#\"}"; configured="${configured%\"}"
   REPOSITORY="${configured:-$REPOSITORY}"
 fi
-if [[ "$ACTION" == fresh && -z "${SWO_REPOSITORY:-}" ]]; then
+if [[ "$ACTION" == fresh && -z "${SWB_REPOSITORY:-}" ]]; then
   configured="$(prompt "
 Which GitHub repository should this server install and update from?
-  Press Enter for the main project, or type your fork as owner/name (e.g. YourName/SpaceWorks-Organization).
+  Press Enter for the main project, or type your fork as owner/name (e.g. YourName/SpaceWorks-Bookings).
   The fork must have run its release workflow at least once.
 GitHub repository [$REPOSITORY]: ")"
   REPOSITORY="${configured:-$REPOSITORY}"
 fi
 [[ "$REPOSITORY" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?/[A-Za-z0-9_.-]{1,100}$ ]] \
-  && [[ "$REPOSITORY" != */. && "$REPOSITORY" != */.. ]] || die 'SWO_REPOSITORY must be a GitHub owner/repo name.'
-export SWO_REPOSITORY="$REPOSITORY"
-export SWO_INSTALL_REPOSITORY_PINNED=1
+  && [[ "$REPOSITORY" != */. && "$REPOSITORY" != */.. ]] || die 'SWB_REPOSITORY must be a GitHub owner/repo name.'
+export SWB_REPOSITORY="$REPOSITORY"
+export SWB_INSTALL_REPOSITORY_PINNED=1
 RELEASE_API="https://api.github.com/repos/$REPOSITORY/releases/latest"
 say 'Host preflight passed; fetching the questionnaire into temporary storage.'
 # Installing an archive reader before the questions would violate the confirmation
@@ -276,7 +276,7 @@ if [[ "$ACTION" == fresh ]]; then
     || die "Unexpected latest release tag: ${RELEASE_TAG:-<empty>}"
   say "Pinned release: $RELEASE_TAG."
   ARCHIVE="$(mktemp)"
-  STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/.sworg-stage.XXXXXX")"
+  STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/.swbook-stage.XXXXXX")"
   fetch "https://github.com/$REPOSITORY/archive/refs/tags/$RELEASE_TAG.tar.gz" -o "$ARCHIVE"
   tar -xzf "$ARCHIVE" -C "$STAGE_DIR" --strip-components=1 --no-same-owner
   [[ -f "$STAGE_DIR/setup.sh" && -f "$STAGE_DIR/scripts/setup-questions.sh" \
@@ -347,7 +347,7 @@ fi
 if ! docker compose version >/dev/null 2>&1; then
   compose_json="$(curl --fail --silent --show-error --location \
     --header 'Accept: application/vnd.github+json' \
-    --header 'User-Agent: sworg-curl-installer' \
+    --header 'User-Agent: swbook-curl-installer' \
     https://api.github.com/repos/docker/compose/releases/latest)"
   compose_tag="$(printf '%s' "$compose_json" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
   [[ "$compose_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Could not resolve a Docker Compose V2 plugin release."
@@ -397,7 +397,7 @@ if [[ "$ACTION" != fresh ]]; then
   # The installed updater downloads the target release and hands over to its own updater.
   update_options="--force"
   [[ "$ACTION" != rollback ]] || update_options="--force --rollback"
-  run_installed "SWO_REPOSITORY='$REPOSITORY' bash scripts/update.sh $update_options"
+  run_installed "SWB_REPOSITORY='$REPOSITORY' bash scripts/update.sh $update_options"
   exit 0
 fi
 ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} chmod 755 "$STAGE_DIR/install.sh" "$STAGE_DIR/scripts/spaceworks-compose.sh"
@@ -413,7 +413,7 @@ fi
 if [[ "$(id -u)" != 0 && ${#RUN_ROOT[@]} -gt 0 ]]; then
   ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} chown "$(id -u):$(id -g)" "$INSTALL_DIR"
 fi
-run_installed "SWO_INSTALL_REPOSITORY_PINNED=1 SWO_REPOSITORY='$REPOSITORY' SWO_IMAGE_TAG='$VERSION' bash setup.sh"
+run_installed "SWB_INSTALL_REPOSITORY_PINNED=1 SWB_REPOSITORY='$REPOSITORY' SWB_IMAGE_TAG='$VERSION' bash setup.sh"
 ${RUN_ROOT[@]+"${RUN_ROOT[@]}"} rm -f -- "$INSTALL_DIR/.spaceworks-answers"
 run_installed "printf '%s\\n' '$VERSION' > .spaceworks-version"
-say "Installed Space Works Organization $VERSION in $INSTALL_DIR."
+say "Installed Space Works Bookings $VERSION in $INSTALL_DIR."

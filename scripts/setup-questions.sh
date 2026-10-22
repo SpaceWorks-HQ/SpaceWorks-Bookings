@@ -6,7 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/setup-question-input.sh"
 
 ask_setup_questions() {
   exec 3</dev/tty
-  echo 'Space Works Organization deployment questions. Enter accepts the [default].'
+  echo 'Space Works Bookings deployment questions. Enter accepts the [default].'
   echo 'Run the website on this server?'
   echo '  1) Yes - serve the website and dashboards here.'
   echo '  2) No, backend only - the website runs on Netlify (docs/DEPLOYMENT_NETLIFY.md).'
@@ -33,7 +33,7 @@ ask_setup_questions() {
   else
     question WEBHOST 'Web address (host name or IP, no http://)' localhost host || return 1
   fi
-  echo 'File storage (organisation logos, member photos, ID cards, receipts):'
+  echo 'File storage (makerspace logos, member photos, ID cards, receipts):'
   echo '  1) Bundled Silo object storage - a private bucket on this server.'
   echo '  2) External S3-compatible bucket (Cloudflare R2, Amazon S3...) - create a private bucket and a key limited to it first.'
   question STORAGE 'File storage' 1 choices:1,2 || return 1
@@ -63,16 +63,16 @@ ask_setup_questions() {
   mail_host="${mail_host:-$WEBHOST}"
   # Only a real domain makes a usable default sender; localhost or an IP leaves it to the operator.
   local sender_default=''
-  [[ "$mail_host" != *.* || "$mail_host" =~ ^[0-9.]+$ ]] || sender_default="Space Works Organization <noreply@$mail_host>"
+  [[ "$mail_host" != *.* || "$mail_host" =~ ^[0-9.]+$ ]] || sender_default="Space Works Bookings <noreply@$mail_host>"
   question EMAIL_FROM 'Sender, as Name <address@your-domain>' "$sender_default" sender || return 1
   question SMTP_HOST 'SMTP host' smtp-relay.brevo.com domain || return 1
   question SMTP_PORT 'SMTP port (implicit TLS: 465)' 587 port || return 1
   question SMTP_USER 'SMTP login' '' text || return 1
   question SMTP_PASSWORD 'SMTP password or key' '' secret || return 1
-  if [[ "${SWO_INSTALL_REPOSITORY_PINNED:-0}" == 1 ]]; then
-    echo "GitHub repository to follow [$SWO_REPOSITORY] (selected before download)."
+  if [[ "${SWB_INSTALL_REPOSITORY_PINNED:-0}" == 1 ]]; then
+    echo "GitHub repository to follow [$SWB_REPOSITORY] (selected before download)."
   else
-    question SWO_REPOSITORY 'GitHub repository to follow' "${SWO_REPOSITORY:-SpaceWorks-HQ/SpaceWorks-Organization}" repository || return 1
+    question SWB_REPOSITORY 'GitHub repository to follow' "${SWB_REPOSITORY:-SpaceWorks-HQ/SpaceWorks-Bookings}" repository || return 1
   fi
   INSTALL_RUNNER=N
   if [[ "$(uname -s)" == Linux ]] && command -v systemctl >/dev/null 2>&1 \
@@ -102,7 +102,7 @@ setup_summary() {
   printf '  Super admin: %s (password set; sign in at /login, then open /super-admin)\n' "$SUPER_ADMIN_EMAIL"
   printf '  Email: %s via %s:%s as %s (password hidden)\n' "$EMAIL_FROM" "$SMTP_HOST" "$SMTP_PORT" "$SMTP_USER"
   echo '  Sign-in options: email + password, or an emailed sign-in link (no single sign-on)'
-  printf '  GitHub repository: %s; install GitHub Actions runner: %s\n' "$SWO_REPOSITORY" "$INSTALL_RUNNER"
+  printf '  GitHub repository: %s; install GitHub Actions runner: %s\n' "$SWB_REPOSITORY" "$INSTALL_RUNNER"
   echo "  migrate builds the database tables. It runs once and stops. It's required."
   echo "  scheduler sends email, runs the membership sweep and clears expired data, once a minute."
   local services='PostgreSQL 16 (TLS), Redis 7 (TLS)'

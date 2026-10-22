@@ -1,4 +1,4 @@
-import type { OrgTaxSettings, PaymentLineKind, TaxDocumentKind } from "@prisma/client";
+import type { MakerspaceTaxSettings, PaymentLineKind, TaxDocumentKind } from "@prisma/client";
 
 /**
  * Tax maths for payments and credit notes. Pure and client-safe; docs/GST.md explains every rule.
@@ -25,9 +25,9 @@ export type TaxSnapshot = {
   lutNumber: string | null;
 };
 
-type TaxSettings = Pick<OrgTaxSettings, "mode" | "scheme" | "gstin" | "legalName" | "address" | "stateCode" | "sacCode" | "rateBps" | "inclusive" | "exempt" | "foreignCurrencyTax" | "lutNumber" | "simpleTaxName">;
+type TaxSettings = Pick<MakerspaceTaxSettings, "mode" | "scheme" | "gstin" | "legalName" | "address" | "stateCode" | "sacCode" | "rateBps" | "inclusive" | "exempt" | "foreignCurrencyTax" | "lutNumber" | "simpleTaxName">;
 
-/** What a payment in `currency` is taxed at under the organisation's current settings. */
+/** What a payment in `currency` is taxed at under the makerspace's current settings. */
 export function resolveTaxSnapshot(settings: TaxSettings | null, currency: string): TaxSnapshot {
   const base: TaxSnapshot = {
     version: TAX_SNAPSHOT_VERSION,

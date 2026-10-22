@@ -9,8 +9,8 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "5"
 x-restart: &default-restart unless-stopped
-x-backend-image: &backend-image "${SWO_BACKEND_IMAGE:-ghcr.io/spaceworks-hq/spaceworks-organization-backend}:${SWO_IMAGE_TAG:-latest}"
-x-database-url: &runtime-database-url "postgresql://sworg_app:${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}@db:5432/sworg?sslmode=require&sslcert=/tls/ca.crt&sslaccept=strict"
+x-backend-image: &backend-image "${SWB_BACKEND_IMAGE:-ghcr.io/spaceworks-hq/spaceworks-bookings-backend}:${SWB_IMAGE_TAG:-latest}"
+x-database-url: &runtime-database-url "postgresql://swbook_app:${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}@db:5432/swbook?sslmode=require&sslcert=/tls/ca.crt&sslaccept=strict"
 x-app-env: &app-env
   NODE_ENV: production
   AUTH_URL: ${PUBLIC_APP_BASE_URL:?set PUBLIC_APP_BASE_URL}
@@ -44,15 +44,15 @@ x-app-env: &app-env
   SMTP_USER: ${SMTP_USER:?set SMTP_USER}
   SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD}
   OUTBOX_RETENTION_DAYS: ${OUTBOX_RETENTION_DAYS:-30}
-  S3_BUCKET: ${S3_BUCKET:-spaceworks-organization}
+  S3_BUCKET: ${S3_BUCKET:-spaceworks-bookings}
   S3_REGION: ${S3_REGION:-us-east-1}
   S3_ENDPOINT: ${S3_ENDPOINT:-https://minio:9000}
-  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-sworg-app}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-swbook-app}
   S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-${S3_APP_PASSWORD:?set S3_APP_PASSWORD}}
   S3_FORCE_PATH_STYLE: "1"
   BACKUP_PROVIDER: ${BACKUP_PROVIDER:-local pg_dump (backups/)}
   BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
-x-tls-ca: &tls-ca "${SWO_TLS_DIR:-./tls}/ca.crt:/tls/ca.crt:ro"
+x-tls-ca: &tls-ca "${SWB_TLS_DIR:-./tls}/ca.crt:/tls/ca.crt:ro"
 services:
   db:
     image: postgres:16-alpine
@@ -60,18 +60,18 @@ services:
     logging: *default-logging
     entrypoint: ["/bin/sh", "/bootstrap/postgres-start.sh"]
     environment:
-      POSTGRES_USER: sworg
-      POSTGRES_DB: sworg
+      POSTGRES_USER: swbook
+      POSTGRES_DB: swbook
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
     volumes:
-      - sworg_pgdata:/var/lib/postgresql/data
-      - ${SWO_TLS_DIR:-./tls}/db:/run/server-tls:ro
+      - swbook_pgdata:/var/lib/postgresql/data
+      - ${SWB_TLS_DIR:-./tls}/db:/run/server-tls:ro
       - ./deploy/postgres-start.sh:/bootstrap/postgres-start.sh:ro
       - ./deploy/init-database.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
       - ./deploy/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
-    healthcheck: {test: ["CMD", "pg_isready", "-h", "db", "-U", "sworg", "-d", "sworg"], interval: 5s, timeout: 5s, retries: 20}
+    healthcheck: {test: ["CMD", "pg_isready", "-h", "db", "-U", "swbook", "-d", "swbook"], interval: 5s, timeout: 5s, retries: 20}
     networks: [data]
   redis:
     image: redis:7-alpine
@@ -82,7 +82,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
     volumes:
       - redis_data:/data
-      - ${SWO_TLS_DIR:-./tls}/redis:/run/server-tls:ro
+      - ${SWB_TLS_DIR:-./tls}/redis:/run/server-tls:ro
       - *tls-ca
       - ./deploy/redis-start.sh:/bootstrap/redis-start.sh:ro
     # Proves TLS is up; authentication is checked by the app's own connection.
@@ -99,7 +99,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-      - ${SWO_TLS_DIR:-./tls}/minio:/server-tls:ro
+      - ${SWB_TLS_DIR:-./tls}/minio:/server-tls:ro
       - *tls-ca
     healthcheck: {test: ["CMD", "curl", "--fail", "--silent", "--cacert", "/tls/ca.crt", "https://minio:9000/minio/health/live"], interval: 5s, timeout: 5s, retries: 20}
     networks: [data]
@@ -126,7 +126,7 @@ services:
     restart: "no"
     logging: *default-logging
     environment:
-      DATABASE_URL: &owner-database-url "postgresql://sworg:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/sworg?sslmode=require&sslcert=/tls/ca.crt&sslaccept=strict"
+      DATABASE_URL: &owner-database-url "postgresql://swbook:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/swbook?sslmode=require&sslcert=/tls/ca.crt&sslaccept=strict"
       DIRECT_URL: *owner-database-url
     volumes: [*tls-ca]
     depends_on: {db: {condition: service_healthy}}
@@ -186,15 +186,15 @@ services:
     command: ["schedule"]
     environment:
       PGHOST: db
-      PGUSER: sworg
-      PGDATABASE: sworg
+      PGUSER: swbook
+      PGDATABASE: swbook
       PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       PGSSLMODE: verify-full
       PGSSLROOTCERT: /tls/ca.crt
       BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
     volumes:
-      - ${SWO_BACKUP_DIR:-./backups}:/backups
+      - ${SWB_BACKUP_DIR:-./backups}:/backups
       - ./deploy/backup.sh:/bootstrap/backup.sh:ro
       - *tls-ca
     depends_on: {db: {condition: service_healthy}}
@@ -211,7 +211,7 @@ services:
       SSL_CERT_FILE: /tls/ca.crt
       BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
     volumes:
-      - ${SWO_BACKUP_DIR:-./backups}:/backups
+      - ${SWB_BACKUP_DIR:-./backups}:/backups
       - ./deploy/backup.sh:/bootstrap/backup.sh:ro
       - *tls-ca
     depends_on: {createbuckets: {condition: service_completed_successfully}}
@@ -223,7 +223,7 @@ services:
     command: ["--role", "ops", "node", "docker/ops/check.mjs"]
     environment:
       <<: *app-env
-      SWO_TOPOLOGY: bundled
+      SWB_TOPOLOGY: bundled
     volumes: [*tls-ca]
     networks: [edge, data]
 
@@ -233,7 +233,7 @@ networks:
     internal: true
 
 volumes:
-  sworg_pgdata:
+  swbook_pgdata:
   redis_data:
   minio_data:
   caddy_data:

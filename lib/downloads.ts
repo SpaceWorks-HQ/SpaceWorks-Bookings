@@ -9,7 +9,7 @@ export const PRIVATE_HEADERS = {
   "X-Content-Type-Options": "nosniff",
 } as const;
 
-/** Unauthorised, other-organisation and unknown requests all look the same. */
+/** Unauthorised, other-makerspace and unknown requests all look the same. */
 export function notFoundResponse() {
   return new Response(null, { status: 404, headers: PRIVATE_HEADERS });
 }

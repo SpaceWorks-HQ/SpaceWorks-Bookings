@@ -9,7 +9,7 @@ import { requireSuperAdmin } from "@/lib/permissions";
 import { recordAuditEvent } from "@/lib/audit";
 import { encryptInstanceConfigSecret } from "@/lib/instanceConfigSecrets";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 
@@ -48,29 +48,29 @@ export async function setNewUserRegistrationEnabled(input: unknown): Promise<Act
   return { ok: true };
 }
 
-const applicationsSettingSchema = z.object({ allowOrganisationApplications: z.boolean() });
+const applicationsSettingSchema = z.object({ allowMakerspaceApplications: z.boolean() });
 
-/** Open or close self-service organisation applications at /start. */
-export async function setOrganisationApplicationsEnabled(input: unknown): Promise<ActionResult> {
+/** Open or close self-service makerspace applications at /start. */
+export async function setMakerspaceApplicationsEnabled(input: unknown): Promise<ActionResult> {
   const session = await requireSuperAdmin();
   if (await isActionRateLimited("action", session.user.id)) return { ok: false, error: "Too many requests. Try again shortly." };
   const parsed = applicationsSettingSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid application setting." };
-  const { allowOrganisationApplications } = parsed.data;
+  const { allowMakerspaceApplications } = parsed.data;
   await prisma.instanceSetting.upsert({
     where: { id: INSTANCE_SETTINGS_ID },
-    create: { id: INSTANCE_SETTINGS_ID, allowOrganisationApplications },
-    update: { allowOrganisationApplications },
+    create: { id: INSTANCE_SETTINGS_ID, allowMakerspaceApplications },
+    update: { allowMakerspaceApplications },
   });
   await recordAuditEvent({
-    action: "ORGANISATION_APPLICATIONS_SETTING_UPDATED",
+    action: "MAKERSPACE_APPLICATIONS_SETTING_UPDATED",
     actorUserId: session.user.id,
     targetType: "InstanceSetting",
     targetId: INSTANCE_SETTINGS_ID,
-    metadata: { allowOrganisationApplications },
+    metadata: { allowMakerspaceApplications },
   });
   revalidatePath("/start");
-  revalidatePath("/super-admin/orgs");
+  revalidatePath("/super-admin/makerspaces");
   return { ok: true };
 }
 

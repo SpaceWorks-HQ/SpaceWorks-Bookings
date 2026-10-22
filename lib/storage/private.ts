@@ -6,19 +6,19 @@ import { prisma } from "@/lib/db";
 /*
  * Private generated files (bulk card exports; receipt ZIPs can follow): never served by
  * /api/uploads, only by routes that check who is asking. Keys are
- * organisations/<id>/exports/<uuid>.<pdf|zip>. Same bucket as public derivatives (S3/Silo/R2), with
+ * makerspaces/<id>/exports/<uuid>.<pdf|zip>. Same bucket as public derivatives (S3/Silo/R2), with
  * no public caching; without object storage (development only) the bytes live in the Asset table.
  */
 
-const PRIVATE_KEY = /^organisations\/([A-Za-z0-9_-]{1,128})\/exports\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(pdf|zip)$/;
+const PRIVATE_KEY = /^makerspaces\/([A-Za-z0-9_-]{1,128})\/exports\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(pdf|zip)$/;
 const CONTENT_TYPES = { pdf: "application/pdf", zip: "application/zip" } as const;
 
 export function isPrivateExportKey(key: string) {
   return PRIVATE_KEY.test(key);
 }
 
-export function privateExportKey(organisationId: string, extension: keyof typeof CONTENT_TYPES) {
-  return `organisations/${organisationId}/exports/${crypto.randomUUID()}.${extension}`;
+export function privateExportKey(makerspaceId: string, extension: keyof typeof CONTENT_TYPES) {
+  return `makerspaces/${makerspaceId}/exports/${crypto.randomUUID()}.${extension}`;
 }
 
 function configured() {
@@ -36,25 +36,25 @@ function client() {
   });
 }
 
-export async function uploadPrivateExport(key: string, body: Uint8Array, organisationId: string) {
+export async function uploadPrivateExport(key: string, body: Uint8Array, makerspaceId: string) {
   const match = PRIVATE_KEY.exec(key);
-  if (!match || match[1] !== organisationId) throw new Error("Invalid private export key.");
+  if (!match || match[1] !== makerspaceId) throw new Error("Invalid private export key.");
   const contentType = CONTENT_TYPES[match[2] as keyof typeof CONTENT_TYPES];
   const bytes = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
   if (configured()) {
     await client().send(new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key, Body: bytes, ContentType: contentType, CacheControl: "private, no-store" }));
     await prisma.asset.upsert({
       where: { key },
-      create: { key, contentType, byteSize: BigInt(bytes.length), provider: "s3", organisationId },
-      update: { contentType, byteSize: BigInt(bytes.length), provider: "s3", fileData: null, organisationId },
+      create: { key, contentType, byteSize: BigInt(bytes.length), provider: "s3", makerspaceId },
+      update: { contentType, byteSize: BigInt(bytes.length), provider: "s3", fileData: null, makerspaceId },
     });
     return;
   }
   if (process.env.NODE_ENV === "production") throw new Error("Private object storage is not configured.");
   await prisma.asset.upsert({
     where: { key },
-    create: { key, contentType, byteSize: BigInt(bytes.length), provider: "database", fileData: new Uint8Array(bytes), organisationId },
-    update: { contentType, byteSize: BigInt(bytes.length), provider: "database", fileData: new Uint8Array(bytes), organisationId },
+    create: { key, contentType, byteSize: BigInt(bytes.length), provider: "database", fileData: new Uint8Array(bytes), makerspaceId },
+    update: { contentType, byteSize: BigInt(bytes.length), provider: "database", fileData: new Uint8Array(bytes), makerspaceId },
   });
 }
 

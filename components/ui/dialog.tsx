@@ -63,7 +63,7 @@ export function DialogFooter({ className, children }: { className?: string; chil
 /**
  * Confirmation for consequential actions (docs/DESIGN.md §4.15). Destructive
  * confirmations use the danger button. Pass `confirmText` to require typing a
- * value (e.g. the organisation name) before the action unlocks.
+ * value (e.g. the makerspace name) before the action unlocks.
  */
 export function ConfirmDialog({
   open,

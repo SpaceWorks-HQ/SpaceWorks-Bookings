@@ -4,12 +4,12 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
-import { acceptOrganisationInviteToken } from "@/lib/inviteAcceptance";
-import type { ActionResult } from "./org";
+import { acceptMakerspaceInviteToken } from "@/lib/inviteAcceptance";
+import type { ActionResult } from "./makerspace";
 
 const tokenSchema = z.string().trim().min(20).max(256).regex(/^[A-Za-z0-9_-]+$/);
 
-export async function acceptOrganisationInvite(input: unknown): Promise<ActionResult<{ href: string }>> {
+export async function acceptMakerspaceInvite(input: unknown): Promise<ActionResult<{ href: string }>> {
   const session = await auth();
   if (!session?.user?.id) return { ok: false, error: "Sign in before accepting this invite." };
   const token = tokenSchema.safeParse(input);
@@ -18,7 +18,7 @@ export async function acceptOrganisationInvite(input: unknown): Promise<ActionRe
   // Read from the database: session JWTs can be stale about the verified email.
   const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true, emailVerified: true } });
   if (!user) return { ok: false, error: "Sign in before accepting this invite." };
-  const result = await acceptOrganisationInviteToken(token.data, { id: session.user.id, email: user.email, emailVerified: user.emailVerified != null });
+  const result = await acceptMakerspaceInviteToken(token.data, { id: session.user.id, email: user.email, emailVerified: user.emailVerified != null });
   if (result.ok) return { ok: true, data: { href: result.href } };
   return { ok: false, error: result.reason === "wrong-account" ? "Sign in with the verified email address this invite was sent to." : "This invite is unavailable." };
 }

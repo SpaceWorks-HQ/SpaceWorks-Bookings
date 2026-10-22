@@ -18,5 +18,5 @@ export const CHAT_KIND_LABELS: Record<ChatKind, string> = {
   WHATSAPP: "WhatsApp",
 };
 
-/** The WhatsApp message template organisations create and get approved in Meta's WhatsApp Manager. */
+/** The WhatsApp message template makerspaces create and get approved in Meta's WhatsApp Manager. */
 export const WHATSAPP_TEMPLATE = { name: "team_alert", language: "en", body: "{{1}}" } as const;

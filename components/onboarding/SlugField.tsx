@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
-import { checkOrganisationSlug } from "@/app/actions/organisation-application";
+import { checkMakerspaceSlug } from "@/app/actions/makerspace-application";
 import { Field, PrefixInput } from "@/components/ui/field";
 
 /** Host and path shown before the address. Inlined at build time, so server and client agree. */
-const PUBLIC_PREFIX = `${(process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "")}/o/`;
+const PUBLIC_PREFIX = `${(process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "")}/m/`;
 
 type State = { status: "idle" | "checking" | "available" | "taken"; reason?: string };
 
@@ -20,7 +20,7 @@ export function slugFromName(name: string) {
   return cleanSlug(name.normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/['’]/g, "").replace(/[^a-zA-Z0-9]+/g, "-")).replace(/^-+|-+$/g, "");
 }
 
-/** The organisation's public web address, checked as the person types. */
+/** The makerspace's public web address, checked as the person types. */
 export function SlugField({ value, onChange, serverError, disabled }: { value: string; onChange: (slug: string) => void; serverError?: string; disabled?: boolean }) {
   const [state, setState] = useState<State>({ status: "idle" });
   const [checked, setChecked] = useState("");
@@ -31,7 +31,7 @@ export function SlugField({ value, onChange, serverError, disabled }: { value: s
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const result = await checkOrganisationSlug(slug);
+        const result = await checkMakerspaceSlug(slug);
         if (cancelled) return;
         setChecked(slug);
         if (!result.ok) setState({ status: "idle" });

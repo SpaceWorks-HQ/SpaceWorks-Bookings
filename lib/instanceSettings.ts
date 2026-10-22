@@ -14,13 +14,13 @@ export async function isNewUserRegistrationEnabled(): Promise<boolean> {
   return settings?.allowNewUserSignups ?? true;
 }
 
-/** Whether people can apply for a new organisation at /start. Platform admins can always create one. */
-export async function isOrganisationApplicationsEnabled(): Promise<boolean> {
+/** Whether people can apply for a new makerspace at /start. Platform admins can always create one. */
+export async function isMakerspaceApplicationsEnabled(): Promise<boolean> {
   const settings = await prisma.instanceSetting.findUnique({
     where: { id: INSTANCE_SETTINGS_ID },
-    select: { allowOrganisationApplications: true },
+    select: { allowMakerspaceApplications: true },
   });
-  return settings?.allowOrganisationApplications ?? true;
+  return settings?.allowMakerspaceApplications ?? true;
 }
 
 export async function getEmailSettings() {
@@ -33,7 +33,7 @@ export async function getEmailSettings() {
   });
   const configured = Boolean(settings?.smtpService || settings?.smtpHost);
   return {
-    from: settings?.emailFrom ?? process.env.EMAIL_FROM ?? "Space Works Organization <noreply@localhost>",
+    from: settings?.emailFrom ?? process.env.EMAIL_FROM ?? "Space Works Bookings <noreply@localhost>",
     service: settings?.smtpService ?? process.env.SMTP_SERVICE,
     host: settings?.smtpHost ?? process.env.SMTP_HOST,
     port: settings?.smtpPort ?? parseInt(process.env.SMTP_PORT || "587", 10),

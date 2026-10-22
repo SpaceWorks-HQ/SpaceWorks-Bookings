@@ -7,21 +7,21 @@ import { signOut } from "next-auth/react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ArrowUpRight, ChevronsUpDown, Home, LogOut, Menu as MenuIcon, Moon, Plus, Sun, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import type { ShellOrganisation, ShellUser } from "@/lib/appShell";
-import { can, organisationAllows, ROLE_LABELS, type Capability } from "@/lib/permissionRoles";
+import type { ShellMakerspace, ShellUser } from "@/lib/appShell";
+import { can, makerspaceAllows, ROLE_LABELS, type Capability } from "@/lib/permissionRoles";
 import { SpaceWorksProductLogo } from "@/components/brand/SpaceWorksLogo";
 import { useAppColorMode } from "@/components/providers";
-import { Avatar, OrgLogo } from "@/components/ui/display";
+import { Avatar, MakerspaceLogo } from "@/components/ui/display";
 import { IconButton } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { BrandHomeLink } from "./SiteHeader";
 
-/** Organisation navigation, in order. Each entry shows only when the role has the capability. */
-const ORG_NAV: Array<{ path: string; label: string; capability: Capability; exact?: boolean }> = [
-  { path: "", label: "Overview", capability: "org.view", exact: true },
+/** Makerspace navigation, in order. Each entry shows only when the role has the capability. */
+const MAKERSPACE_NAV: Array<{ path: string; label: string; capability: Capability; exact?: boolean }> = [
+  { path: "", label: "Overview", capability: "makerspace.view", exact: true },
   { path: "/payments", label: "Payments", capability: "payments.view" },
-  { path: "/team", label: "Team", capability: "org.view" },
-  { path: "/settings", label: "Settings", capability: "org.settings" },
+  { path: "/team", label: "Team", capability: "makerspace.view" },
+  { path: "/settings", label: "Settings", capability: "makerspace.settings" },
 ];
 
 function NavItem({ href, children, active, onNavigate, badge }: { href: string; children: string; active: boolean; onNavigate?: () => void; badge?: ReactNode }) {
@@ -42,9 +42,9 @@ function NavItem({ href, children, active, onNavigate, badge }: { href: string; 
   );
 }
 
-function currentOrganisationSlug(pathname: string | null) {
+function currentMakerspaceSlug(pathname: string | null) {
   const match = /^\/dashboard\/([^/]+)/.exec(pathname ?? "");
-  if (!match || match[1] === "org" || match[1] === "security") return null;
+  if (!match || match[1] === "makerspace" || match[1] === "security") return null;
   return decodeURIComponent(match[1]!);
 }
 
@@ -93,48 +93,48 @@ function AccountMenu({ user, onNavigate }: { user: ShellUser; onNavigate?: () =>
   );
 }
 
-function OrganisationSwitcher({ current, organisations, onNavigate }: { current: ShellOrganisation; organisations: ShellOrganisation[]; onNavigate?: () => void }) {
+function MakerspaceSwitcher({ current, makerspaces, onNavigate }: { current: ShellMakerspace; makerspaces: ShellMakerspace[]; onNavigate?: () => void }) {
   return (
     <Menu>
       <MenuTrigger className="group w-full overflow-hidden rounded-xl border border-line bg-panel text-left transition-colors hover:border-line-strong">
         <span className="flex min-h-[58px] items-center gap-2.5 px-2.5 py-2">
-          <OrgLogo name={current.name} src={current.logoUrl} size="md" />
+          <MakerspaceLogo name={current.name} src={current.logoUrl} size="md" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[15px] font-semibold text-ink">{current.name}</span>
             <span className="block text-caption text-ink-muted">{ROLE_LABELS[current.role]}</span>
           </span>
           <ChevronsUpDown aria-hidden className="mt-1 size-4 shrink-0 text-ink-muted" />
-          <span className="sr-only">Switch organisation</span>
+          <span className="sr-only">Switch makerspace</span>
         </span>
       </MenuTrigger>
       <MenuContent align="start" side="bottom" className="min-w-[240px]">
-        <MenuLabel>Organisations</MenuLabel>
-        {organisations.map((organisation) => (
-          <MenuItem key={organisation.slug} asChild>
-            <Link href={`/dashboard/${organisation.slug}`} onClick={onNavigate}>
+        <MenuLabel>Makerspaces</MenuLabel>
+        {makerspaces.map((makerspace) => (
+          <MenuItem key={makerspace.slug} asChild>
+            <Link href={`/dashboard/${makerspace.slug}`} onClick={onNavigate}>
               <span className="flex items-center gap-2.5">
-                <OrgLogo name={organisation.name} src={organisation.logoUrl} size="sm" />
-                <span className="min-w-0 truncate">{organisation.name}</span>
+                <MakerspaceLogo name={makerspace.name} src={makerspace.logoUrl} size="sm" />
+                <span className="min-w-0 truncate">{makerspace.name}</span>
               </span>
             </Link>
           </MenuItem>
         ))}
         <MenuSeparator />
         <MenuItem asChild icon={<Home />}>
-          <Link href="/dashboard" onClick={onNavigate}>All organisations</Link>
+          <Link href="/dashboard" onClick={onNavigate}>All makerspaces</Link>
         </MenuItem>
         <MenuItem asChild icon={<Plus />}>
-          <Link href="/start" onClick={onNavigate}>Apply for a new organisation</Link>
+          <Link href="/start" onClick={onNavigate}>Apply for a new makerspace</Link>
         </MenuItem>
       </MenuContent>
     </Menu>
   );
 }
 
-function SidebarContents({ user, organisations, onNavigate }: { user: ShellUser; organisations: ShellOrganisation[]; onNavigate?: () => void }) {
+function SidebarContents({ user, makerspaces, onNavigate }: { user: ShellUser; makerspaces: ShellMakerspace[]; onNavigate?: () => void }) {
   const pathname = usePathname() ?? "";
-  const slug = currentOrganisationSlug(pathname);
-  const current = slug ? organisations.find((organisation) => organisation.slug === slug) ?? null : null;
+  const slug = currentMakerspaceSlug(pathname);
+  const current = slug ? makerspaces.find((makerspace) => makerspace.slug === slug) ?? null : null;
   const base = current ? `/dashboard/${current.slug}` : "";
   const active = current?.status === "ACTIVE";
 
@@ -146,9 +146,9 @@ function SidebarContents({ user, organisations, onNavigate }: { user: ShellUser;
 
       {current ? (
         <>
-          <OrganisationSwitcher current={current} organisations={organisations} onNavigate={onNavigate} />
-          <nav aria-label="Organisation" className="flex flex-col gap-1">
-            {ORG_NAV.filter((item) => organisationAllows(current.status, item.capability) && can(current.role, item.capability)).map((item) => {
+          <MakerspaceSwitcher current={current} makerspaces={makerspaces} onNavigate={onNavigate} />
+          <nav aria-label="Makerspace" className="flex flex-col gap-1">
+            {MAKERSPACE_NAV.filter((item) => makerspaceAllows(current.status, item.capability) && can(current.role, item.capability)).map((item) => {
               const href = `${base}${item.path}`;
               const isActive = item.exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
               return (
@@ -168,26 +168,26 @@ function SidebarContents({ user, organisations, onNavigate }: { user: ShellUser;
       ) : (
         <nav aria-label="Workspace" className="flex flex-col gap-1">
           <NavItem href="/dashboard" active={pathname === "/dashboard"} onNavigate={onNavigate}>Home</NavItem>
-          <p className="mt-4 px-4 pb-0.5 text-overline text-ink-muted">Organisations</p>
-          {organisations.map((organisation) => (
+          <p className="mt-4 px-4 pb-0.5 text-overline text-ink-muted">Makerspaces</p>
+          {makerspaces.map((makerspace) => (
             <Link
-              key={organisation.slug}
-              href={`/dashboard/${organisation.slug}`}
+              key={makerspace.slug}
+              href={`/dashboard/${makerspace.slug}`}
               onClick={onNavigate}
               className="relative flex min-h-11 items-center gap-2.5 rounded-control px-4 text-[15px] text-ink transition-colors hover:bg-sidebar-hover"
             >
-              <OrgLogo name={organisation.name} src={organisation.logoUrl} size="sm" className="size-6 rounded-[7px] text-[10px]" />
-              <span className="min-w-0 flex-1 truncate">{organisation.name}</span>
+              <MakerspaceLogo name={makerspace.name} src={makerspace.logoUrl} size="sm" className="size-6 rounded-[7px] text-[10px]" />
+              <span className="min-w-0 flex-1 truncate">{makerspace.name}</span>
             </Link>
           ))}
-          <NavItem href="/start" active={pathname === "/start"} onNavigate={onNavigate}>Apply for an organisation</NavItem>
+          <NavItem href="/start" active={pathname === "/start"} onNavigate={onNavigate}>Apply for a makerspace</NavItem>
         </nav>
       )}
 
       <div className="mt-auto flex flex-col gap-2">
         {current && active ? (
           <Link
-            href={`/o/${current.slug}`}
+            href={`/m/${current.slug}`}
             onClick={onNavigate}
             className="inline-flex min-h-11 items-center gap-1 rounded-control px-4 text-sm font-medium text-ink underline-offset-4 hover:underline"
           >
@@ -205,16 +205,16 @@ function SidebarContents({ user, organisations, onNavigate }: { user: ShellUser;
  * Dashboard app shell (docs/DESIGN.md): a 256px Citron sidebar with text-only navigation from 1024px,
  * and a top bar with a menu sheet below it. There is no icon rail: the navigation is words only.
  */
-export function AppShell({ user, organisations, children }: { user: ShellUser; organisations: ShellOrganisation[]; children: ReactNode }) {
+export function AppShell({ user, makerspaces, children }: { user: ShellUser; makerspaces: ShellMakerspace[]; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <aside className="sticky top-0 hidden h-dvh w-[256px] shrink-0 overflow-y-auto overflow-x-hidden border-r border-line bg-sidebar lg:block">
-        <SidebarContents user={user} organisations={organisations} />
+        <SidebarContents user={user} makerspaces={makerspaces} />
       </aside>
 
       <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-canvas px-4 lg:hidden">
-        <Link href="/dashboard" aria-label="Space Works Organization home" className="inline-flex shrink-0 items-center rounded-md">
+        <Link href="/dashboard" aria-label="Space Works Bookings home" className="inline-flex shrink-0 items-center rounded-md">
           <SpaceWorksProductLogo height={30} label={null} />
         </Link>
         <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
@@ -233,7 +233,7 @@ export function AppShell({ user, organisations, children }: { user: ShellUser; o
                   <X />
                 </IconButton>
               </DialogPrimitive.Close>
-              <SidebarContents user={user} organisations={organisations} onNavigate={() => setMenuOpen(false)} />
+              <SidebarContents user={user} makerspaces={makerspaces} onNavigate={() => setMenuOpen(false)} />
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         </DialogPrimitive.Root>

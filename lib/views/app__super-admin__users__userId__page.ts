@@ -37,7 +37,7 @@ export async function loadSuperAdminUserDetailView({ params }: Props) {
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 100,
-      select: { id: true, role: true, createdAt: true, organisation: { select: { id: true, name: true, slug: true } } },
+      select: { id: true, role: true, createdAt: true, makerspace: { select: { id: true, name: true, slug: true } } },
     }),
     prisma.auditEvent.findMany({ where: { actorUserId: user.id }, orderBy: { createdAt: "desc" }, take: 20, select: auditRowSelect }),
   ]);

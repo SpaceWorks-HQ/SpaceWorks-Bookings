@@ -5,7 +5,7 @@ CREATE TYPE "RefundPolicy" AS ENUM ('NONE', 'FULL', 'PRO_RATA');
 CREATE TYPE "RefundRequestStatus" AS ENUM ('OPEN', 'APPROVED', 'DECLINED', 'WITHDRAWN');
 
 -- AlterTable
-ALTER TABLE "OrgPaymentSettings" ADD COLUMN     "refundPolicy" "RefundPolicy" NOT NULL DEFAULT 'NONE',
+ALTER TABLE "MakerspacePaymentSettings" ADD COLUMN     "refundPolicy" "RefundPolicy" NOT NULL DEFAULT 'NONE',
 ADD COLUMN     "refundPolicyText" TEXT NOT NULL DEFAULT '',
 ADD COLUMN     "refundWindowDays" INTEGER NOT NULL DEFAULT 14;
 
@@ -15,7 +15,7 @@ ALTER TABLE "Refund" ADD COLUMN     "lastCheckedAt" TIMESTAMP(3);
 -- CreateTable
 CREATE TABLE "RefundRequest" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "paymentId" TEXT NOT NULL,
     "termId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
@@ -37,34 +37,34 @@ CREATE TABLE "RefundRequest" (
 CREATE UNIQUE INDEX "RefundRequest_refundId_key" ON "RefundRequest"("refundId");
 
 -- CreateIndex
-CREATE INDEX "RefundRequest_organisationId_status_createdAt_idx" ON "RefundRequest"("organisationId", "status", "createdAt");
+CREATE INDEX "RefundRequest_makerspaceId_status_createdAt_idx" ON "RefundRequest"("makerspaceId", "status", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "RefundRequest_paymentId_idx" ON "RefundRequest"("paymentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "RefundRequest_organisationId_id_key" ON "RefundRequest"("organisationId", "id");
+CREATE UNIQUE INDEX "RefundRequest_makerspaceId_id_key" ON "RefundRequest"("makerspaceId", "id");
 
 -- AddForeignKey
-ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_organisationId_paymentId_fkey" FOREIGN KEY ("organisationId", "paymentId") REFERENCES "Payment"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_makerspaceId_paymentId_fkey" FOREIGN KEY ("makerspaceId", "paymentId") REFERENCES "Payment"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_organisationId_termId_fkey" FOREIGN KEY ("organisationId", "termId") REFERENCES "MembershipTerm"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_makerspaceId_termId_fkey" FOREIGN KEY ("makerspaceId", "termId") REFERENCES "MembershipTerm"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_organisationId_memberId_fkey" FOREIGN KEY ("organisationId", "memberId") REFERENCES "Member"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_makerspaceId_memberId_fkey" FOREIGN KEY ("makerspaceId", "memberId") REFERENCES "Member"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RefundRequest" ADD CONSTRAINT "RefundRequest_refundId_fkey" FOREIGN KEY ("refundId") REFERENCES "Refund"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 
 -- Hand-written rules (not expressible in the Prisma schema).
-ALTER TABLE "OrgPaymentSettings"
-  ADD CONSTRAINT "OrgPaymentSettings_refund_window" CHECK ("refundWindowDays" BETWEEN 1 AND 365),
-  ADD CONSTRAINT "OrgPaymentSettings_refund_text_length" CHECK (char_length("refundPolicyText") <= 2000);
+ALTER TABLE "MakerspacePaymentSettings"
+  ADD CONSTRAINT "MakerspacePaymentSettings_refund_window" CHECK ("refundWindowDays" BETWEEN 1 AND 365),
+  ADD CONSTRAINT "MakerspacePaymentSettings_refund_text_length" CHECK (char_length("refundPolicyText") <= 2000);
 
 ALTER TABLE "RefundRequest"
   ADD CONSTRAINT "RefundRequest_suggested_not_negative" CHECK ("suggestedMinor" >= 0),
@@ -82,7 +82,7 @@ BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'Refund requests are never deleted' USING ERRCODE = 'check_violation';
   END IF;
-  IF NEW."organisationId" IS DISTINCT FROM OLD."organisationId"
+  IF NEW."makerspaceId" IS DISTINCT FROM OLD."makerspaceId"
     OR NEW."paymentId" IS DISTINCT FROM OLD."paymentId"
     OR NEW."termId" IS DISTINCT FROM OLD."termId"
     OR NEW."memberId" IS DISTINCT FROM OLD."memberId"

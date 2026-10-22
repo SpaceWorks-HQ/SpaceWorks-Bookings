@@ -1,15 +1,15 @@
 import "server-only";
 
-import type { Organisation, Payment, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
+import type { Makerspace, Payment, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
 import { chargeLines, placeOfSupply, resolveTaxSnapshot, sumSplits, type ChargeItem } from "./tax";
 
 type Tx = Prisma.TransactionClient;
-export type OrgForPayments = Pick<Organisation, "id" | "name" | "slug" | "status" | "timezone" | "financialYearStartMonth" | "offlineConfirmationRequired" | "addressLine" | "city" | "stateCode" | "postalCode" | "contactEmail" | "locale" | "logoUrl">;
+export type MakerspaceForPayments = Pick<Makerspace, "id" | "name" | "slug" | "status" | "timezone" | "financialYearStartMonth" | "offlineConfirmationRequired" | "addressLine" | "city" | "stateCode" | "postalCode" | "contactEmail" | "locale" | "logoUrl">;
 
-export const ORG_FOR_PAYMENTS = {
+export const MAKERSPACE_FOR_PAYMENTS = {
   id: true, name: true, slug: true, status: true, timezone: true, financialYearStartMonth: true, offlineConfirmationRequired: true,
   addressLine: true, city: true, stateCode: true, postalCode: true, contactEmail: true, locale: true, logoUrl: true,
-} satisfies Prisma.OrganisationSelect;
+} satisfies Prisma.MakerspaceSelect;
 
 export class PaymentError extends Error {
   override name = "PaymentError";
@@ -25,7 +25,7 @@ export type PaymentCustomer = { name: string; email: string; stateCode?: string 
 export async function createPayment(
   tx: Tx,
   args: {
-    org: OrgForPayments;
+    makerspace: MakerspaceForPayments;
     customer: PaymentCustomer;
     currency: string;
     items: ChargeItem[];
@@ -39,14 +39,14 @@ export async function createPayment(
     recordedById?: string | null;
   },
 ): Promise<Payment> {
-  const settings = await tx.orgTaxSettings.findUnique({ where: { organisationId: args.org.id } });
+  const settings = await tx.makerspaceTaxSettings.findUnique({ where: { makerspaceId: args.makerspace.id } });
   const snapshot = resolveTaxSnapshot(settings, args.currency);
   const lines = chargeLines(args.items, snapshot, placeOfSupply(args.customer.stateCode, snapshot));
   if (lines.length === 0) throw new PaymentError("Nothing is due.");
   const totals = sumSplits(lines);
   return tx.payment.create({
     data: {
-      organisationId: args.org.id,
+      makerspaceId: args.makerspace.id,
       bookingId: args.bookingId ?? null,
       customerName: args.customer.name,
       customerEmail: args.customer.email.trim().toLowerCase(),
@@ -67,9 +67,9 @@ export async function createPayment(
   });
 }
 
-/** Lock one payment of the organisation for an update. */
-export async function lockPayment(tx: Tx, organisationId: string, paymentId: string) {
-  const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "Payment" WHERE "id" = ${paymentId} AND "organisationId" = ${organisationId} FOR UPDATE`;
+/** Lock one payment of the makerspace for an update. */
+export async function lockPayment(tx: Tx, makerspaceId: string, paymentId: string) {
+  const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "Payment" WHERE "id" = ${paymentId} AND "makerspaceId" = ${makerspaceId} FOR UPDATE`;
   if (rows.length === 0) throw new PaymentError("Payment not found.");
   return tx.payment.findUniqueOrThrow({ where: { id: paymentId } });
 }

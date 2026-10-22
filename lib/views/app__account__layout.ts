@@ -4,7 +4,7 @@ import { getAppShellData } from "@/lib/appShell";
 
 export async function loadAccountShell() {
   const session = await requireAuth();
-  const [{ user, organisations }, account] = await Promise.all([
+  const [{ user, makerspaces }, account] = await Promise.all([
     getAppShellData(session.user.id),
     // Header facts only: booleans and a date, never secrets.
     prisma.user.findUniqueOrThrow({
@@ -12,5 +12,5 @@ export async function loadAccountShell() {
       select: { emailVerified: true, mfaEnabledAt: true, createdAt: true },
     }),
   ]);
-  return { user, organisations, account };
+  return { user, makerspaces, account };
 }

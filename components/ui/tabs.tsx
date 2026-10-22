@@ -7,7 +7,7 @@ import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-/* ---------- Underline tabs (docs/DESIGN.md §4.4): 2px teal (or organisation accent) underline ---------- */
+/* ---------- Underline tabs (docs/DESIGN.md §4.4): 2px teal (or makerspace accent) underline ---------- */
 
 export const Tabs = TabsPrimitive.Root;
 

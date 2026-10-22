@@ -6,11 +6,11 @@
 # Only ca.crt is shared with application containers; ca.key never leaves tls/.
 set -eu
 umask 077
-dir=${SWO_TLS_DIR:-/tls}
+dir=${SWB_TLS_DIR:-/tls}
 case "${1:-}" in
   '') [ ! -e "$dir/ca.key" ] || { echo 'A private CA already exists; use --renew.' >&2; exit 1; }
       openssl req -x509 -newkey rsa:3072 -nodes -sha256 -days 3650 \
-        -subj '/CN=Space Works Organization private CA' -addext 'basicConstraints=critical,CA:TRUE' \
+        -subj '/CN=Space Works Bookings private CA' -addext 'basicConstraints=critical,CA:TRUE' \
         -keyout "$dir/ca.key" -out "$dir/ca.crt" 2>/dev/null ;;
   --renew) [ -s "$dir/ca.key" ] || { echo 'No private CA to renew from.' >&2; exit 1; } ;;
   *) echo 'Usage: certificates.sh [--renew]' >&2; exit 64 ;;

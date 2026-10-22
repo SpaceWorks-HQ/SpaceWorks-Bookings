@@ -118,12 +118,12 @@ describe("credit notes across several partial refunds", () => {
 
 describe("document numbers", () => {
   it("formats payment documents and credit notes within 16 characters", () => {
-    expect(formatDocumentNumber("SWO", "R", "2026-27", 42)).toBe("SWO-2627-00042");
-    expect(formatDocumentNumber("SWOR", "C", "2026-27", 99_999)).toBe("SWOR-2627-C99999");
+    expect(formatDocumentNumber("SWB", "R", "2026-27", 42)).toBe("SWB-2627-00042");
+    expect(formatDocumentNumber("SWBR", "C", "2026-27", 99_999)).toBe("SWBR-2627-C99999");
     expect(formatDocumentNumber("", "R", "2026", 1)).toBe("2026-00001");
-    expect(formatDocumentNumber("SWOR", "C", "2026-27", 1).length).toBeLessThanOrEqual(16);
-    expect(formatDocumentNumber("SWOR", "C", "2026-27", 100_000)).toBe("SWOR2627-C100000");
-    expect(formatDocumentNumber("SWOR", "C", "2026-27", 1_000_000).length).toBeLessThanOrEqual(16);
+    expect(formatDocumentNumber("SWBR", "C", "2026-27", 1).length).toBeLessThanOrEqual(16);
+    expect(formatDocumentNumber("SWBR", "C", "2026-27", 100_000)).toBe("SWBR2627-C100000");
+    expect(formatDocumentNumber("SWBR", "C", "2026-27", 1_000_000).length).toBeLessThanOrEqual(16);
   });
 
   it("limits prefixes to four letters or digits", () => {

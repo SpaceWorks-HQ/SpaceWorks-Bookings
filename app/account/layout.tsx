@@ -4,9 +4,9 @@ import { AccountSettingsLayout } from "@/components/account/AccountSettingsLayou
 import { formatMemberSince } from "@/lib/accountSecurity";
 
 export default async function AccountLayout({ children }: { children: React.ReactNode; }) {
-  const { user, organisations, account } = await loadAccountShell();
+  const { user, makerspaces, account } = await loadAccountShell();
   return (
-    <AppShell user={user} organisations={organisations}>
+    <AppShell user={user} makerspaces={makerspaces}>
       <AccountSettingsLayout
         account={{
           name: user.name,

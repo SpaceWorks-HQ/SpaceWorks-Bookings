@@ -8,7 +8,7 @@ const defaultServerCommand = process.env.PLAYWRIGHT_PRODUCTION_SERVER === "1"
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  // Signed-in journeys share the seeded demo organisations, so files run one after another.
+  // Signed-in journeys share the seeded demo makerspaces, so files run one after another.
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
@@ -16,7 +16,7 @@ export default defineConfig({
   timeout: process.env.CI ? 120_000 : 60_000,
   use: {
     // Use IPv4 explicitly: on this workstation localhost/::1 is served by a
-    // separate development app while SpaceWorks Organization is bound on 127.0.0.1.
+    // separate development app while SpaceWorks Bookings is bound on 127.0.0.1.
     baseURL: testBaseUrl,
     trace: "on-first-retry",
   },

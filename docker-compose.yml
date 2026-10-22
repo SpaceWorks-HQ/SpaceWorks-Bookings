@@ -3,15 +3,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: sworg
-      POSTGRES_PASSWORD: sworg_dev
-      POSTGRES_DB: sworg_dev
+      POSTGRES_USER: swbook
+      POSTGRES_PASSWORD: swbook_dev
+      POSTGRES_DB: swbook_dev
     ports:
       - "5432:5432"
     volumes:
-      - sworg_pgdata:/var/lib/postgresql/data
+      - swbook_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sworg -d sworg_dev"]
+      test: ["CMD-SHELL", "pg_isready -U swbook -d swbook_dev"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,4 +27,4 @@ services:
       retries: 5
 
 volumes:
-  sworg_pgdata:
+  swbook_pgdata:

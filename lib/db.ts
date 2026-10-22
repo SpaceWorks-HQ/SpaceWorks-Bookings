@@ -23,12 +23,12 @@ function getPrisma(): PrismaClient {
   const existing = globalForPrisma.prisma;
   const delegates = existing as unknown as {
     teamMember?: { findMany: unknown };
-    organisationReview?: { findMany: unknown };
+    makerspaceReview?: { findMany: unknown };
   } | undefined;
   const delegateOk = Boolean(
     delegates &&
       typeof delegates.teamMember?.findMany === "function" &&
-      typeof delegates.organisationReview?.findMany === "function",
+      typeof delegates.makerspaceReview?.findMany === "function",
   );
 
   if (delegateOk && existing) {

@@ -4,9 +4,9 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     // A stable id so the installed app keeps its identity across hosts (e.g. a dev tunnel).
     id: "/",
-    name: "Space Works Organization",
-    short_name: "SW Organization",
-    description: "Run your organisation's memberships: plans, members, renewals, payments and ID cards.",
+    name: "Space Works Bookings",
+    short_name: "SW Makerspace",
+    description: "Book a makerspace's rooms, studios, desks and halls, and take payments for them.",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",

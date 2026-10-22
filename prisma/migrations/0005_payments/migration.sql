@@ -26,8 +26,8 @@ CREATE TYPE "ForeignCurrencyTax" AS ENUM ('EXPORT_LUT', 'NO_TAX');
 CREATE TYPE "TaxDocumentKind" AS ENUM ('RECEIPT', 'TAX_INVOICE', 'BILL_OF_SUPPLY', 'CREDIT_NOTE');
 
 -- CreateTable
-CREATE TABLE "OrgPaymentSettings" (
-    "organisationId" TEXT NOT NULL,
+CREATE TABLE "MakerspacePaymentSettings" (
+    "makerspaceId" TEXT NOT NULL,
     "provider" "GatewayProvider" NOT NULL DEFAULT 'NONE',
     "keyId" TEXT,
     "secretEncrypted" TEXT,
@@ -40,12 +40,12 @@ CREATE TABLE "OrgPaymentSettings" (
     "offlineInstructions" TEXT NOT NULL DEFAULT '',
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OrgPaymentSettings_pkey" PRIMARY KEY ("organisationId")
+    CONSTRAINT "MakerspacePaymentSettings_pkey" PRIMARY KEY ("makerspaceId")
 );
 
 -- CreateTable
-CREATE TABLE "OrgTaxSettings" (
-    "organisationId" TEXT NOT NULL,
+CREATE TABLE "MakerspaceTaxSettings" (
+    "makerspaceId" TEXT NOT NULL,
     "mode" "TaxMode" NOT NULL DEFAULT 'NONE',
     "scheme" "GstScheme" NOT NULL DEFAULT 'REGULAR',
     "gstin" TEXT,
@@ -62,13 +62,13 @@ CREATE TABLE "OrgTaxSettings" (
     "receiptPrefix" TEXT NOT NULL DEFAULT '',
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OrgTaxSettings_pkey" PRIMARY KEY ("organisationId")
+    CONSTRAINT "MakerspaceTaxSettings_pkey" PRIMARY KEY ("makerspaceId")
 );
 
 -- CreateTable
 CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
     "termId" TEXT,
     "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
@@ -100,7 +100,7 @@ CREATE TABLE "Payment" (
 -- CreateTable
 CREATE TABLE "PaymentLine" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "paymentId" TEXT NOT NULL,
     "kind" "PaymentLineKind" NOT NULL,
     "description" TEXT NOT NULL,
@@ -119,7 +119,7 @@ CREATE TABLE "PaymentLine" (
 CREATE TABLE "ProcessedWebhookEvent" (
     "provider" "PaymentProvider" NOT NULL,
     "eventId" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ProcessedWebhookEvent_pkey" PRIMARY KEY ("provider","eventId")
@@ -128,7 +128,7 @@ CREATE TABLE "ProcessedWebhookEvent" (
 -- CreateTable
 CREATE TABLE "Refund" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "paymentId" TEXT NOT NULL,
     "status" "RefundStatus" NOT NULL DEFAULT 'PENDING',
     "currency" TEXT NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE "Refund" (
 -- CreateTable
 CREATE TABLE "TaxDocument" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "paymentId" TEXT,
     "refundId" TEXT,
     "kind" "TaxDocumentKind" NOT NULL,
@@ -173,31 +173,31 @@ CREATE TABLE "TaxDocument" (
 
 -- CreateTable
 CREATE TABLE "DocumentCounter" (
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "series" TEXT NOT NULL,
     "financialYear" TEXT NOT NULL,
     "next" INTEGER NOT NULL DEFAULT 1,
 
-    CONSTRAINT "DocumentCounter_pkey" PRIMARY KEY ("organisationId","series","financialYear")
+    CONSTRAINT "DocumentCounter_pkey" PRIMARY KEY ("makerspaceId","series","financialYear")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "OrgPaymentSettings_webhookPublicCode_key" ON "OrgPaymentSettings"("webhookPublicCode");
+CREATE UNIQUE INDEX "MakerspacePaymentSettings_webhookPublicCode_key" ON "MakerspacePaymentSettings"("webhookPublicCode");
 
 -- CreateIndex
-CREATE INDEX "Payment_organisationId_status_createdAt_idx" ON "Payment"("organisationId", "status", "createdAt");
+CREATE INDEX "Payment_makerspaceId_status_createdAt_idx" ON "Payment"("makerspaceId", "status", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "Payment_organisationId_paidAt_idx" ON "Payment"("organisationId", "paidAt");
+CREATE INDEX "Payment_makerspaceId_paidAt_idx" ON "Payment"("makerspaceId", "paidAt");
 
 -- CreateIndex
-CREATE INDEX "Payment_organisationId_memberId_idx" ON "Payment"("organisationId", "memberId");
+CREATE INDEX "Payment_makerspaceId_memberId_idx" ON "Payment"("makerspaceId", "memberId");
 
 -- CreateIndex
 CREATE INDEX "Payment_termId_idx" ON "Payment"("termId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Payment_organisationId_id_key" ON "Payment"("organisationId", "id");
+CREATE UNIQUE INDEX "Payment_makerspaceId_id_key" ON "Payment"("makerspaceId", "id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_provider_gatewayOrderId_key" ON "Payment"("provider", "gatewayOrderId");
@@ -206,79 +206,79 @@ CREATE UNIQUE INDEX "Payment_provider_gatewayOrderId_key" ON "Payment"("provider
 CREATE INDEX "PaymentLine_paymentId_idx" ON "PaymentLine"("paymentId");
 
 -- CreateIndex
-CREATE INDEX "ProcessedWebhookEvent_organisationId_receivedAt_idx" ON "ProcessedWebhookEvent"("organisationId", "receivedAt");
+CREATE INDEX "ProcessedWebhookEvent_makerspaceId_receivedAt_idx" ON "ProcessedWebhookEvent"("makerspaceId", "receivedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Refund_gatewayRefundId_key" ON "Refund"("gatewayRefundId");
 
 -- CreateIndex
-CREATE INDEX "Refund_organisationId_createdAt_idx" ON "Refund"("organisationId", "createdAt");
+CREATE INDEX "Refund_makerspaceId_createdAt_idx" ON "Refund"("makerspaceId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Refund_paymentId_idx" ON "Refund"("paymentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Refund_organisationId_id_key" ON "Refund"("organisationId", "id");
+CREATE UNIQUE INDEX "Refund_makerspaceId_id_key" ON "Refund"("makerspaceId", "id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TaxDocument_refundId_key" ON "TaxDocument"("refundId");
 
 -- CreateIndex
-CREATE INDEX "TaxDocument_organisationId_issuedAt_idx" ON "TaxDocument"("organisationId", "issuedAt");
+CREATE INDEX "TaxDocument_makerspaceId_issuedAt_idx" ON "TaxDocument"("makerspaceId", "issuedAt");
 
 -- CreateIndex
 CREATE INDEX "TaxDocument_paymentId_idx" ON "TaxDocument"("paymentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TaxDocument_organisationId_number_key" ON "TaxDocument"("organisationId", "number");
+CREATE UNIQUE INDEX "TaxDocument_makerspaceId_number_key" ON "TaxDocument"("makerspaceId", "number");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TaxDocument_organisationId_series_financialYear_sequence_key" ON "TaxDocument"("organisationId", "series", "financialYear", "sequence");
+CREATE UNIQUE INDEX "TaxDocument_makerspaceId_series_financialYear_sequence_key" ON "TaxDocument"("makerspaceId", "series", "financialYear", "sequence");
 
 -- AddForeignKey
-ALTER TABLE "OrgPaymentSettings" ADD CONSTRAINT "OrgPaymentSettings_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspacePaymentSettings" ADD CONSTRAINT "MakerspacePaymentSettings_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrgTaxSettings" ADD CONSTRAINT "OrgTaxSettings_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspaceTaxSettings" ADD CONSTRAINT "MakerspaceTaxSettings_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_organisationId_memberId_fkey" FOREIGN KEY ("organisationId", "memberId") REFERENCES "Member"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_makerspaceId_memberId_fkey" FOREIGN KEY ("makerspaceId", "memberId") REFERENCES "Member"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_organisationId_termId_fkey" FOREIGN KEY ("organisationId", "termId") REFERENCES "MembershipTerm"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_makerspaceId_termId_fkey" FOREIGN KEY ("makerspaceId", "termId") REFERENCES "MembershipTerm"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "PaymentLine" ADD CONSTRAINT "PaymentLine_organisationId_paymentId_fkey" FOREIGN KEY ("organisationId", "paymentId") REFERENCES "Payment"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PaymentLine" ADD CONSTRAINT "PaymentLine_makerspaceId_paymentId_fkey" FOREIGN KEY ("makerspaceId", "paymentId") REFERENCES "Payment"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Refund" ADD CONSTRAINT "Refund_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Refund" ADD CONSTRAINT "Refund_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Refund" ADD CONSTRAINT "Refund_organisationId_paymentId_fkey" FOREIGN KEY ("organisationId", "paymentId") REFERENCES "Payment"("organisationId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Refund" ADD CONSTRAINT "Refund_makerspaceId_paymentId_fkey" FOREIGN KEY ("makerspaceId", "paymentId") REFERENCES "Payment"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TaxDocument" ADD CONSTRAINT "TaxDocument_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TaxDocument" ADD CONSTRAINT "TaxDocument_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TaxDocument" ADD CONSTRAINT "TaxDocument_organisationId_paymentId_fkey" FOREIGN KEY ("organisationId", "paymentId") REFERENCES "Payment"("organisationId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE "TaxDocument" ADD CONSTRAINT "TaxDocument_makerspaceId_paymentId_fkey" FOREIGN KEY ("makerspaceId", "paymentId") REFERENCES "Payment"("makerspaceId", "id") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- AddForeignKey
 ALTER TABLE "TaxDocument" ADD CONSTRAINT "TaxDocument_refundId_fkey" FOREIGN KEY ("refundId") REFERENCES "Refund"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DocumentCounter" ADD CONSTRAINT "DocumentCounter_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "DocumentCounter" ADD CONSTRAINT "DocumentCounter_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 -- ── Hand-written constraints (P7) ──────────────────────────────────────────
 
-ALTER TABLE "OrgTaxSettings"
-  ADD CONSTRAINT "OrgTaxSettings_rate_range" CHECK ("rateBps" BETWEEN 0 AND 10000),
-  ADD CONSTRAINT "OrgTaxSettings_prefix_format" CHECK ("receiptPrefix" ~ '^[A-Z0-9]{0,4}$'),
-  ADD CONSTRAINT "OrgTaxSettings_sac_format" CHECK ("sacCode" ~ '^[0-9]{4,8}$'),
-  ADD CONSTRAINT "OrgTaxSettings_gst_ready" CHECK ("mode" <> 'GST' OR ("gstin" IS NOT NULL AND "legalName" IS NOT NULL AND "stateCode" IS NOT NULL));
+ALTER TABLE "MakerspaceTaxSettings"
+  ADD CONSTRAINT "MakerspaceTaxSettings_rate_range" CHECK ("rateBps" BETWEEN 0 AND 10000),
+  ADD CONSTRAINT "MakerspaceTaxSettings_prefix_format" CHECK ("receiptPrefix" ~ '^[A-Z0-9]{0,4}$'),
+  ADD CONSTRAINT "MakerspaceTaxSettings_sac_format" CHECK ("sacCode" ~ '^[0-9]{4,8}$'),
+  ADD CONSTRAINT "MakerspaceTaxSettings_gst_ready" CHECK ("mode" <> 'GST' OR ("gstin" IS NOT NULL AND "legalName" IS NOT NULL AND "stateCode" IS NOT NULL));
 
 ALTER TABLE "Payment"
   ADD CONSTRAINT "Payment_amount_nonnegative" CHECK ("amountMinor" >= 0 AND ("capturedMinor" IS NULL OR "capturedMinor" >= 0)),
@@ -286,8 +286,8 @@ ALTER TABLE "Payment"
   ADD CONSTRAINT "Payment_paid_has_date" CHECK ("status" NOT IN ('PAID', 'WAIVED') OR "paidAt" IS NOT NULL),
   ADD CONSTRAINT "Payment_offline_has_no_gateway" CHECK ("provider" <> 'OFFLINE' OR "gatewayOrderId" IS NULL);
 
--- A UPI or bank reference is claimed once per organisation, but a rejected claim can be resubmitted.
-CREATE UNIQUE INDEX "Payment_offline_utr_once" ON "Payment" ("organisationId", "utr")
+-- A UPI or bank reference is claimed once per makerspace, but a rejected claim can be resubmitted.
+CREATE UNIQUE INDEX "Payment_offline_utr_once" ON "Payment" ("makerspaceId", "utr")
   WHERE "provider" = 'OFFLINE' AND "utr" IS NOT NULL AND "status" NOT IN ('CANCELLED', 'FAILED');
 
 -- At most one open payment per term; a new checkout cancels the previous one first.
@@ -328,7 +328,7 @@ BEGIN
     RETURN OLD;
   END IF;
   IF OLD."status" IN ('PAID', 'WAIVED') THEN
-    IF NEW."organisationId" IS DISTINCT FROM OLD."organisationId"
+    IF NEW."makerspaceId" IS DISTINCT FROM OLD."makerspaceId"
       OR NEW."memberId" IS DISTINCT FROM OLD."memberId"
       OR NEW."termId" IS DISTINCT FROM OLD."termId"
       OR NEW."status" IS DISTINCT FROM OLD."status"
@@ -352,7 +352,7 @@ CREATE TRIGGER "Payment_guard" BEFORE UPDATE OR DELETE ON "Payment" FOR EACH ROW
 
 CREATE FUNCTION payment_line_guard() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  -- Lines of a payment that never settled may go with it (an unpaid organisation being deleted).
+  -- Lines of a payment that never settled may go with it (an unpaid makerspace being deleted).
   IF TG_OP = 'DELETE' AND NOT EXISTS (SELECT 1 FROM "Payment" WHERE "id" = OLD."paymentId" AND "status" IN ('PAID', 'WAIVED')) THEN
     RETURN OLD;
   END IF;
@@ -367,7 +367,7 @@ BEGIN
     RAISE EXCEPTION 'Tax documents are never deleted' USING ERRCODE = 'check_violation';
   END IF;
   IF OLD."cancelledAt" IS NOT NULL
-    OR NEW."organisationId" IS DISTINCT FROM OLD."organisationId"
+    OR NEW."makerspaceId" IS DISTINCT FROM OLD."makerspaceId"
     OR NEW."paymentId" IS DISTINCT FROM OLD."paymentId"
     OR NEW."refundId" IS DISTINCT FROM OLD."refundId"
     OR NEW."kind" IS DISTINCT FROM OLD."kind"
@@ -401,7 +401,7 @@ BEGIN
     RAISE EXCEPTION 'Refunds are never deleted' USING ERRCODE = 'check_violation';
   END IF;
   IF OLD."status" <> 'PENDING'
-    OR NEW."organisationId" IS DISTINCT FROM OLD."organisationId"
+    OR NEW."makerspaceId" IS DISTINCT FROM OLD."makerspaceId"
     OR NEW."paymentId" IS DISTINCT FROM OLD."paymentId"
     OR NEW."currency" IS DISTINCT FROM OLD."currency"
     OR NEW."amountMinor" IS DISTINCT FROM OLD."amountMinor"

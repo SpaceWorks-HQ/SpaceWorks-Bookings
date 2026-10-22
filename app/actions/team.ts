@@ -5,7 +5,7 @@ import { trackedRevalidation } from "@/lib/frontend/revalidation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
-  canDeleteOrg,
+  canDeleteMakerspace,
   canManageTeam,
   canManageTeamMember,
   getMembership,
@@ -13,14 +13,14 @@ import {
   STAFF_AUTHENTICATOR_MESSAGE,
 } from "@/lib/permissions";
 import {
-  deleteOrganisationSchema,
+  deleteMakerspaceSchema,
   removeTeamMemberSchema,
   updateTeamRoleSchema,
 } from "@/lib/validators";
-import type { ActionResult } from "./org";
+import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
-import { organisationAllows } from "@/lib/permissionRoles";
-import { canDeleteInStatus, ORGANISATION_LOCKED } from "@/lib/organisationLifecycle";
+import { makerspaceAllows } from "@/lib/permissionRoles";
+import { canDeleteInStatus, MAKERSPACE_LOCKED } from "@/lib/makerspaceLifecycle";
 import { recordAuditEvent } from "@/lib/audit";
 import { hasRecentAuthentication } from "@/lib/reauth";
 
@@ -43,14 +43,14 @@ export async function updateTeamRole(
     };
   }
 
-  const { organisationSlug, targetUserId, role } = parsed.data;
-  const org = await prisma.organisation.findUnique({
-    where: { slug: organisationSlug },
+  const { makerspaceSlug, targetUserId, role } = parsed.data;
+  const makerspace = await prisma.makerspace.findUnique({
+    where: { slug: makerspaceSlug },
   });
-  if (!org) return { ok: false, error: "Organisation not found." };
-  if (!organisationAllows(org.status, "team.manage")) return { ok: false, error: ORGANISATION_LOCKED };
+  if (!makerspace) return { ok: false, error: "Makerspace not found." };
+  if (!makerspaceAllows(makerspace.status, "team.manage")) return { ok: false, error: MAKERSPACE_LOCKED };
 
-  const actor = await getMembership(session.user.id, org.id);
+  const actor = await getMembership(session.user.id, makerspace.id);
   if (!actor || !canManageTeam(actor)) {
     return { ok: false, error: "Only owners and managers can change team roles." };
   }
@@ -59,7 +59,7 @@ export async function updateTeamRole(
     return { ok: false, error: "For security, sign in again before changing team roles." };
   }
 
-  const target = await getMembership(targetUserId, org.id);
+  const target = await getMembership(targetUserId, makerspace.id);
   if (!target) return { ok: false, error: "Team member not found." };
   if (target.role === "OWNER") {
     return { ok: false, error: "The owner role cannot be changed here." };
@@ -76,14 +76,14 @@ export async function updateTeamRole(
   await recordAuditEvent({
     action: "TEAM_ROLE_CHANGED",
     actorUserId: session.user.id,
-    organisationId: org.id,
+    makerspaceId: makerspace.id,
     targetType: "teamMember",
     targetId: target.id,
     metadata: { role },
   });
 
-  revalidatePath(`/dashboard/${org.slug}/team`);
-  revalidatePath(`/dashboard/${org.slug}`);
+  revalidatePath(`/dashboard/${makerspace.slug}/team`);
+  revalidatePath(`/dashboard/${makerspace.slug}`);
   return { ok: true };
 }
 
@@ -102,27 +102,27 @@ export async function removeTeamMember(input: unknown): Promise<ActionResult> {
     };
   }
 
-  const { organisationSlug, targetUserId } = parsed.data;
+  const { makerspaceSlug, targetUserId } = parsed.data;
   if (targetUserId === session.user.id) {
     return { ok: false, error: "You cannot remove yourself this way." };
   }
 
-  const org = await prisma.organisation.findUnique({
-    where: { slug: organisationSlug },
+  const makerspace = await prisma.makerspace.findUnique({
+    where: { slug: makerspaceSlug },
   });
-  if (!org) return { ok: false, error: "Organisation not found." };
-  if (!organisationAllows(org.status, "team.manage")) return { ok: false, error: ORGANISATION_LOCKED };
+  if (!makerspace) return { ok: false, error: "Makerspace not found." };
+  if (!makerspaceAllows(makerspace.status, "team.manage")) return { ok: false, error: MAKERSPACE_LOCKED };
 
-  const actor = await getMembership(session.user.id, org.id);
+  const actor = await getMembership(session.user.id, makerspace.id);
   if (!actor || !canManageTeam(actor)) {
     return { ok: false, error: "You do not have permission to remove people from the team." };
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
 
-  const target = await getMembership(targetUserId, org.id);
+  const target = await getMembership(targetUserId, makerspace.id);
   if (!target) return { ok: false, error: "Team member not found." };
   if (target.role === "OWNER") {
-    return { ok: false, error: "Cannot remove the organisation owner." };
+    return { ok: false, error: "Cannot remove the makerspace owner." };
   }
   if (!canManageTeamMember(actor.role, target.role)) {
     return { ok: false, error: "Admins can only remove treasurers and viewers." };
@@ -132,23 +132,23 @@ export async function removeTeamMember(input: unknown): Promise<ActionResult> {
   await recordAuditEvent({
     action: "TEAM_MEMBER_REMOVED",
     actorUserId: session.user.id,
-    organisationId: org.id,
+    makerspaceId: makerspace.id,
     targetType: "teamMember",
     targetId: target.id,
   });
 
-  revalidatePath(`/dashboard/${org.slug}/team`);
-  revalidatePath(`/dashboard/${org.slug}`);
+  revalidatePath(`/dashboard/${makerspace.slug}/team`);
+  revalidatePath(`/dashboard/${makerspace.slug}`);
   return { ok: true };
 }
 
-export async function deleteOrganisation(input: unknown): Promise<ActionResult> {
+export async function deleteMakerspace(input: unknown): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, error: "You must be signed in." };
   }
 
-  const parsed = deleteOrganisationSchema.safeParse(input);
+  const parsed = deleteMakerspaceSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
@@ -157,43 +157,43 @@ export async function deleteOrganisation(input: unknown): Promise<ActionResult> 
     };
   }
 
-  const org = await prisma.organisation.findUnique({
-    where: { slug: parsed.data.organisationSlug },
+  const makerspace = await prisma.makerspace.findUnique({
+    where: { slug: parsed.data.makerspaceSlug },
   });
-  if (!org) return { ok: false, error: "Organisation not found." };
+  if (!makerspace) return { ok: false, error: "Makerspace not found." };
 
-  if (!canDeleteInStatus(org.status)) return { ok: false, error: "A suspended or archived organisation keeps its records and can't be deleted." };
+  if (!canDeleteInStatus(makerspace.status)) return { ok: false, error: "A suspended or archived makerspace keeps its records and can't be deleted." };
 
-  const membership = await getMembership(session.user.id, org.id);
-  if (!canDeleteOrg(membership)) {
-    return { ok: false, error: "Only the organisation owner can delete it." };
+  const membership = await getMembership(session.user.id, makerspace.id);
+  if (!canDeleteMakerspace(membership)) {
+    return { ok: false, error: "Only the makerspace owner can delete it." };
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   if (!(await hasRecentAuthentication())) {
-    return { ok: false, error: "For security, sign in again before deleting an organisation." };
+    return { ok: false, error: "For security, sign in again before deleting a makerspace." };
   }
 
-  // Money records are kept for audit (8 years); an organisation that has taken payments is archived instead.
-  if (await prisma.payment.count({ where: { organisationId: org.id, status: { in: ["PAID", "WAIVED"] } } })) {
-    return { ok: false, error: "This organisation has taken payments, so its records must be kept. Ask a platform admin to archive it instead." };
+  // Money records are kept for audit (8 years); a makerspace that has taken payments is archived instead.
+  if (await prisma.payment.count({ where: { makerspaceId: makerspace.id, status: { in: ["PAID", "WAIVED"] } } })) {
+    return { ok: false, error: "This makerspace has taken payments, so its records must be kept. Ask a platform admin to archive it instead." };
   }
 
-  const slug = org.slug;
-  // Deliberately omit organisationId: deleting the organisation cascades its
+  const slug = makerspace.slug;
+  // Deliberately omit makerspaceId: deleting the makerspace cascades its
   // scoped records, while this audit record must survive at the instance level.
   await recordAuditEvent({
-    action: "ORGANISATION_DELETED",
+    action: "MAKERSPACE_DELETED",
     actorUserId: session.user.id,
-    targetType: "organisation",
-    targetId: org.id,
+    targetType: "makerspace",
+    targetId: makerspace.id,
   });
   await prisma.$transaction([
-    prisma.paymentLine.deleteMany({ where: { organisationId: org.id } }),
-    prisma.payment.deleteMany({ where: { organisationId: org.id } }),
-    prisma.organisation.delete({ where: { id: org.id } }),
+    prisma.paymentLine.deleteMany({ where: { makerspaceId: makerspace.id } }),
+    prisma.payment.deleteMany({ where: { makerspaceId: makerspace.id } }),
+    prisma.makerspace.delete({ where: { id: makerspace.id } }),
   ]);
 
   revalidatePath("/dashboard");
-  revalidatePath(`/o/${slug}`);
+  revalidatePath(`/m/${slug}`);
   return { ok: true };
 }

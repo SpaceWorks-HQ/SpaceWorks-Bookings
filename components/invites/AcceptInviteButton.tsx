@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { acceptOrganisationInvite } from "@/app/actions/invite-acceptance";
+import { acceptMakerspaceInvite } from "@/app/actions/invite-acceptance";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/display";
 
@@ -20,7 +20,7 @@ export function AcceptInviteButton(props: { token: string }) {
         loadingLabel="Accepting…"
         onClick={() => startTransition(async () => {
           setError(null);
-          const result = await acceptOrganisationInvite(props.token);
+          const result = await acceptMakerspaceInvite(props.token);
           if (!result.ok || !result.data) {
             setError(result.ok ? "This invite is unavailable." : result.error);
             return;

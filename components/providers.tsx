@@ -8,7 +8,7 @@ import { ToastProvider } from "@/components/feedback/ToastProvider";
 import { TooltipProvider } from "@/components/ui/menu";
 import { COLOR_MODE_COOKIE, type ColorMode } from "@/lib/colorMode";
 
-const CHANGE_EVENT = "swo:theme-change";
+const CHANGE_EVENT = "swb:theme-change";
 
 function readMode(): ColorMode {
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
@@ -99,7 +99,7 @@ export function useAppColorMode() {
 }
 
 /**
- * Light unless the person picks dark. The choice lives in the swo.theme cookie, which the root layout
+ * Light unless the person picks dark. The choice lives in the swb.theme cookie, which the root layout
  * reads to render the right class on <html>; there is no operating-system fallback.
  */
 export function Providers({ children, initialColorMode, session }: { children: React.ReactNode; initialColorMode: ColorMode; session?: Session | null }) {

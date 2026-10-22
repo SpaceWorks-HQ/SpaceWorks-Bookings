@@ -7,10 +7,10 @@ set -eu
 MC_HOST_local="https://${MINIO_ROOT_USER}:${MINIO_ROOT_PASSWORD}@minio:9000"
 export MC_HOST_local
 until mc ls local >/dev/null 2>&1; do sleep 1; done
-mc mb --ignore-existing local/spaceworks-organization
-mc anonymous set none local/spaceworks-organization
-mc version enable local/spaceworks-organization
-mc admin user add local sworg-app "$S3_APP_PASSWORD" >/dev/null
-mc admin policy create local sworg-app /bootstrap/storage-policy.json >/dev/null
-mc admin policy attach local sworg-app --user sworg-app >/dev/null 2>&1 || true
+mc mb --ignore-existing local/spaceworks-bookings
+mc anonymous set none local/spaceworks-bookings
+mc version enable local/spaceworks-bookings
+mc admin user add local swbook-app "$S3_APP_PASSWORD" >/dev/null
+mc admin policy create local swbook-app /bootstrap/storage-policy.json >/dev/null
+mc admin policy attach local swbook-app --user swbook-app >/dev/null 2>&1 || true
 echo 'Private storage bucket and application policy ready.'

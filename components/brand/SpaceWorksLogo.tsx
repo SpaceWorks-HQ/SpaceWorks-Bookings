@@ -88,10 +88,10 @@ export function SpaceWorksLogo({ variant = "lockup-horizontal", tone = "full", a
 
 /**
  * The product lockup for headers: the horizontal Space Works lockup, a thin
- * rule, and "Organization" in Gilroy ExtraBold. The rule and label sit a clear space
+ * rule, and "Makerspace" in Gilroy ExtraBold. The rule and label sit a clear space
  * (¼ of the lockup height) away from the artwork.
  */
-export function SpaceWorksProductLogo({ height = 36, label = "Space Works Organization", className }: { height?: number; label?: string | null; className?: string }) {
+export function SpaceWorksProductLogo({ height = 36, label = "Space Works Bookings", className }: { height?: number; label?: string | null; className?: string }) {
   const size = spaceWorksLogoSize("lockup-horizontal", height);
   const space = Math.round(size.height / 4);
   return (
@@ -105,7 +105,7 @@ export function SpaceWorksProductLogo({ height = 36, label = "Space Works Organi
       <SpaceWorksLogo variant="lockup-horizontal" height={size.height} label={null} />
       <span aria-hidden className="block w-px shrink-0 bg-line-strong" style={{ height: Math.round(size.height * 0.62) }} />
       <span aria-hidden className="font-sans font-semibold leading-none tracking-[-0.01em] text-ink" style={{ fontSize: Math.round(size.height * 0.5) }}>
-        Organization
+        Makerspace
       </span>
     </span>
   );

@@ -5,7 +5,7 @@
  * A handful of roles have no token of their own in the kit. They are integer mixes of brand
  * neutrals (ui-brand-spec.md §A), marked "mix" below, and keep WCAG AA for every text pair.
  *
- * Colour mode: the class "dark" on <html> (set on the server from the swo.theme cookie). Light is the
+ * Colour mode: the class "dark" on <html> (set on the server from the swb.theme cookie). Light is the
  * default; there is no "System" option (ui-brand-spec D11).
  */
 
@@ -74,7 +74,7 @@
   --sw-yellow: var(--sw-brand-warm-yellow);
   --sw-cream: var(--sw-brand-warm-cream);
 
-  /* Accent (full colour values): Maker Teal by default; .sw-accent-scope swaps in an organisation's own. */
+  /* Accent (full colour values): Maker Teal by default; .sw-accent-scope swaps in a makerspace's own. */
   --sw-accent: rgb(var(--sw-color-accent));
   --sw-accent-soft: rgb(var(--sw-color-accent-soft));
   --sw-on-accent: rgb(var(--sw-color-on-accent));

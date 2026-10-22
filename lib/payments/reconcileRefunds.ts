@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
-import { ORG_FOR_PAYMENTS, type OrgForPayments } from "./charges";
+import { MAKERSPACE_FOR_PAYMENTS, type MakerspaceForPayments } from "./charges";
 import { loadGateway } from "./config";
 import { attachGatewayRefund, failRefund, processRefund } from "./refunds";
 
@@ -13,7 +13,7 @@ const RUN_EVERY_MS = 5 * MINUTE;
 const BATCH = 50;
 
 function state() {
-  return globalThis as typeof globalThis & { __sworgRefundReconcileAt?: number };
+  return globalThis as typeof globalThis & { __swbookRefundReconcileAt?: number };
 }
 
 /**
@@ -23,8 +23,8 @@ function state() {
  */
 export async function reconcileGatewayRefunds(now = new Date(), force = false) {
   const runtime = state();
-  if (!force && runtime.__sworgRefundReconcileAt && now.getTime() - runtime.__sworgRefundReconcileAt < RUN_EVERY_MS) return { checked: 0, settled: 0, skipped: true };
-  runtime.__sworgRefundReconcileAt = now.getTime();
+  if (!force && runtime.__swbookRefundReconcileAt && now.getTime() - runtime.__swbookRefundReconcileAt < RUN_EVERY_MS) return { checked: 0, settled: 0, skipped: true };
+  runtime.__swbookRefundReconcileAt = now.getTime();
 
   const pending = await prisma.refund.findMany({
     where: {
@@ -34,30 +34,30 @@ export async function reconcileGatewayRefunds(now = new Date(), force = false) {
     },
     orderBy: [{ lastCheckedAt: { sort: "asc", nulls: "first" } }, { createdAt: "asc" }],
     take: BATCH,
-    select: { id: true, organisationId: true, gatewayRefundId: true, payment: { select: { provider: true, gatewayPaymentId: true } } },
+    select: { id: true, makerspaceId: true, gatewayRefundId: true, payment: { select: { provider: true, gatewayPaymentId: true } } },
   });
-  const orgs = new Map<string, OrgForPayments | null>();
+  const makerspaces = new Map<string, MakerspaceForPayments | null>();
   const gateways = new Map<string, Awaited<ReturnType<typeof loadGateway>>>();
   let settled = 0;
   for (const refund of pending) {
     await prisma.refund.updateMany({ where: { id: refund.id, status: "PENDING" }, data: { lastCheckedAt: now } });
     try {
-      if (!gateways.has(refund.organisationId)) gateways.set(refund.organisationId, await loadGateway(refund.organisationId));
-      const live = gateways.get(refund.organisationId);
+      if (!gateways.has(refund.makerspaceId)) gateways.set(refund.makerspaceId, await loadGateway(refund.makerspaceId));
+      const live = gateways.get(refund.makerspaceId);
       if (!live || live.provider !== refund.payment.provider || !refund.payment.gatewayPaymentId) continue;
       const result = await live.gateway.fetchRefund(live.credentials, { gatewayPaymentId: refund.payment.gatewayPaymentId, gatewayRefundId: refund.gatewayRefundId, refundId: refund.id });
       if (!result || result.status === "pending") continue;
-      if (!orgs.has(refund.organisationId)) orgs.set(refund.organisationId, await prisma.organisation.findUnique({ where: { id: refund.organisationId }, select: ORG_FOR_PAYMENTS }));
-      const org = orgs.get(refund.organisationId);
-      if (!org) continue;
+      if (!makerspaces.has(refund.makerspaceId)) makerspaces.set(refund.makerspaceId, await prisma.makerspace.findUnique({ where: { id: refund.makerspaceId }, select: MAKERSPACE_FOR_PAYMENTS }));
+      const makerspace = makerspaces.get(refund.makerspaceId);
+      if (!makerspace) continue;
       await prisma.$transaction(async (tx) => {
-        if (!refund.gatewayRefundId && result.gatewayRefundId) await attachGatewayRefund(tx, { org, refundId: refund.id, gatewayRefundId: result.gatewayRefundId });
-        if (result.status === "processed") await processRefund(tx, { org, refundId: refund.id, gatewayRefundId: result.gatewayRefundId || null, now });
-        else await failRefund(tx, { org, refundId: refund.id, reason: "The provider reported the refund as failed." });
+        if (!refund.gatewayRefundId && result.gatewayRefundId) await attachGatewayRefund(tx, { makerspace, refundId: refund.id, gatewayRefundId: result.gatewayRefundId });
+        if (result.status === "processed") await processRefund(tx, { makerspace, refundId: refund.id, gatewayRefundId: result.gatewayRefundId || null, now });
+        else await failRefund(tx, { makerspace, refundId: refund.id, reason: "The provider reported the refund as failed." });
       });
       settled += 1;
     } catch {
-      // One organisation's bad keys or a provider outage must not stop the others.
+      // One makerspace's bad keys or a provider outage must not stop the others.
       console.error("[refunds reconcile] one refund could not be checked");
     }
   }

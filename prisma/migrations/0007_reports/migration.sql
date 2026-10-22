@@ -1,7 +1,7 @@
 -- CreateTable
-CREATE TABLE "OrgDailyStats" (
+CREATE TABLE "MakerspaceDailyStats" (
     "id" TEXT NOT NULL,
-    "organisationId" TEXT NOT NULL,
+    "makerspaceId" TEXT NOT NULL,
     "day" DATE NOT NULL,
     "unitId" TEXT,
     "planId" TEXT,
@@ -15,35 +15,35 @@ CREATE TABLE "OrgDailyStats" (
     "applications" INTEGER NOT NULL DEFAULT 0,
     "computedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "OrgDailyStats_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "MakerspaceDailyStats_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "OrgStatsDirtyDay" (
-    "organisationId" TEXT NOT NULL,
+CREATE TABLE "MakerspaceStatsDirtyDay" (
+    "makerspaceId" TEXT NOT NULL,
     "day" DATE NOT NULL,
     "markedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "OrgStatsDirtyDay_pkey" PRIMARY KEY ("organisationId","day")
+    CONSTRAINT "MakerspaceStatsDirtyDay_pkey" PRIMARY KEY ("makerspaceId","day")
 );
 
 -- CreateIndex
-CREATE INDEX "OrgDailyStats_organisationId_day_idx" ON "OrgDailyStats"("organisationId", "day");
+CREATE INDEX "MakerspaceDailyStats_makerspaceId_day_idx" ON "MakerspaceDailyStats"("makerspaceId", "day");
 
 -- CreateIndex
-CREATE INDEX "OrgDailyStats_day_idx" ON "OrgDailyStats"("day");
+CREATE INDEX "MakerspaceDailyStats_day_idx" ON "MakerspaceDailyStats"("day");
 
 -- CreateIndex
-CREATE INDEX "MembershipTerm_organisationId_createdAt_idx" ON "MembershipTerm"("organisationId", "createdAt");
+CREATE INDEX "MembershipTerm_makerspaceId_createdAt_idx" ON "MembershipTerm"("makerspaceId", "createdAt");
 
 -- AddForeignKey
-ALTER TABLE "OrgDailyStats" ADD CONSTRAINT "OrgDailyStats_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspaceDailyStats" ADD CONSTRAINT "MakerspaceDailyStats_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrgDailyStats" ADD CONSTRAINT "OrgDailyStats_organisationId_unitId_fkey" FOREIGN KEY ("organisationId", "unitId") REFERENCES "OrgUnit"("organisationId", "id") ON DELETE CASCADE ON UPDATE RESTRICT;
+ALTER TABLE "MakerspaceDailyStats" ADD CONSTRAINT "MakerspaceDailyStats_makerspaceId_unitId_fkey" FOREIGN KEY ("makerspaceId", "unitId") REFERENCES "MakerspaceUnit"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "OrgDailyStats" ADD CONSTRAINT "OrgDailyStats_organisationId_planId_fkey" FOREIGN KEY ("organisationId", "planId") REFERENCES "MembershipPlan"("organisationId", "id") ON DELETE CASCADE ON UPDATE RESTRICT;
+ALTER TABLE "MakerspaceDailyStats" ADD CONSTRAINT "MakerspaceDailyStats_makerspaceId_planId_fkey" FOREIGN KEY ("makerspaceId", "planId") REFERENCES "MembershipPlan"("makerspaceId", "id") ON DELETE CASCADE ON UPDATE RESTRICT;
 
 -- AddForeignKey
-ALTER TABLE "OrgStatsDirtyDay" ADD CONSTRAINT "OrgStatsDirtyDay_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organisation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "MakerspaceStatsDirtyDay" ADD CONSTRAINT "MakerspaceStatsDirtyDay_makerspaceId_fkey" FOREIGN KEY ("makerspaceId") REFERENCES "Makerspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;

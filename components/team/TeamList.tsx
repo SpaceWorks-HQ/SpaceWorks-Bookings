@@ -17,12 +17,12 @@ const FILTERS: Array<{ value: TeamFilter; label: string }> = [
 const AVATAR_TONES: Record<TeamRole, "ink" | "warning" | "success" | "neutral"> = { OWNER: "ink", ADMIN: "warning", TREASURER: "success", VIEWER: "neutral" };
 
 export function TeamList({
-  organisationSlug,
+  makerspaceSlug,
   actorRole,
   rows,
   showEmail,
 }: {
-  organisationSlug: string;
+  makerspaceSlug: string;
   actorRole: TeamRole;
   rows: TeamMemberRow[];
   showEmail: boolean;
@@ -41,7 +41,7 @@ export function TeamList({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="team-title" className="text-h4 text-ink">Team</h2>
         <div className="w-full min-w-0 sm:w-[260px]">
-          <label htmlFor="team-search" className="sr-only">Search members</label>
+          <label htmlFor="team-search" className="sr-only">Search the team</label>
           <SearchInput
             id="team-search"
             value={query}
@@ -74,7 +74,7 @@ export function TeamList({
                     <Avatar name={row.name ?? row.email ?? null} size="md" tone={AVATAR_TONES[row.role]} />
                     <div className="flex min-w-0 flex-[1_1_200px] flex-col">
                       <span className="flex min-w-0 items-center gap-2">
-                        <span className="truncate font-bold text-ink">{row.name ?? "Unnamed member"}</span>
+                        <span className="truncate font-bold text-ink">{row.name ?? "Unnamed person"}</span>
                         {row.isYou ? <Chip size="sm" className="shrink-0">You</Chip> : null}
                       </span>
                       <span className="truncate text-caption text-ink-muted">
@@ -83,7 +83,7 @@ export function TeamList({
                     </div>
                     <div className="ml-auto flex min-w-0 max-w-full flex-wrap justify-end gap-2">
                       <MemberRoleActions
-                        organisationSlug={organisationSlug}
+                        makerspaceSlug={makerspaceSlug}
                         targetUserId={row.userId}
                         role={row.role}
                         actorRole={actorRole}

@@ -48,7 +48,7 @@ export function ChartFrame({ title, description, drill, table, children, classNa
           {action}
           {drill ? (
             <Link href={drill.href} className="sw-print-hide inline-flex min-h-9 items-center gap-1 text-label font-semibold text-accent-text underline-offset-4 hover:underline">
-              {drill.label ?? "See members"}
+              {drill.label ?? "See the list"}
               <ArrowRight aria-hidden className="size-4" />
             </Link>
           ) : null}

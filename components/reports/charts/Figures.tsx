@@ -71,7 +71,7 @@ export function KpiTile({ label, value, format = "number", display, delta, trend
   );
   const classes = cn("block min-w-0 rounded-xl border border-line bg-panel p-4", href && "transition-colors duration-[120ms] hover:border-line-strong hover:bg-subtle", className);
   return href ? (
-    <Link href={href} className={classes} aria-label={`${label}: ${display ?? formatValue(value, format)}. See these members`}>
+    <Link href={href} className={classes} aria-label={`${label}: ${display ?? formatValue(value, format)}. See these`}>
       {body}
     </Link>
   ) : (

@@ -29,8 +29,8 @@ jobs:
     env:
       # Prisma resolves datasource URLs while validating and generating, even
       # though these steps never connect to a database.
-      DATABASE_URL: postgresql://build:build@localhost:5432/sworg
-      DIRECT_URL: postgresql://build:build@localhost:5432/sworg
+      DATABASE_URL: postgresql://build:build@localhost:5432/swbook
+      DIRECT_URL: postgresql://build:build@localhost:5432/swbook
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,20 +52,20 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: sworg
-          POSTGRES_PASSWORD: sworg
-          POSTGRES_DB: sworg_test
+          POSTGRES_USER: swbook
+          POSTGRES_PASSWORD: swbook
+          POSTGRES_DB: swbook_test
         ports: ["5432:5432"]
-        options: --health-cmd "pg_isready -U sworg" --health-interval 5s --health-timeout 5s --health-retries 20
+        options: --health-cmd "pg_isready -U swbook" --health-interval 5s --health-timeout 5s --health-retries 20
       redis:
         image: redis:7-alpine
         ports: ["6379:6379"]
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 20
     env:
       # Disposable CI databases only; nothing here is a real secret.
-      TEST_DATABASE_URL: postgresql://sworg:sworg@localhost:5432/sworg_test
-      DATABASE_URL: postgresql://sworg:sworg@localhost:5432/sworg_e2e
-      DIRECT_URL: postgresql://sworg:sworg@localhost:5432/sworg_e2e
+      TEST_DATABASE_URL: postgresql://swbook:swbook@localhost:5432/swbook_test
+      DATABASE_URL: postgresql://swbook:swbook@localhost:5432/swbook_e2e
+      DIRECT_URL: postgresql://swbook:swbook@localhost:5432/swbook_e2e
       REDIS_URL: redis://localhost:6379
       AUTH_TRUST_HOST: "true"
       AUTH_URL: http://127.0.0.1:3000
@@ -95,7 +95,7 @@ jobs:
       - run: npm run test:integration
       - name: Create, migrate and seed the end-to-end database
         run: |
-          PGPASSWORD=sworg psql -h localhost -U sworg -d sworg_test -c "CREATE DATABASE sworg_e2e"
+          PGPASSWORD=swbook psql -h localhost -U swbook -d swbook_test -c "CREATE DATABASE swbook_e2e"
           npx prisma migrate deploy
           npm run db:seed-demo
           npm run db:seed-reports
@@ -124,13 +124,13 @@ jobs:
           cp .env.production.example "$work/cloud.env"
           for layer in none tls proxy; do
             for storage in bundled external; do
-              printf "%s\n" "SWO_LAYER='$layer'" "SWO_STORAGE='$storage'" "TLS_EMAIL='ops@example.test'" > "$work/.env"
-              grep -v '^SWO_' .env.production.example >> "$work/.env"
-              SWO_STATIC_ENV_FILE="$work/.env" scripts/spaceworks-compose.sh bundled config --quiet
-              SWO_STATIC_ENV_FILE="$work/.env" SWO_COMPOSE_BUILD_LAYER=1 scripts/spaceworks-compose.sh bundled config --quiet
+              printf "%s\n" "SWB_LAYER='$layer'" "SWB_STORAGE='$storage'" "TLS_EMAIL='ops@example.test'" > "$work/.env"
+              grep -v '^SWB_' .env.production.example >> "$work/.env"
+              SWB_STATIC_ENV_FILE="$work/.env" scripts/spaceworks-compose.sh bundled config --quiet
+              SWB_STATIC_ENV_FILE="$work/.env" SWB_COMPOSE_BUILD_LAYER=1 scripts/spaceworks-compose.sh bundled config --quiet
             done
           done
-          SWO_STATIC_ENV_FILE="$work/cloud.env" scripts/spaceworks-compose.sh cloud config --quiet
+          SWB_STATIC_ENV_FILE="$work/cloud.env" scripts/spaceworks-compose.sh cloud config --quiet
 
   images:
     name: Images build and the bundled stack runs (compose smoke)
@@ -143,10 +143,10 @@ jobs:
         run: |
           key=$(openssl rand -base64 32)
           echo "::add-mask::$key"
-          SWO_BUILD_KEY="$key" docker buildx build --load --target frontend \
-            --secret id=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,env=SWO_BUILD_KEY \
-            --build-arg NEXT_PUBLIC_BASE_URL=https://spaceworks-organization-origin.invalid \
-            --build-arg NEXT_PUBLIC_BACKEND_ORIGIN=https://spaceworks-organization-backend.invalid \
-            --tag sworg-frontend:ci .
+          SWB_BUILD_KEY="$key" docker buildx build --load --target frontend \
+            --secret id=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,env=SWB_BUILD_KEY \
+            --build-arg NEXT_PUBLIC_BASE_URL=https://spaceworks-bookings-origin.invalid \
+            --build-arg NEXT_PUBLIC_BACKEND_ORIGIN=https://spaceworks-bookings-backend.invalid \
+            --tag swbook-frontend:ci .
       - name: Build the backend image and run the compose smoke test
-        run: SWO_COMPOSE_BUILD_LAYER=1 SWO_IMAGE_TAG=ci bash scripts/compose-smoke.sh
+        run: SWB_COMPOSE_BUILD_LAYER=1 SWB_IMAGE_TAG=ci bash scripts/compose-smoke.sh

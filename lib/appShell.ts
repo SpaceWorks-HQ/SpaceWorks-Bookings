@@ -1,14 +1,14 @@
 import "server-only";
 
-import type { OrganisationStatus, TeamRole } from "@prisma/client";
+import type { MakerspaceStatus, TeamRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
-export type ShellOrganisation = {
+export type ShellMakerspace = {
   slug: string;
   name: string;
   logoUrl: string | null;
   role: TeamRole;
-  status: OrganisationStatus;
+  status: MakerspaceStatus;
 };
 
 export type ShellUser = {
@@ -17,22 +17,22 @@ export type ShellUser = {
   image: string | null;
 };
 
-const MAX_SHELL_ORGANISATIONS = 50;
+const MAX_SHELL_MAKERSPACES = 50;
 
-/** Data for the dashboard sidebar: the signed-in person and the organisations they are on the team of. */
-export async function getAppShellData(userId: string): Promise<{ user: ShellUser; organisations: ShellOrganisation[] }> {
+/** Data for the dashboard sidebar: the signed-in person and the makerspaces they are on the team of. */
+export async function getAppShellData(userId: string): Promise<{ user: ShellUser; makerspaces: ShellMakerspace[] }> {
   const [user, teams] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true, image: true, profileImageUrl: true } }),
     prisma.teamMember.findMany({
       where: { userId },
-      select: { role: true, organisation: { select: { slug: true, name: true, logoUrl: true, status: true } } },
-      orderBy: { organisation: { name: "asc" } },
-      take: MAX_SHELL_ORGANISATIONS,
+      select: { role: true, makerspace: { select: { slug: true, name: true, logoUrl: true, status: true } } },
+      orderBy: { makerspace: { name: "asc" } },
+      take: MAX_SHELL_MAKERSPACES,
     }),
   ]);
 
   return {
     user: { name: user?.name ?? null, email: user?.email ?? null, image: user?.profileImageUrl ?? user?.image ?? null },
-    organisations: teams.map(({ role, organisation }) => ({ ...organisation, role })),
+    makerspaces: teams.map(({ role, makerspace }) => ({ ...makerspace, role })),
   };
 }
