@@ -27,7 +27,7 @@ export async function loadPaymentView({ params }: { params: Promise<{ makerspace
     payment,
     names,
     refundableMinor: payment.status === "PAID" ? Math.max(0, (payment.capturedMinor ?? payment.amountMinor) - refundedMinor) : 0,
-    canManage: can(membership.role, "payments.manage"),
+    canManage: can(membership.role, "payments.record"),
     isRecorder: payment.recordedById === membership.userId,
   };
 }

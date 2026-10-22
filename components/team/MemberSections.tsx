@@ -5,7 +5,7 @@ import { Chip } from "@/components/ui/display";
 import { ROLE_LABELS } from "@/components/team/memberSummary";
 import { ROLE_DESCRIPTIONS } from "@/lib/permissionRoles";
 
-const DOT_TONES: Record<TeamRole, string> = { OWNER: "bg-primary", ADMIN: "bg-highlight", TREASURER: "bg-info-solid", VIEWER: "bg-line-strong" };
+const DOT_TONES: Record<TeamRole, string> = { OWNER: "bg-primary", SPACE_MANAGER: "bg-highlight", BOOKINGS_MANAGER: "bg-success-solid", FRONT_DESK: "bg-ink-muted", TREASURER: "bg-info-solid", VIEWER: "bg-line-strong" };
 
 /* ---------- Stats ---------- */
 
@@ -30,9 +30,11 @@ export function MemberStat({ label, value, hint, dots }: { label: string; value:
 
 /* ---------- Roles ---------- */
 
-const ROLE_SUMMARIES: Array<{ role: TeamRole; tone: "ink" | "warning" | "info" | "neutral"; body: string }> = [
+const ROLE_SUMMARIES: Array<{ role: TeamRole; tone: "ink" | "warning" | "success" | "info" | "neutral"; body: string }> = [
   { role: "OWNER", tone: "ink", body: ROLE_DESCRIPTIONS.OWNER },
-  { role: "ADMIN", tone: "warning", body: ROLE_DESCRIPTIONS.ADMIN },
+  { role: "SPACE_MANAGER", tone: "warning", body: ROLE_DESCRIPTIONS.SPACE_MANAGER },
+  { role: "BOOKINGS_MANAGER", tone: "success", body: ROLE_DESCRIPTIONS.BOOKINGS_MANAGER },
+  { role: "FRONT_DESK", tone: "neutral", body: ROLE_DESCRIPTIONS.FRONT_DESK },
   { role: "TREASURER", tone: "info", body: ROLE_DESCRIPTIONS.TREASURER },
   { role: "VIEWER", tone: "neutral", body: ROLE_DESCRIPTIONS.VIEWER },
 ];

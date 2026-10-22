@@ -6,7 +6,7 @@ type Props = { params: Promise<{ makerspaceSlug: string; }>; };
 export async function loadMakerspaceSettingsView({ params }: Props) {
 
   const { makerspaceSlug } = await params;
-  const { makerspace: current, membership } = await requireMakerspaceRole(makerspaceSlug, "ADMIN");
+  const { makerspace: current, membership } = await requireMakerspaceRole(makerspaceSlug, "SPACE_MANAGER");
 
   const makerspace = await prisma.makerspace.findUnique({
     where: { id: current.id },

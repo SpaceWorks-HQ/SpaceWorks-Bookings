@@ -34,7 +34,7 @@ const refundSchema = z.object({
 export async function refundPayment(input: unknown): Promise<ActionResult<{ status: Status }>> {
   const parsed = refundSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.manage");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "refunds.manage");
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };

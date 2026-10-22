@@ -70,7 +70,7 @@ export async function loadPaymentsDirectory({ params, searchParams }: { params: 
     payments,
     gateway: settings && settings.provider !== "NONE" ? settings : null,
     stuckRefunds,
-    canManage: can(membership.role, "payments.manage"),
+    canManage: can(membership.role, "payments.record"),
     canConfigure: can(membership.role, "payments.settings"),
     userId: membership.userId,
   };

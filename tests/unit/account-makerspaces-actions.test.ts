@@ -95,7 +95,7 @@ describe("leaveMakerspace", () => {
     expect(mocks.audit).not.toHaveBeenCalled();
   });
 
-  it.each(["VIEWER", "TREASURER", "ADMIN"] as const)("lets a %s leave without counting owners", async (role) => {
+  it.each(["VIEWER", "TREASURER", "FRONT_DESK", "BOOKINGS_MANAGER", "SPACE_MANAGER"] as const)("lets a %s leave without counting owners", async (role) => {
     mocks.teamMemberFindUnique.mockResolvedValue({ id: "membership_1", role });
     await expect(leaveMakerspace({ makerspaceSlug: "acme" })).resolves.toEqual({ ok: true });
     expect(mocks.teamMemberCount).not.toHaveBeenCalled();

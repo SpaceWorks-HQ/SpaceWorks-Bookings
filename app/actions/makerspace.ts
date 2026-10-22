@@ -9,7 +9,7 @@ import { flattenZodErrors } from "./utils";
 import { recordAuditEvent } from "@/lib/audit";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { isMakerspaceUploadUrl } from "@/lib/uploadUrl";
-import { makerspaceAllows } from "@/lib/permissionRoles";
+import { isMakerspaceAdmin, makerspaceAllows } from "@/lib/permissionRoles";
 import { hasAuthenticator, STAFF_AUTHENTICATOR_MESSAGE } from "@/lib/permissions";
 import { MAKERSPACE_LOCKED } from "@/lib/makerspaceLifecycle";
 
@@ -65,7 +65,7 @@ export async function updateMakerspace(
 
   if (
     !membership ||
-    (membership.role !== "OWNER" && membership.role !== "ADMIN")
+    !isMakerspaceAdmin(membership.role)
   ) {
     return { ok: false, error: "Only makerspace owners and managers can edit settings." };
   }

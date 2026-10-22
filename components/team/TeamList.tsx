@@ -10,11 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FILTERS: Array<{ value: TeamFilter; label: string }> = [
   { value: "everyone", label: "Everyone" },
-  { value: "admins", label: "Owners and managers" },
-  { value: "others", label: "Treasurers and viewers" },
+  { value: "admins", label: "Owners and space managers" },
+  { value: "others", label: "Everyone else" },
 ];
 
-const AVATAR_TONES: Record<TeamRole, "ink" | "warning" | "success" | "neutral"> = { OWNER: "ink", ADMIN: "warning", TREASURER: "success", VIEWER: "neutral" };
+const AVATAR_TONES: Record<TeamRole, "ink" | "warning" | "success" | "neutral"> = { OWNER: "ink", SPACE_MANAGER: "warning", BOOKINGS_MANAGER: "success", FRONT_DESK: "neutral", TREASURER: "success", VIEWER: "neutral" };
 
 export function TeamList({
   makerspaceSlug,

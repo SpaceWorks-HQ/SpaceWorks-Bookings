@@ -14,10 +14,12 @@ datasource db {
 
 // ─── Platform ────────────────────────────────────────────────────────────────
 
-/// Makerspace staff roles. OWNER and ADMIN run everything; TREASURER runs money; VIEWER reads.
+/// Makerspace staff roles (lib/permissionRoles.ts maps them to capabilities). Customers are not staff.
 enum TeamRole {
   OWNER
-  ADMIN
+  SPACE_MANAGER
+  BOOKINGS_MANAGER
+  FRONT_DESK
   TREASURER
   VIEWER
 }

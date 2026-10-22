@@ -54,7 +54,7 @@ export async function createMakerspaceInvite(input: unknown): Promise<
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   if (!canManageTeamMember(membership.role, role)) {
-    return { ok: false, error: "Managers can invite treasurers and viewers only." };
+    return { ok: false, error: "You can only invite people to roles below your own." };
   }
 
   // Single-use link. Default expiry: 7 days.

@@ -10,12 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/display";
 import { Dropdown } from "@/components/ui/field";
 import { ROLE_LABELS } from "@/components/team/memberSummary";
-import { canManageTeamMember } from "@/lib/permissionRoles";
+import { assignableRoles, canManageTeamMember } from "@/lib/permissionRoles";
 
-const ROLE_TONES = { OWNER: "ink", ADMIN: "warning", TREASURER: "info", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
-
-/** Roles an actor may hand out: owners any non-owner role, admins treasurer and viewer. */
-const ASSIGNABLE: Array<"ADMIN" | "TREASURER" | "VIEWER"> = ["ADMIN", "TREASURER", "VIEWER"];
+const ROLE_TONES = { OWNER: "ink", SPACE_MANAGER: "warning", BOOKINGS_MANAGER: "success", FRONT_DESK: "neutral", TREASURER: "info", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
 
 export function MemberRoleActions(props: {
   makerspaceSlug: string;
@@ -33,7 +30,8 @@ export function MemberRoleActions(props: {
 
   const canEditRoles = role !== "OWNER" && canManageTeamMember(actorRole, role);
   const canRemove = role !== "OWNER" && canManageTeamMember(actorRole, role);
-  const options = ASSIGNABLE.filter((option) => canManageTeamMember(actorRole, option));
+  // Roles below the actor's own; owners hand out any role but owner.
+  const options = assignableRoles(actorRole);
 
   if (!canEditRoles && !canRemove) {
     return <Chip size="sm" tone={ROLE_TONES[role]}>{ROLE_LABELS[role]}</Chip>;
@@ -46,9 +44,9 @@ export function MemberRoleActions(props: {
           aria-label={memberName ? `Role for ${memberName}` : "Role"}
           value={role}
           disabled={pending}
-          className="w-auto min-w-[120px] py-2 text-sm"
+          className="w-auto min-w-[160px] py-2 text-sm"
           onChange={(e) => {
-            const next = e.target.value as "ADMIN" | "TREASURER" | "VIEWER";
+            const next = e.target.value as TeamRole;
             startTransition(async () => {
               const res = await updateTeamRole({
                 makerspaceSlug,

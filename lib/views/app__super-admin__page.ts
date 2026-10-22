@@ -1,5 +1,5 @@
 import { requireSuperAdmin } from "@/lib/permissions";
-import { MakerspaceStatus, OutboxStatus, TeamRole } from "@prisma/client";
+import { MakerspaceStatus, OutboxStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { minutesAgo } from "@/lib/superAdminInsights";
 
@@ -11,7 +11,7 @@ export async function loadSuperAdminOverviewView() {
     prisma.teamMember.count(),
     prisma.outboxMessage.count({ where: { status: OutboxStatus.FAILED } }),
     prisma.outboxMessage.count({ where: { status: OutboxStatus.PENDING, availableAt: { lt: minutesAgo(15) } } }),
-    prisma.user.count({ where: { mfaEnabledAt: null, teamMembers: { some: { role: { in: [TeamRole.OWNER, TeamRole.ADMIN] } } } } }),
+    prisma.user.count({ where: { mfaEnabledAt: null, teamMembers: { some: {} } } }),
     prisma.user.count({ where: { emailVerified: null } }),
     prisma.makerspace.count({ where: { status: MakerspaceStatus.PENDING_REVIEW, updatedAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60_000) } } }),
   ]);

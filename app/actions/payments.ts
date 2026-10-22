@@ -25,7 +25,7 @@ const reasonSchema = paymentSchema.extend({ reason: z.string().trim().min(3, "Gi
 export async function confirmPayment(input: unknown): Promise<ActionResult> {
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.manage");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.record");
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };
@@ -41,7 +41,7 @@ export async function confirmPayment(input: unknown): Promise<ActionResult> {
 export async function rejectPayment(input: unknown): Promise<ActionResult> {
   const parsed = reasonSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.manage");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.record");
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };
@@ -57,7 +57,7 @@ export async function rejectPayment(input: unknown): Promise<ActionResult> {
 export async function cancelOpenPayment(input: unknown): Promise<ActionResult> {
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.manage");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.record");
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };
@@ -74,7 +74,7 @@ export async function cancelOpenPayment(input: unknown): Promise<ActionResult> {
 export async function releaseDocument(input: unknown): Promise<ActionResult> {
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.manage");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.record");
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };
@@ -91,7 +91,7 @@ export async function releaseDocument(input: unknown): Promise<ActionResult> {
 export async function clearFlag(input: unknown): Promise<ActionResult> {
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request." };
-  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.manage");
+  const ctx = await paymentAccess(parsed.data.makerspaceSlug, "payments.record");
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };

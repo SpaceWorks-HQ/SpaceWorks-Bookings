@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowRight, Check } from "lucide-react";
 import { loadMakerspaceOverviewView } from "@/lib/views/app__dashboard__makerspaceSlug__page";
-import { ROLE_LABELS } from "@/lib/permissionRoles";
+import { roleWithArticle } from "@/lib/permissionRoles";
 import { STATUS_EXPLANATIONS } from "@/lib/makerspaceLifecycle";
 import { MakerspacePageHeader } from "@/components/dashboard/makerspace/MakerspacePageHeader";
 import { buttonClasses } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export default async function MakerspaceOverviewPage({ params }: { params: Promi
   const base = `/dashboard/${makerspace.slug}`;
   return (
     <div className="flex flex-col gap-6">
-      <MakerspacePageHeader makerspace={makerspace} title="Overview" description={`You're ${role === "ADMIN" || role === "OWNER" ? "an" : "a"} ${ROLE_LABELS[role].toLowerCase()} here.`} />
+      <MakerspacePageHeader makerspace={makerspace} title="Overview" description={`You're ${roleWithArticle(role)} here.`} />
 
       {makerspace.status !== "ACTIVE" ? (
         <Callout
