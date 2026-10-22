@@ -1,18 +1,17 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { at, createPaymentsMakerspace, ensurePaymentKey, people, removePaymentsMakerspace, unpaidTerm } from "./payments-helpers";
+import { at, createPaymentsMakerspace, customer, ensurePaymentKey, people, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
 
 ensurePaymentKey();
 
 const { prisma } = await import("@/lib/db");
-const { createTermPayment } = await import("@/lib/payments/charges");
+const { createPayment } = await import("@/lib/payments/charges");
 const { savePaymentKeys, ensurePaymentSettings } = await import("@/lib/payments/config");
 const { handleWebhook } = await import("@/lib/payments/webhooks");
 const { releaseHeldDocument } = await import("@/lib/payments/settle");
 
 type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
 let makerspace: Ctx["makerspace"];
-let plan: Ctx["plan"];
 let code: string;
 let reviewer: { id: string };
 const now = at("2026-07-01T06:00:00Z");
@@ -24,15 +23,14 @@ const deliver = (body: string, eventId: string, signature = sign(body)) =>
   handleWebhook("RAZORPAY", code, body, new Headers({ "x-razorpay-signature": signature, "x-razorpay-event-id": eventId }));
 
 async function gatewayPayment(name: string) {
-  const term = await unpaidTerm(makerspace, plan, name, now);
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "RAZORPAY", status: "PENDING", now }));
+  const payment = await prisma.$transaction((tx) => createPayment(tx, { makerspace, customer: customer(name), currency: "INR", items: ROOM_HIRE, provider: "RAZORPAY", status: "PENDING" }));
   const orderId = `order_${payment.id.slice(-8)}`;
   await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: orderId } });
-  return { term, payment, orderId };
+  return { payment, orderId };
 }
 
 beforeAll(async () => {
-  ({ makerspace, plan } = await createPaymentsMakerspace());
+  ({ makerspace } = await createPaymentsMakerspace());
   await savePaymentKeys(makerspace.id, { provider: "RAZORPAY", keyId: "rzp_test_key", secret: "secret_key", webhookSecret: "hook_secret", testMode: true });
   code = (await ensurePaymentSettings(makerspace.id)).webhookPublicCode;
   [reviewer] = await people(1);
@@ -52,14 +50,13 @@ describe.sequential("gateway webhooks", () => {
   });
 
   it("settles a capture once, however many times it is delivered", async () => {
-    const { term, payment, orderId } = await gatewayPayment("samad");
+    const { payment, orderId } = await gatewayPayment("samad");
     const body = captured(payment.id, orderId, 118_000);
     expect(await deliver(body, "evt_1")).toEqual({ status: 200, body: "OK" });
     expect(await deliver(body, "evt_1")).toEqual({ status: 200, body: "Duplicate" });
     const paid = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id }, include: { documents: true } });
     expect(paid).toMatchObject({ status: "PAID", method: "upi", flaggedAt: null, documentHeld: false });
     expect(paid.documents).toHaveLength(1);
-    expect((await prisma.membershipTerm.findUniqueOrThrow({ where: { id: term.id } })).status).toBe("ACTIVE");
     // A different event for the same capture settles nothing twice.
     expect((await deliver(body, "evt_1b")).status).toBe(200);
     expect(await prisma.taxDocument.count({ where: { paymentId: payment.id } })).toBe(1);
@@ -78,29 +75,13 @@ describe.sequential("gateway webhooks", () => {
     expect(document.cgstMinor + document.sgstMinor + document.taxableMinor).toBe(100_000);
   });
 
-  it("receipts and flags a capture that arrives after the membership was already paid", async () => {
-    const first = await gatewayPayment("tinker");
-    const second = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: first.term.id, provider: "RAZORPAY", status: "PENDING", now }));
-    await prisma.payment.update({ where: { id: second.id }, data: { gatewayOrderId: `order_${second.id.slice(-8)}` } });
-    // The first attempt was replaced, so it is CANCELLED; it then captures, and the second captures too.
-    expect((await deliver(captured(second.id, `order_${second.id.slice(-8)}`, 118_000), "evt_3")).status).toBe(200);
-    expect((await deliver(captured(first.payment.id, first.orderId, 118_000), "evt_4")).status).toBe(200);
-    const late = await prisma.payment.findUniqueOrThrow({ where: { id: first.payment.id } });
+  it("receipts and flags a capture that arrives after its attempt was closed", async () => {
+    const { payment, orderId } = await gatewayPayment("tinker");
+    await prisma.payment.update({ where: { id: payment.id }, data: { status: "CANCELLED" } });
+    expect((await deliver(captured(payment.id, orderId, 118_000), "evt_3")).status).toBe(200);
+    const late = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
     expect(late.status).toBe("PAID");
-    expect(late.flagReason).toMatch(/already paid/);
-    expect(await prisma.taxDocument.count({ where: { paymentId: first.payment.id } })).toBe(1);
-  });
-
-  it("receipts and flags money for a membership that can no longer start, instead of failing the webhook", async () => {
-    const ended = await prisma.membershipPlan.create({ data: { makerspaceId: makerspace.id, name: "Season", slug: `season-${makerspace.id.slice(-6)}`, currency: "INR", priceNewMinor: 118_000, joinMode: "OPEN", durationType: "FIXED_END", fixedEndDate: at("2026-07-31T18:30:00Z") } });
-    const term = await unpaidTerm(makerspace, ended, "late-season", now);
-    const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "RAZORPAY", status: "PENDING", now }));
-    await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: `order_${payment.id.slice(-8)}` } });
-    // The capture is only processed after the season has ended.
-    const { settlePayment } = await import("@/lib/payments/settle");
-    const settled = await prisma.$transaction((tx) => settlePayment(tx, { makerspace, paymentId: payment.id, capture: { gatewayPaymentId: "pay_late", amountMinor: 118_000, currency: "INR", method: "upi" }, now: at("2026-08-02T06:00:00Z") }));
-    expect(settled.payment.status).toBe("PAID");
-    expect(settled.flagged).toMatch(/couldn't start/);
+    expect(late.flagReason).toMatch(/after this attempt was closed/);
     expect(await prisma.taxDocument.count({ where: { paymentId: payment.id } })).toBe(1);
   });
 

@@ -1,17 +1,16 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { at, createPaymentsMakerspace, ensurePaymentKey, removePaymentsMakerspace, unpaidTerm } from "./payments-helpers";
+import { at, createPaymentsMakerspace, customer, ensurePaymentKey, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
 
 ensurePaymentKey();
 
 const { prisma } = await import("@/lib/db");
-const { createTermPayment } = await import("@/lib/payments/charges");
+const { createPayment } = await import("@/lib/payments/charges");
 const { savePaymentKeys, ensurePaymentSettings } = await import("@/lib/payments/config");
 const { webhookResponse } = await import("@/lib/payments/webhookRoute");
 
 type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
 let makerspace: Ctx["makerspace"];
-let plan: Ctx["plan"];
 let code: string;
 const now = at("2026-07-01T06:00:00Z");
 const SECRET = "whsec_test_secret";
@@ -25,15 +24,14 @@ const post = (body: string, header: string | null = signature(body), endpoint = 
   webhookResponse("STRIPE", endpoint, new Request(`http://localhost/api/webhooks/stripe/${endpoint}`, { method: "POST", body, headers: header ? { "stripe-signature": header } : {} }));
 
 async function checkout(name: string) {
-  const term = await unpaidTerm(makerspace, plan, name, now);
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "STRIPE", status: "PENDING", now }));
+  const payment = await prisma.$transaction((tx) => createPayment(tx, { makerspace, customer: customer(name), currency: "INR", items: ROOM_HIRE, provider: "STRIPE", status: "PENDING" }));
   const orderId = `cs_test_${payment.id.slice(-10)}`;
   await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: orderId } });
-  return { term, payment, orderId };
+  return { payment, orderId };
 }
 
 beforeAll(async () => {
-  ({ makerspace, plan } = await createPaymentsMakerspace());
+  ({ makerspace } = await createPaymentsMakerspace());
   await savePaymentKeys(makerspace.id, { provider: "STRIPE", keyId: "pk_test_key", secret: "sk_test_key", webhookSecret: SECRET, testMode: true });
   code = (await ensurePaymentSettings(makerspace.id)).webhookPublicCode;
 });
@@ -54,8 +52,8 @@ describe.sequential("Stripe webhooks through the route", () => {
     expect((await post(body, signature(body, Math.floor(Date.now() / 1000) - 600))).status).toBe(401);
   });
 
-  it("settles a paid checkout once, issues the tax invoice and starts the membership", async () => {
-    const { term, payment, orderId } = await checkout("anin");
+  it("settles a paid checkout once and issues the tax invoice", async () => {
+    const { payment, orderId } = await checkout("anin");
     const body = session("checkout.session.completed", "evt_paid_1", payment.id, orderId);
     const first = await post(body);
     expect([first.status, await first.text()]).toEqual([200, "OK"]);
@@ -65,7 +63,6 @@ describe.sequential("Stripe webhooks through the route", () => {
     const paid = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id }, include: { documents: true } });
     expect(paid).toMatchObject({ status: "PAID", amountMinor: 118_000, flaggedAt: null });
     expect(paid.documents.map((document) => document.kind)).toEqual(["TAX_INVOICE"]);
-    expect((await prisma.membershipTerm.findUniqueOrThrow({ where: { id: term.id } })).status).toBe("ACTIVE");
   });
 
   it("waits for a delayed method, then settles when Stripe confirms it", async () => {

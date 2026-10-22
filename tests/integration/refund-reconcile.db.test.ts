@@ -1,10 +1,10 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { at, createPaymentsMakerspace, ensurePaymentKey, people, removePaymentsMakerspace, unpaidTerm } from "./payments-helpers";
+import { at, createPaymentsMakerspace, customer, ensurePaymentKey, people, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
 
 ensurePaymentKey();
 
 const { prisma } = await import("@/lib/db");
-const { createTermPayment } = await import("@/lib/payments/charges");
+const { createPayment } = await import("@/lib/payments/charges");
 const { savePaymentKeys } = await import("@/lib/payments/config");
 const { settlePayment } = await import("@/lib/payments/settle");
 const { createRefund } = await import("@/lib/payments/refunds");
@@ -12,16 +12,14 @@ const { reconcileGatewayRefunds } = await import("@/lib/payments/reconcileRefund
 
 type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
 let makerspace: Ctx["makerspace"];
-let plan: Ctx["plan"];
 let staff: Array<{ id: string }>;
 const paidOn = at("2026-06-15T06:00:00Z");
 const refundedOn = at("2026-06-16T06:00:00Z");
 const later = new Date(refundedOn.getTime() + 15 * 60_000);
 
-/** A Razorpay-paid membership with a refund still PENDING, as if the provider's answer never arrived. */
+/** A Razorpay payment with a refund still PENDING, as if the provider's answer never arrived. */
 async function pendingRefund(name: string, paymentRef: string) {
-  const term = await unpaidTerm(makerspace, plan, name, paidOn);
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { makerspace, termId: term.id, provider: "RAZORPAY", status: "PENDING", now: paidOn }));
+  const payment = await prisma.$transaction((tx) => createPayment(tx, { makerspace, customer: customer(name), currency: "INR", items: ROOM_HIRE, provider: "RAZORPAY", status: "PENDING" }));
   await prisma.$transaction((tx) => settlePayment(tx, { makerspace, paymentId: payment.id, capture: { gatewayPaymentId: paymentRef, amountMinor: 118_000, currency: "INR", method: "upi" }, now: paidOn }));
   const { refund } = await prisma.$transaction((tx) => createRefund(tx, { makerspace, paymentId: payment.id, amountMinor: 118_000, reason: "Cancelled", actorUserId: staff[0].id, now: refundedOn }));
   await prisma.$executeRaw`UPDATE "Refund" SET "createdAt" = ${refundedOn} WHERE "id" = ${refund.id}`;
@@ -36,7 +34,7 @@ function stubRazorpay(items: (url: string) => Array<Record<string, unknown>>) {
 }
 
 beforeAll(async () => {
-  ({ makerspace, plan } = await createPaymentsMakerspace());
+  ({ makerspace } = await createPaymentsMakerspace());
   staff = await people(1);
   await savePaymentKeys(makerspace.id, { provider: "RAZORPAY", keyId: "rzp_test_key", secret: "secret_key", webhookSecret: "hook_secret", testMode: true });
 });
@@ -52,7 +50,7 @@ describe.sequential("pending refund follow-up", () => {
   it("settles a refund the provider processed, found by our refund id, and issues the credit note", async () => {
     const refund = await pendingRefund("gauri", "pay_follow_1");
     const fetchStub = stubRazorpay((url) => url.includes("/payments/pay_follow_1/refunds") ? [{ id: "rfnd_follow_1", status: "processed", notes: { refundId: refund.id } }] : []);
-    const result = await reconcileGatewayRefunds(later, true);
+    const result = await reconcileGatewayRefunds(later);
     expect(result.settled).toBeGreaterThanOrEqual(1);
     expect(fetchStub).toHaveBeenCalled();
     expect(await prisma.refund.findUniqueOrThrow({ where: { id: refund.id } })).toMatchObject({ status: "PROCESSED", gatewayRefundId: "rfnd_follow_1" });
@@ -62,18 +60,18 @@ describe.sequential("pending refund follow-up", () => {
   it("leaves a refund pending while the provider is still working on it or can't find it, and fails it only on the provider's word", async () => {
     const refund = await pendingRefund("hiba", "pay_follow_2");
     stubRazorpay(() => []);
-    await reconcileGatewayRefunds(later, true);
+    await reconcileGatewayRefunds(later);
     expect(await prisma.refund.findUniqueOrThrow({ where: { id: refund.id } })).toMatchObject({ status: "PENDING", lastCheckedAt: later });
 
     stubRazorpay(() => [{ id: "rfnd_follow_2", status: "failed", notes: { refundId: refund.id } }]);
-    await reconcileGatewayRefunds(new Date(later.getTime() + 60_000), true);
+    await reconcileGatewayRefunds(new Date(later.getTime() + 60_000));
     expect(await prisma.refund.findUniqueOrThrow({ where: { id: refund.id } })).toMatchObject({ status: "FAILED" });
   });
 
   it("does not ask about refunds younger than ten minutes", async () => {
     const refund = await pendingRefund("irfan", "pay_follow_3");
     const fetchStub = stubRazorpay(() => [{ id: "rfnd_follow_3", status: "processed", notes: { refundId: refund.id } }]);
-    await reconcileGatewayRefunds(new Date(refundedOn.getTime() + 5 * 60_000), true);
+    await reconcileGatewayRefunds(new Date(refundedOn.getTime() + 5 * 60_000));
     expect(fetchStub).not.toHaveBeenCalled();
     expect((await prisma.refund.findUniqueOrThrow({ where: { id: refund.id } })).status).toBe("PENDING");
   });
