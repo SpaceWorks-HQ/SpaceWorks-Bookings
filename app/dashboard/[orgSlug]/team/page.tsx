@@ -19,19 +19,19 @@ const RECENT_DAYS = 30;
 const DISPLAY_TIME_ZONE = "UTC";
 
 export const metadata: Metadata = {
-  title: "Members",
-  description: "Organisation members and roles.",
+  title: "Team",
+  description: "The team and their roles.",
 };
 
 
 
 export default async function OrgMembersPage({ params, searchParams }: Props) {
-  const { organisation, profile, adminView, memberCount, roleCounts, recentCount, recentHint, openInviteCount, rows, membership, memberPages, memberPage, baseUrl, invites, units, now } = await loadOrgMembersView({ params, searchParams });
+  const { organisation, profile, adminView, memberCount, roleCounts, recentCount, recentHint, openInviteCount, rows, membership, memberPages, memberPage, baseUrl, invites, now } = await loadOrgMembersView({ params, searchParams });
   return (
     <div className="flex flex-col gap-7 pb-4">
       <OrgPageHeader
         organisation={{ name: organisation.name, slug: organisation.slug, logoUrl: profile.logoUrl }}
-        title="Members"
+        title="Team"
         description={`The people who run ${organisation.name}, and what each of them can do.`}
       />
 
@@ -44,9 +44,9 @@ export default async function OrgMembersPage({ params, searchParams }: Props) {
       <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-4">
           {rows.length === 0 ? (
-            <EmptyState mood="sleepy">No members found.</EmptyState>
+            <EmptyState mood="sleepy">No one on the team yet.</EmptyState>
           ) : (
-            <TeamList organisationSlug={organisation.slug} actorRole={membership.role} rows={rows} showEmail={adminView} units={units} />
+            <TeamList organisationSlug={organisation.slug} actorRole={membership.role} rows={rows} showEmail={adminView} />
           )}
           {memberPages > 1 ? (
             <nav aria-label="Member pages" className="flex flex-wrap items-center justify-end gap-2">

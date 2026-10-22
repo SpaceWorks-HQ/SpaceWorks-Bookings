@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateOrganisationPreferences } from "@/app/actions/structure";
+import { updateOrganisationPreferences } from "@/app/actions/preferences";
 import { CURRENCIES, CURRENCY_CODES, formatMoney, type CurrencyCode } from "@/lib/money/currencies";
 import { Button } from "@/components/ui/button";
 import { CheckboxField } from "@/components/ui/choice";
@@ -53,12 +53,12 @@ export function MoneySettingsForm({ slug, initial, calendarLocked, timezones, di
         <Field label="Number style" optional helperText={`Shows as ${preview}`} error={errors.locale?.[0]}>
           <Input value={values.locale} disabled={disabled} placeholder="Automatic" onChange={(event) => setValues({ ...values, locale: event.target.value })} maxLength={20} />
         </Field>
-        <Field label="Financial year starts in" helperText={calendarLocked ? "Fixed now that memberships exist." : "Membership years and receipt numbers follow this year."}>
+        <Field label="Financial year starts in" helperText={calendarLocked ? "Fixed now that receipts exist." : "Receipt numbers follow this year."}>
           <Dropdown value={String(values.financialYearStartMonth)} disabled={disabled || calendarLocked} onChange={(event) => setValues({ ...values, financialYearStartMonth: Number(event.target.value) })}>
             {MONTHS.map((month, index) => <option key={month} value={String(index + 1)}>{month}</option>)}
           </Dropdown>
         </Field>
-        <Field label="Timezone" helperText={calendarLocked ? "Fixed now that memberships exist." : "Days start and end at midnight here."} error={errors.timezone?.[0]}>
+        <Field label="Timezone" helperText={calendarLocked ? "Fixed now that receipts exist." : "Days start and end at midnight here."} error={errors.timezone?.[0]}>
           <Dropdown value={values.timezone} disabled={disabled || calendarLocked} onChange={(event) => setValues({ ...values, timezone: event.target.value })}>
             {timezones.map((zone) => <option key={zone} value={zone}>{zone.replace(/_/g, " ")}</option>)}
           </Dropdown>

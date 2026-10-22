@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Organisation, Prisma, TaxDocument } from "@prisma/client";
-import { financialYearLabel, localDate } from "@/lib/membership/periods";
+import { financialYearLabel, localDate } from "@/lib/calendarDate";
 import { formatDocumentNumber, type DocumentSeries } from "./numbering";
 import { creditNoteLines, placeOfSupply, sumSplits, type TaxSnapshot } from "./tax";
 
@@ -20,14 +20,13 @@ export type DocumentSnapshot = {
   locale: string | null;
   timeZone: string;
   issuer: { name: string; legalName: string | null; gstin: string | null; address: string; state: string | null; email: string | null; logoUrl: string | null };
-  recipient: { name: string; memberNumber: number; state: string | null; gstin: string | null };
+  recipient: { name: string; email: string | null; state: string | null; gstin: string | null };
   placeOfSupply: string | null;
   sac: string | null;
   tax: Pick<TaxSnapshot, "mode" | "rateBps" | "inclusive" | "taxName" | "zeroRatedExport" | "lutNumber">;
   lines: Array<{ description: string; amountMinor: number; taxableMinor: number; cgstMinor: number; sgstMinor: number; igstMinor: number; otherTaxMinor: number }>;
   totals: { amountMinor: number; taxableMinor: number; cgstMinor: number; sgstMinor: number; igstMinor: number; otherTaxMinor: number };
   payment: { provider: string; method: string | null; reference: string | null; paidAt: string | null };
-  membership: { plan: string; startsAt: string | null; endsAt: string | null } | null;
   original: { number: string; issuedAt: string } | null;
 };
 
@@ -45,11 +44,11 @@ function issuerOf(org: OrgForDocs, snapshot: TaxSnapshot): DocumentSnapshot["iss
   return { name: org.name, legalName: snapshot.legalName, gstin: snapshot.gstin, address, state: snapshot.supplierState ?? org.stateCode, email: org.contactEmail, logoUrl: org.logoUrl };
 }
 
-const paymentForDocument = {
-  lines: true,
-  member: { select: { name: true, memberNumber: true, stateCode: true, gstin: true } },
-  term: { select: { startsAt: true, endsAt: true, plan: { select: { name: true } } } },
-} satisfies Prisma.PaymentInclude;
+const paymentForDocument = { lines: true } satisfies Prisma.PaymentInclude;
+
+function recipientOf(payment: { customerName: string; customerEmail: string; customerStateCode: string | null; customerGstin: string | null }): DocumentSnapshot["recipient"] {
+  return { name: payment.customerName, email: payment.customerEmail, state: payment.customerStateCode, gstin: payment.customerGstin };
+}
 
 /**
  * Issue the receipt, tax invoice or bill of supply for a settled payment. Idempotent per payment.
@@ -65,7 +64,7 @@ export async function issuePaymentDocument(tx: Tx, org: OrgForDocs, paymentId: s
   const number = formatDocumentNumber(prefix, "R", financialYear, sequence);
   const lines = receivedMinor === undefined ? payment.lines : creditNoteLines(payment.lines, receivedMinor);
   const totals = sumSplits(lines);
-  const pos = placeOfSupply(payment.member.stateCode, tax);
+  const pos = placeOfSupply(payment.customerStateCode, tax);
   const snapshot: DocumentSnapshot = {
     kind: tax.documentKind,
     number,
@@ -75,14 +74,13 @@ export async function issuePaymentDocument(tx: Tx, org: OrgForDocs, paymentId: s
     locale: org.locale,
     timeZone: org.timezone,
     issuer: issuerOf(org, tax),
-    recipient: { name: payment.member.name, memberNumber: payment.member.memberNumber, state: payment.member.stateCode, gstin: payment.member.gstin },
+    recipient: recipientOf(payment),
     placeOfSupply: tax.mode === "GST" ? pos : null,
     sac: tax.sac,
     tax: { mode: tax.mode, rateBps: tax.rateBps, inclusive: tax.inclusive, taxName: tax.taxName, zeroRatedExport: tax.zeroRatedExport, lutNumber: tax.lutNumber },
     lines: lines.map(({ description, amountMinor, taxableMinor, cgstMinor, sgstMinor, igstMinor, otherTaxMinor }) => ({ description, amountMinor, taxableMinor, cgstMinor, sgstMinor, igstMinor, otherTaxMinor })),
     totals,
     payment: { provider: payment.provider, method: payment.method, reference: payment.gatewayPaymentId ?? payment.utr ?? payment.reference, paidAt: payment.paidAt?.toISOString() ?? null },
-    membership: payment.term ? { plan: payment.term.plan.name, startsAt: payment.term.startsAt?.toISOString() ?? null, endsAt: payment.term.endsAt?.toISOString() ?? null } : null,
     original: null,
   };
   return tx.taxDocument.create({
@@ -134,14 +132,13 @@ export async function issueCreditNote(tx: Tx, org: OrgForDocs, refundId: string,
     locale: org.locale,
     timeZone: org.timezone,
     issuer: originalSnapshot?.issuer ?? issuerOf(org, tax),
-    recipient: originalSnapshot?.recipient ?? { name: payment.member.name, memberNumber: payment.member.memberNumber, state: payment.member.stateCode, gstin: payment.member.gstin },
+    recipient: originalSnapshot?.recipient ?? recipientOf(payment),
     placeOfSupply: original?.placeOfSupply ?? null,
     sac: tax.sac,
     tax: { mode: tax.mode, rateBps: tax.rateBps, inclusive: tax.inclusive, taxName: tax.taxName, zeroRatedExport: tax.zeroRatedExport, lutNumber: tax.lutNumber },
     lines: lines.map(({ description, amountMinor, taxableMinor, cgstMinor, sgstMinor, igstMinor, otherTaxMinor }) => ({ description, amountMinor, taxableMinor, cgstMinor, sgstMinor, igstMinor, otherTaxMinor })),
     totals,
     payment: { provider: payment.provider, method: payment.method, reference: refund.gatewayRefundId ?? null, paidAt: refund.processedAt?.toISOString() ?? null },
-    membership: originalSnapshot?.membership ?? null,
     original: original ? { number: original.number, issuedAt: original.issuedAt.toISOString() } : null,
   };
   return tx.taxDocument.create({

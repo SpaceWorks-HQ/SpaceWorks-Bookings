@@ -1,18 +1,12 @@
 import "server-only";
 
 import NextAuth, { CredentialsSignin } from "next-auth";
-import { authAdapter } from "@/lib/authAdapter";
-import Google from "next-auth/providers/google";
-import GitHub from "next-auth/providers/github";
-import Apple from "next-auth/providers/apple";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { consumeRecoveryCode, decryptMfaSecret, consumeMfaCode } from "@/lib/mfa";
-import { isNewUserRegistrationEnabled } from "@/lib/instanceSettings";
-import { getOAuthSettings, providerVerifiedEmail } from "@/lib/oauthProviders";
 import { consumeLoginCode, issueLoginCode, justVerified, recognisedDevice, rememberDevice } from "@/lib/loginSecurity";
 import { isIpBlocked, recordFailedLogin } from "@/lib/ipBlock";
 import { getClientIpFromHeaders } from "@/lib/rateLimit";
@@ -63,12 +57,8 @@ class AddressBlockedError extends CredentialsSignin {
   code = "address_blocked";
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
-  const oauth = await getOAuthSettings();
-  return {
-  adapter: authAdapter,
-  // Credentials requires JWT sessions; OAuth accounts are still persisted
-  // via the adapter's `linkAccount` hook.
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Credentials only (no SSO), so sessions are JWTs and there is no adapter.
   session: { strategy: "jwt" },
   // Changing the session payload/secret can leave an old encrypted cookie in
   // browsers. A versioned name retires that incompatible token cleanly rather
@@ -86,11 +76,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     error: "/login",
   },
   providers: [
-    // Existing accounts link by email. That is safe only because callbacks.signIn refuses any identity
-    // whose provider has not verified the email.
-    ...(oauth.google ? [Google({ ...oauth.google, allowDangerousEmailAccountLinking: true })] : []),
-    ...(oauth.github ? [GitHub({ ...oauth.github, allowDangerousEmailAccountLinking: true })] : []),
-    ...(oauth.apple ? [Apple({ ...oauth.apple, allowDangerousEmailAccountLinking: true })] : []),
     Credentials({
       id: "credentials",
       name: "Email and password",
@@ -121,7 +106,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
             mfaSecretEncrypted: true,
           },
         });
-        // Equal bcrypt work for missing and OAuth-only accounts prevents the
+        // Equal bcrypt work for missing and password-less accounts prevents the
         // obvious timing oracle. This is a fixed non-secret dummy hash.
         const ok = await bcrypt.compare(password, user?.passwordHash ?? "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW");
         if (!user?.passwordHash || !ok) return fail();
@@ -156,35 +141,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (!account || account.provider === "credentials") return true;
-      const email = user.email?.trim().toLowerCase();
-      if (!email) return false;
-      if (!(await providerVerifiedEmail(account.provider, profile, account.access_token, email))) return "/login?error=unverified_email";
-      user.email = email;
-      const existing = await prisma.user.findUnique({
-        where: { email }, select: { passwordHash: true, emailVerified: true, isSuperAdmin: true },
-      });
-      // Super admins sign in with their email and the password set on the server, never through a provider.
-      if (existing?.isSuperAdmin) return "/login?error=super_admin_password_only";
-      // A pre-registered, unverified password must never survive linking to
-      // the real inbox owner's provider identity.
-      if (existing?.passwordHash && !existing.emailVerified) return false;
-
-      const existingAccount = await prisma.account.findUnique({
-        where: { provider_providerAccountId: { provider: account.provider, providerAccountId: account.providerAccountId } },
-        select: { id: true },
-      });
-      if (existingAccount || existing) return true;
-
-      // A verified provider identity may create an account only while the
-      // instance-wide account-creation policy permits it. Returning true lets
-      // Auth.js create the adapter user after this callback.
-      if (!(await isNewUserRegistrationEnabled())) {
-        return "/login?error=account_creation_disabled";
-      }
-      return true;
-    },
     async jwt({ token, user }) {
       const userId = user?.id ?? token.sub;
       if (!userId) return null;
@@ -220,15 +176,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
       return session;
     },
   },
-  events: {
-    async signIn({ user, account }) {
-      if (account && account.provider !== "credentials" && user.id) {
-        // Auth.js creates or links the adapter user after callbacks.signIn.
-        await prisma.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
-        // The provider proved the identity; still remember the browser and alert on a new one.
-        await rememberDevice(user.id, await recognisedDevice(user.id));
-      }
-    },
-  },
-  };
 });

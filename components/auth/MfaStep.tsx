@@ -50,10 +50,9 @@ export function MfaStep({
 /** Words for the error codes Auth.js and our callbacks send back to /login. */
 export function loginErrorMessage(code: string | null): string | null {
   if (!code) return null;
-  if (code === "google_account_required") return "Create an account with your email and password before continuing with that provider.";
   if (code === "account_creation_disabled") return "New account creation is currently unavailable. Ask an administrator for access or sign in with an existing account.";
   if (code === "address_blocked") return "Too many failed sign-ins from your network. Try again in an hour, or ask your administrator.";
   if (code === "super_admin_password_only") return "This is a super-admin account. Sign in with its email and password.";
-  if (code === "unverified_email") return "That account's email address isn't verified with the provider. Verify it there, or sign in with your email and password.";
+  if (code === "magic_link_invalid") return "That sign-in link has expired or was already used. Ask for a new one.";
   return "Sign-in could not be completed. Try again, or use your password and verify your email first.";
 }

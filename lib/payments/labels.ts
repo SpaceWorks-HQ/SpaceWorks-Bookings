@@ -33,14 +33,13 @@ export function methodLabel(method: string | null | undefined) {
 }
 
 /** Directory filters on the payments page, in tab order. */
-export const PAYMENT_FILTERS = ["all", "confirm", "flagged", "requests", "paid", "open", "refunds", "failed"] as const;
+export const PAYMENT_FILTERS = ["all", "confirm", "flagged", "paid", "open", "refunds", "failed"] as const;
 export type PaymentFilter = (typeof PAYMENT_FILTERS)[number];
 
 export const PAYMENT_FILTER_LABELS: Record<PaymentFilter, string> = {
   all: "All",
   confirm: "To confirm",
   flagged: "Needs review",
-  requests: "Refund requests",
   paid: "Paid",
   open: "Started",
   refunds: "Refunds",

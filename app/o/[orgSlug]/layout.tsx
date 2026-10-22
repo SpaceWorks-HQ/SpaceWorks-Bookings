@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ orgSlug: 
   const { org } = await loadPublicOrgLayout({ params });
   return {
     title: { default: org.name, template: `%s · ${org.name}` },
-    description: (org.page?.publishedAt && org.page.tagline) || org.description.slice(0, 160) || `${org.name} memberships`,
+    description: org.description.slice(0, 160) || `Book a space at ${org.name}`,
     // Unlisted organisations are reachable by link but stay out of search engines.
     robots: org.visibility === "PUBLIC" ? undefined : { index: false, follow: false },
   };
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ orgSlug: 
 export default async function PublicOrganisationLayout({ children, params }: Props) {
   const { org } = await loadPublicOrgLayout({ params });
   return (
-    <div className="sw-accent-scope flex min-h-dvh flex-col bg-canvas" style={accentStyle((org.page?.publishedAt && org.page.accentColor) || org.accentColor)}>
+    <div className="sw-accent-scope flex min-h-dvh flex-col bg-canvas" style={accentStyle(org.accentColor)}>
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="border-b border-line bg-canvas">
         <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-4 px-4 py-3 sm:px-6">

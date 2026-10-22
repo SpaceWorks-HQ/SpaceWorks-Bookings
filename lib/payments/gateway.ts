@@ -13,7 +13,6 @@ export type GatewayCredentials = { keyId: string | null; secret: string; webhook
 export type CheckoutRequest = {
   paymentId: string;
   organisationId: string;
-  termId: string | null;
   amountMinor: number;
   currency: string;
   description: string;

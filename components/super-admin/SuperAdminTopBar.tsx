@@ -14,13 +14,11 @@ import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } fr
 const sections = [
   { label: "Overview", href: "/super-admin" },
   { label: "Organisations", href: "/super-admin/orgs" },
-  { label: "Reports", href: "/super-admin/reports" },
   { label: "Users", href: "/super-admin/users" },
   { label: "Email", href: "/super-admin/email" },
   { label: "Audit log", href: "/super-admin/audit" },
   { label: "Monitoring", href: "/super-admin/monitoring" },
   { label: "Operations", href: "/super-admin/operations" },
-  { label: "Auth", href: "/super-admin/auth" },
   { label: "Security", href: "/super-admin/security" },
   { label: "Storage", href: "/super-admin/storage" },
   { label: "Settings", href: "/super-admin/settings" },

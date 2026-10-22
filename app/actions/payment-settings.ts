@@ -12,7 +12,6 @@ import { paymentAccess, paymentFailure } from "@/lib/payments/actionContext";
 import type { ActionResult } from "./org";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
-const ORG_WIDE_ONLY = "Payment settings apply to the whole organisation, so a manager limited to one unit can't change them.";
 const slug = z.string().trim().min(1).max(64);
 const optionalText = (max: number) => z.string().trim().max(max).optional().nullable().transform((value) => value || null);
 
@@ -38,7 +37,6 @@ export async function savePaymentGateway(input: unknown): Promise<ActionResult> 
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
   const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  if (ctx.access.membership.unitId) return { ok: false, error: ORG_WIDE_ONLY };
   const current = await ensurePaymentSettings(ctx.org.id);
   const { provider, keyId, secret, webhookSecret } = parsed.data;
   const switching = current.provider !== provider;
@@ -65,7 +63,6 @@ export async function testPaymentGateway(input: unknown): Promise<ActionResult> 
   if (!parsed.success) return { ok: false, error: "Invalid request." };
   const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  if (ctx.access.membership.unitId) return { ok: false, error: ORG_WIDE_ONLY };
   const settings = await ensurePaymentSettings(ctx.org.id);
   let credentials;
   try {
@@ -115,7 +112,6 @@ export async function saveTaxSettings(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
   const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  if (ctx.access.membership.unitId) return { ok: false, error: ORG_WIDE_ONLY };
   const { organisationSlug: _, ...data } = parsed.data;
   void _;
   await prisma.orgTaxSettings.upsert({ where: { organisationId: ctx.org.id }, create: { organisationId: ctx.org.id, ...data }, update: data });
@@ -137,31 +133,8 @@ export async function saveOfflinePaymentSettings(input: unknown): Promise<Action
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
   const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
   if (!ctx.ok) return ctx;
-  if (ctx.access.membership.unitId) return { ok: false, error: ORG_WIDE_ONLY };
   await ensurePaymentSettings(ctx.org.id);
   await prisma.orgPaymentSettings.update({ where: { organisationId: ctx.org.id }, data: { upiVpa: parsed.data.upiVpa, upiPayeeName: parsed.data.upiPayeeName, offlineInstructions: parsed.data.offlineInstructions } });
-  revalidatePath(`/dashboard/${ctx.org.slug}/settings/payments`);
-  return { ok: true };
-}
-
-const refundPolicySchema = z.object({
-  organisationSlug: slug,
-  refundPolicy: z.enum(["NONE", "FULL", "PRO_RATA"]),
-  refundWindowDays: z.number().int().min(1, "At least 1 day").max(365, "At most 365 days"),
-  refundPolicyText: z.string().trim().max(2000),
-});
-
-/** What members may get back when they cancel, how long they have to ask, and the policy in your words. */
-export async function saveRefundPolicy(input: unknown): Promise<ActionResult> {
-  const parsed = refundPolicySchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
-  const ctx = await paymentAccess(parsed.data.organisationSlug, "payments.settings");
-  if (!ctx.ok) return ctx;
-  if (ctx.access.membership.unitId) return { ok: false, error: ORG_WIDE_ONLY };
-  await ensurePaymentSettings(ctx.org.id);
-  const { organisationSlug: _, ...data } = parsed.data;
-  await prisma.orgPaymentSettings.update({ where: { organisationId: ctx.org.id }, data });
-  await recordAuditEvent({ action: "REFUND_POLICY_SAVED", actorUserId: ctx.access.userId, organisationId: ctx.org.id, targetType: "Organisation", targetId: ctx.org.id, metadata: { refundPolicy: data.refundPolicy, refundWindowDays: data.refundWindowDays } });
   revalidatePath(`/dashboard/${ctx.org.slug}/settings/payments`);
   return { ok: true };
 }

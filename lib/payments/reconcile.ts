@@ -20,7 +20,7 @@ async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date)
 }
 
 /**
- * Poll open gateway attempts so a missed webhook never leaves a paid member waiting. Each run takes the
+ * Poll open gateway attempts so a missed webhook never leaves a paid customer waiting. Each run takes the
  * attempts checked longest ago (`updatedAt` is touched on every check), so abandoned checkouts cannot starve
  * newer ones. Settling is idempotent, so overlapping runs on several replicas are harmless. Attempts still
  * open after a week are closed as FAILED, even when the provider can't be reached; a capture that arrives

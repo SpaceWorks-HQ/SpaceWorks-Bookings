@@ -6,7 +6,7 @@ import { indianStateName } from "@/lib/indianStates";
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState, OrgLogo } from "@/components/ui/display";
 
-export const metadata: Metadata = { title: "Organisations", description: "Find an organisation and apply to become a member." };
+export const metadata: Metadata = { title: "Organisations", description: "Find a makerspace and book its spaces." };
 
 export default async function OrganisationsDirectoryPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const { q, page, pages, total, organisations } = await loadOrganisationsDirectory({ searchParams });
@@ -15,7 +15,7 @@ export default async function OrganisationsDirectoryPage({ searchParams }: { sea
     <div className="flex flex-col gap-8">
       <header className="flex max-w-[680px] flex-col gap-3">
         <h1 className="text-display-m text-ink">Find your organisation.</h1>
-        <p className="text-body-l text-ink-secondary">Clubs, associations and communities taking members on this platform. Open one to see its plans and apply.</p>
+        <p className="text-body-l text-ink-secondary">Makerspaces taking bookings on this platform. Open one to see its spaces.</p>
       </header>
       <form role="search" className="flex max-w-[560px] gap-2" action="/organisations">
         <label htmlFor="org-search" className="sr-only">Search organisations</label>
@@ -45,7 +45,7 @@ export default async function OrganisationsDirectoryPage({ searchParams }: { sea
                     </div>
                   </div>
                   {org.description ? <p className="line-clamp-3 text-body-ui text-ink-secondary">{org.description}</p> : null}
-                  <p className="mt-auto text-caption font-semibold text-ink">{org._count.plans ? `${org._count.plans} ${org._count.plans === 1 ? "plan" : "plans"} open` : "See membership"}</p>
+                  <p className="mt-auto text-caption font-semibold text-ink">See spaces</p>
                 </Link>
               </li>
             ))}

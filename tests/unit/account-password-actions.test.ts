@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   hash: vi.fn(),
   userFind: vi.fn(),
   userUpdate: vi.fn(),
-  sessionDelete: vi.fn(),
   auditCreate: vi.fn(),
   transaction: vi.fn(),
 }));
@@ -23,7 +22,6 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const tx = {
   user: { update: mocks.userUpdate, updateMany: mocks.userUpdate },
   verificationToken: { deleteMany: vi.fn() },
-  session: { deleteMany: mocks.sessionDelete },
   auditEvent: { create: mocks.auditCreate },
 };
 vi.mock("@/lib/db", () => ({
@@ -52,7 +50,6 @@ describe("account password actions", () => {
     await expect(updateAccountPassword({ currentPassword: "current-password", newPassword: "new-password", confirmPassword: "new-password" })).resolves.toEqual({ ok: true, data: { passwordSet: true } });
     expect(mocks.compare).toHaveBeenCalledWith("current-password", "old-hash");
     expect(mocks.userUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ passwordHash: "new-hash", sessionVersion: { increment: 1 } }) }));
-    expect(mocks.sessionDelete).toHaveBeenCalledWith({ where: { userId: "user_1" } });
   });
 
   it("lets a recently authenticated Google-only user add a password", async () => {
@@ -72,7 +69,6 @@ describe("account password actions", () => {
 it("does not overwrite credentials changed by a concurrent request", async () => {
   mocks.userUpdate.mockResolvedValue({ count: 0 });
   expect((await updateAccountPassword({ currentPassword: "current-password", newPassword: "new-password", confirmPassword: "new-password" })).ok).toBe(false);
-  expect(mocks.sessionDelete).not.toHaveBeenCalled();
   expect(mocks.auditCreate).not.toHaveBeenCalled();
 });
 

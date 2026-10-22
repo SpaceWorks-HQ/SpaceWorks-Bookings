@@ -81,7 +81,7 @@ export default async function SuperAdminOrgDetailPage({ params }: Props) {
         </div>
         <div className="flex flex-col gap-6">
           <OrganisationVisibilityToggle organisationId={org.id} visibility={org.visibility} active={org.status === "ACTIVE"} />
-          <OrganisationLimitsForm organisationId={org.id} memberLimit={org.memberLimit} managerLimit={org.managerLimit} />
+          <OrganisationLimitsForm organisationId={org.id} managerLimit={org.managerLimit} />
         </div>
       </div>
 

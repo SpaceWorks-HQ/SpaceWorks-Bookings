@@ -25,16 +25,14 @@ export async function loadSuperAdminUserDetailView({ params }: Props) {
       profileImageUrl: true,
       image: true,
       isSuperAdmin: true,
-      _count: { select: { teamMembers: true, sessions: true } },
+      _count: { select: { teamMembers: true, knownDevices: true } },
     },
   });
 
   if (!user) notFound();
 
-  const [hasPassword, accounts, activeSessions, memberships, auditEvents] = await Promise.all([
+  const [hasPassword, memberships, auditEvents] = await Promise.all([
     prisma.user.count({ where: { id: user.id, passwordHash: { not: null } } }),
-    prisma.account.findMany({ where: { userId: user.id }, select: { id: true, provider: true, type: true } }),
-    prisma.session.count({ where: { userId: user.id, expires: { gt: now } } }),
     prisma.teamMember.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -47,5 +45,5 @@ export async function loadSuperAdminUserDetailView({ params }: Props) {
   const displayName = user.name ?? user.email ?? "Unnamed user";
 
 
-  return { user, hasPassword, accounts, activeSessions, memberships, auditEvents, displayName, now, viewerId: session.user.id };
+  return { user, hasPassword, memberships, auditEvents, displayName, now, viewerId: session.user.id };
 }

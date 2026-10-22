@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 
 const PAGE_SIZE = 24;
 
-/** Public, active organisations people can find and apply to. Unlisted ones never appear here. */
+/** Public, active organisations people can find and book. Unlisted ones never appear here. */
 export async function loadOrganisationsDirectory({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const search = await searchParams;
   const q = (search.q ?? "").trim().slice(0, 80);
@@ -20,7 +20,7 @@ export async function loadOrganisationsDirectory({ searchParams }: { searchParam
       orderBy: { name: "asc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      select: { slug: true, name: true, kind: true, city: true, stateCode: true, description: true, logoUrl: true, _count: { select: { plans: { where: { archivedAt: null, joinMode: { in: ["OPEN", "APPROVAL"] } } } } } },
+      select: { slug: true, name: true, kind: true, city: true, stateCode: true, description: true, logoUrl: true },
     }),
   ]);
   return { q, page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)), total, organisations };

@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Search, Settings } from "lucide-react";
 import { loadPaymentsDirectory } from "@/lib/views/app__dashboard__orgSlug__payments__page";
-import { money } from "@/lib/membership/describe";
-import { formatCalendarDate, localDate } from "@/lib/membership/periods";
+import { money } from "@/lib/money/currencies";
+import { formatCalendarDate, localDate } from "@/lib/calendarDate";
 import { methodLabel, PAYMENT_FILTER_LABELS, PAYMENT_FILTERS, PROVIDER_LABELS } from "@/lib/payments/labels";
 import { OrgPageHeader } from "@/components/dashboard/org/OrgPageHeader";
 import { PaymentStatusChip } from "@/components/payments/PaymentStatusChip";
@@ -64,7 +64,7 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
         <label htmlFor="payment-search" className="sr-only">Search payments</label>
         <div className="relative flex-1">
           <Search aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-muted" />
-          <input id="payment-search" name="q" defaultValue={view.q} placeholder="Name, member no., UTR or receipt no." className="min-h-11 w-full rounded-control border border-line-strong bg-panel pl-10 pr-4 text-base text-ink placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(var(--sw-ui-focus))]" />
+          <input id="payment-search" name="q" defaultValue={view.q} placeholder="Name, email, UTR or receipt no." className="min-h-11 w-full rounded-control border border-line-strong bg-panel pl-10 pr-4 text-base text-ink placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(var(--sw-ui-focus))]" />
         </div>
         <button type="submit" className={buttonClasses({ variant: "secondary" })}>Search</button>
       </form>
@@ -72,11 +72,6 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
       {counts.confirm > 0 && filter !== "confirm" && view.canManage ? (
         <Callout tone="info" action={<Link href={query({ status: "confirm", page: "" })} className={buttonClasses({ variant: "secondary", size: "sm" })}>Review</Link>}>
           {counts.confirm} {counts.confirm === 1 ? "payment is" : "payments are"} waiting to be confirmed.
-        </Callout>
-      ) : null}
-      {counts.requests > 0 && filter !== "requests" && view.canManage ? (
-        <Callout tone="warning" action={<Link href={query({ status: "requests", page: "" })} className={buttonClasses({ variant: "secondary", size: "sm" })}>Review</Link>}>
-          {counts.requests} {counts.requests === 1 ? "member has" : "members have"} asked to cancel with a refund.
         </Callout>
       ) : null}
       {view.stuckRefunds > 0 && view.canManage ? (
@@ -92,14 +87,13 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
 
       {payments.length === 0 ? (
         <EmptyState {...(counts.all === 0 ? { patch: true } : { mood: "sleepy" as const })} title={counts.all === 0 ? "No payments yet" : "Nothing matches"}>
-          {counts.all === 0 ? "Payments appear here when members pay online, or when you record one on a member's page." : "Try another filter or search."}
+          {counts.all === 0 ? "Payments appear here when customers pay online or the team records one." : "Try another filter or search."}
         </EmptyState>
       ) : (
         <Table label="Payments">
           <THead>
             <tr>
-              <TH>Member</TH>
-              <TH>For</TH>
+              <TH>Customer</TH>
               <TH className="text-right">Amount</TH>
               <TH>How</TH>
               <TH>Status</TH>
@@ -113,10 +107,9 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
               return (
                 <TR key={payment.id}>
                   <TD>
-                    <Link href={`${base}/${payment.id}`} className="font-semibold text-ink underline-offset-4 hover:underline">{payment.member.name}</Link>
-                    <span className="block text-caption tabular-nums text-ink-muted">No. {payment.member.memberNumber}</span>
+                    <Link href={`${base}/${payment.id}`} className="font-semibold text-ink underline-offset-4 hover:underline">{payment.customerName}</Link>
+                    <span className="block text-caption text-ink-muted">{payment.customerEmail}</span>
                   </TD>
-                  <TD className="text-ink-secondary">{payment.term?.plan.name ?? "—"}</TD>
                   <TD className="text-right tabular-nums">
                     {money(payment.amountMinor, payment.currency, org.locale)}
                     {refunded ? <span className="block text-caption text-ink-muted">{money(refunded, payment.currency, org.locale)} refunded</span> : null}

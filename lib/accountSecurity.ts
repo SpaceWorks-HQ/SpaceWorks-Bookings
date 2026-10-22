@@ -24,16 +24,6 @@ export function securityActivityLabel(action: string): string {
   return Object.hasOwn(SECURITY_ACTIVITY_LABELS, action) ? SECURITY_ACTIVITY_LABELS[action as SecurityActivityAction] : "Security change";
 }
 
-const PROVIDER_LABELS: Record<string, string> = { google: "Google" };
-
-/** Display name for an Auth.js OAuth provider id ("google" → "Google"). */
-export function signInProviderLabel(provider: string): string {
-  const known = PROVIDER_LABELS[provider.toLowerCase()];
-  if (known) return known;
-  const cleaned = provider.replace(/[-_]+/g, " ").trim();
-  return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : "Single sign-on";
-}
-
 /** "14 Oct 2026" in UTC, so the server and browser agree. */
 export function formatMemberSince(createdAt: Date): string {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(createdAt);

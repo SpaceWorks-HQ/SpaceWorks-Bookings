@@ -23,13 +23,13 @@ export default async function DashboardPage() {
       <PageHeader
         kicker="Home"
         title={`Hello, ${firstName}`}
-        description={teams.length ? "Pick an organisation to manage its members, plans and payments." : undefined}
+        description={teams.length ? "Pick an organisation to manage its spaces, bookings and payments." : undefined}
         actions={teams.length ? <Link href="/start" className={buttonClasses({ variant: "secondary" })}>Apply for another</Link> : undefined}
       />
 
       {teams.length === 0 ? (
         <EmptyState patch title="No organisations yet" action={apply}>
-          Apply to run your organisation&rsquo;s memberships here. A platform admin reviews every application, or ask an
+          Apply to take bookings for your organisation&rsquo;s spaces here. A platform admin reviews every application, or ask an
           organisation owner to invite you to their team.
         </EmptyState>
       ) : (

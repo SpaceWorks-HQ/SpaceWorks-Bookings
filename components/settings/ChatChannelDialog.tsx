@@ -39,7 +39,7 @@ export function ChatChannelDialog({ slug, channel, onClose }: { slug: string; ch
   const router = useRouter();
   const [kind, setKind] = useState<ChatKind>(channel?.kind ?? "SLACK");
   const [name, setName] = useState(channel?.name ?? "");
-  const [events, setEvents] = useState<ChatEvent[]>((channel?.events as ChatEvent[]) ?? ["application", "payment-to-confirm", "refund-requested"]);
+  const [events, setEvents] = useState<ChatEvent[]>((channel?.events as ChatEvent[]) ?? ["payment", "payment-to-confirm"]);
   const [includeNames, setIncludeNames] = useState(channel?.includeNames ?? false);
   const [enabled, setEnabled] = useState(channel?.enabled ?? true);
   const [fields, setFields] = useState<Record<string, string>>({});

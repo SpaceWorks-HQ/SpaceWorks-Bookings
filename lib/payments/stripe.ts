@@ -58,7 +58,6 @@ export const stripe: PaymentGateway = {
         "line_items[0][price_data][product_data][name]": request.description.slice(0, 250),
         "metadata[paymentId]": request.paymentId,
         "metadata[organisationId]": request.organisationId,
-        "metadata[termId]": request.termId ?? "",
         "payment_intent_data[metadata][paymentId]": request.paymentId,
       }),
     });

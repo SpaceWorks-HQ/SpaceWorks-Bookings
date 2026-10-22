@@ -14,14 +14,13 @@ const snapshot: Snapshot = {
   locale: null,
   timeZone: "Asia/Kolkata",
   issuer: { name: "Kunj-Company", legalName: "Kunj Company Society", gstin: "32ABCDE1234F1Z5", address: "Kochi", state: "KL", email: "hello@kunj.example", logoUrl: null },
-  recipient: { name: "ഷാൻ Shoukath", memberNumber: 1, state: "KL", gstin: null },
+  recipient: { name: "ഷാൻ Shoukath", email: "shaan@example.test", state: "KL", gstin: null },
   placeOfSupply: "KL",
-  sac: "999599",
+  sac: "997212",
   tax: { mode: "GST", rateBps: 1800, inclusive: true, taxName: "GST", zeroRatedExport: false, lutNumber: null },
-  lines: [{ description: "Annual membership", amountMinor: 118_000, taxableMinor: 100_000, cgstMinor: 9_000, sgstMinor: 9_000, igstMinor: 0, otherTaxMinor: 0 }],
+  lines: [{ description: "Laser studio, 2 hours", amountMinor: 118_000, taxableMinor: 100_000, cgstMinor: 9_000, sgstMinor: 9_000, igstMinor: 0, otherTaxMinor: 0 }],
   totals: { amountMinor: 118_000, taxableMinor: 100_000, cgstMinor: 9_000, sgstMinor: 9_000, igstMinor: 0, otherTaxMinor: 0 },
   payment: { provider: "OFFLINE", method: "upi", reference: "612345678901", paidAt: "2026-06-15T06:00:00.000Z" },
-  membership: { plan: "Annual", startsAt: "2026-06-14T18:30:00.000Z", endsAt: "2027-03-31T18:30:00.000Z" },
   original: null,
 };
 

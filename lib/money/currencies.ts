@@ -102,3 +102,8 @@ export function totalsByCurrency(amounts: Array<{ minor: number; currency: strin
     .map(([currency, minor]) => ({ currency, minor }))
     .sort((a, b) => (a.currency === primary ? -1 : b.currency === primary ? 1 : a.currency.localeCompare(b.currency)));
 }
+
+/** Format an amount in any currency code; unknown codes fall back to "XYZ 1234". */
+export function money(minor: number, currency: string, locale?: string | null) {
+  return isCurrencyCode(currency) ? formatMoney(minor, currency, locale ?? undefined) : `${currency} ${minor}`;
+}

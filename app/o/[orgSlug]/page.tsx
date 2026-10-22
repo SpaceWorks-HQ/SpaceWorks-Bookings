@@ -1,22 +1,10 @@
 import { Globe, Mail, MapPin, Phone } from "lucide-react";
 import { loadPublicOrgPage } from "@/lib/views/app__o__orgSlug__page";
 import { indianStateName } from "@/lib/indianStates";
-import { PageSections } from "@/components/public/PageSections";
-import { PlanCards } from "@/components/public/PlanCards";
-import { Chip, OrgLogo } from "@/components/ui/display";
+import { Callout, Chip, EmptyState, OrgLogo } from "@/components/ui/display";
 
 export default async function PublicOrganisationPage({ params }: { params: Promise<{ orgSlug: string }> }) {
-  const { org, plans, takingMembers, page, units } = await loadPublicOrgPage({ params });
-
-  // A published custom page (Settings → Public page) replaces the plain one.
-  if (page) {
-    return (
-      <div className="mx-auto w-full max-w-[1120px] px-4 py-10 sm:px-6 lg:py-16">
-        <PageSections document={page} org={org} plans={plans} units={units} takingMembers={takingMembers} preview={false} />
-      </div>
-    );
-  }
-
+  const { org, takingBookings } = await loadPublicOrgPage({ params });
   const place = [org.city, indianStateName(org.stateCode)].filter(Boolean).join(", ");
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-12 px-4 py-10 sm:px-6 lg:py-16">
@@ -37,9 +25,15 @@ export default async function PublicOrganisationPage({ params }: { params: Promi
         </dl>
       </section>
 
-      <section aria-labelledby="plans" className="flex flex-col gap-6">
-        <h2 id="plans" className="text-h1 text-ink">Membership</h2>
-        <PlanCards org={org} plans={plans} takingMembers={takingMembers} />
+      <section aria-labelledby="spaces" className="flex flex-col gap-6">
+        <h2 id="spaces" className="text-h1 text-ink">Spaces</h2>
+        {takingBookings ? (
+          <EmptyState patch title="No spaces to book yet">
+            {org.name} hasn&apos;t opened any spaces for booking here yet. Contact them to ask.
+          </EmptyState>
+        ) : (
+          <Callout tone="warning" title="Not taking bookings">{org.name} isn&apos;t taking bookings right now.</Callout>
+        )}
       </section>
     </div>
   );

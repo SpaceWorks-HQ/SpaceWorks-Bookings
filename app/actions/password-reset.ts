@@ -134,7 +134,6 @@ export async function confirmPasswordReset(
       data: { passwordHash, emailVerified: new Date(), sessionVersion: { increment: 1 } },
       select: { id: true },
     });
-    await tx.session.deleteMany({ where: { userId: user.id } });
     await tx.verificationToken.deleteMany({ where: { identifier: { in: [`mfa:${user.id}`, `email-verification:${user.id}`] } } });
     await tx.auditEvent.create({ data: { action: "ACCOUNT_PASSWORD_RESET", actorUserId: user.id, targetType: "User", targetId: user.id } });
     await tx.verificationToken.deleteMany({ where: { identifier: `reset:${email}` } });

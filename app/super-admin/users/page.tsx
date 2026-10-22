@@ -56,14 +56,13 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
             <TH>Verified</TH>
             <TH>MFA</TH>
             <TH className="text-right">Orgs</TH>
-            <TH className="text-right">Accounts</TH>
-            <TH className="text-right">Sessions</TH>
+            <TH className="text-right">Browsers</TH>
             <TH>Created</TH>
           </tr>
         </THead>
         <TBody>
           {users.length === 0 ? (
-            <tr><TD colSpan={8} className="py-8 text-center text-ink-muted">No users.</TD></tr>
+            <tr><TD colSpan={7} className="py-8 text-center text-ink-muted">No users.</TD></tr>
           ) : (
             users.map((u) => (
               <TR key={u.id}>
@@ -72,8 +71,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                 <TD>{u.emailVerified ? <Chip size="sm" tone="success">Yes</Chip> : <Chip size="sm" tone="warning">No</Chip>}</TD>
                 <TD>{u.mfaEnabledAt ? <Chip size="sm" tone="success">On</Chip> : <Chip size="sm" tone="neutral">Off</Chip>}</TD>
                 <TD className="text-right tabular-nums">{u._count.teamMembers}</TD>
-                <TD className="text-right tabular-nums">{u._count.accounts}</TD>
-                <TD className="text-right tabular-nums">{u._count.sessions}</TD>
+                <TD className="text-right tabular-nums">{u._count.knownDevices}</TD>
                 <TD className="whitespace-nowrap text-ink-secondary">{u.createdAt.toLocaleString()}</TD>
               </TR>
             ))

@@ -45,7 +45,6 @@ export async function setNewUserRegistrationEnabled(input: unknown): Promise<Act
     metadata: { allowNewUserSignups: parsed.data.allowNewUserSignups },
   });
   revalidatePath("/login");
-  revalidatePath("/super-admin/auth");
   return { ok: true };
 }
 

@@ -137,7 +137,6 @@ export async function updateAccountPassword(
     });
     if (updated.count !== 1) return false;
     await tx.verificationToken.deleteMany({ where: { identifier: { in: [`reset:${user.email}`, `mfa:${session.user.id}`] } } });
-    await tx.session.deleteMany({ where: { userId: session.user.id } });
     await tx.auditEvent.create({
       data: {
         action: user.passwordHash

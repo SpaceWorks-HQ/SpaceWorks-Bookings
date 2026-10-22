@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { loadOrgEmailSettingsView } from "@/lib/views/app__dashboard__orgSlug__settings__email__page";
-import { formatCalendarDate, localDate } from "@/lib/membership/periods";
+import { formatCalendarDate, localDate } from "@/lib/calendarDate";
 import { OrgPageHeader } from "@/components/dashboard/org/OrgPageHeader";
 import { SettingsTabs } from "@/components/settings/SettingsTabs";
 import { OrgEmailForm } from "@/components/settings/OrgEmailForm";
@@ -13,7 +13,7 @@ export default async function OrgEmailSettingsPage({ params }: { params: Promise
   const { verifiedAt, ...initial } = settings;
   return (
     <div className="flex flex-col gap-6">
-      <OrgPageHeader organisation={org} title="Settings" description="How emails to your members are sent." />
+      <OrgPageHeader organisation={org} title="Settings" description="How emails to your customers are sent." />
       <SettingsTabs slug={org.slug} />
       <Card as="section" className="max-w-[860px] rounded-xl">
         <CardHeader

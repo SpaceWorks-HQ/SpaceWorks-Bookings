@@ -20,16 +20,5 @@ export async function loadSuperAdminSettingsView() {
       backupRetentionDays: String(settings?.backupRetentionDays ?? env.BACKUP_RETENTION_DAYS ?? ""),
       hasSmtpPassword: Boolean(settings?.smtpPasswordEncrypted ?? env.SMTP_PASSWORD),
     },
-    providers: {
-      googleClientId: settings?.googleClientId ?? env.AUTH_GOOGLE_ID ?? "",
-      githubClientId: settings?.githubClientId ?? env.AUTH_GITHUB_ID ?? "",
-      appleClientId: settings?.appleClientId ?? env.AUTH_APPLE_ID ?? "",
-      appleTeamId: settings?.appleTeamId ?? env.AUTH_APPLE_TEAM_ID ?? "",
-      appleKeyId: settings?.appleKeyId ?? env.AUTH_APPLE_KEY_ID ?? "",
-      hasGoogleSecret: Boolean(settings?.googleClientSecretEncrypted ?? env.AUTH_GOOGLE_SECRET),
-      hasGithubSecret: Boolean(settings?.githubClientSecretEncrypted ?? env.AUTH_GITHUB_SECRET),
-      hasAppleKey: Boolean(settings?.applePrivateKeyEncrypted ?? env.AUTH_APPLE_PRIVATE_KEY),
-      callbackBase: (env.AUTH_URL ?? env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/$/, ""),
-    },
   };
 }

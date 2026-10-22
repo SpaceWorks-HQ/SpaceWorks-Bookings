@@ -110,7 +110,7 @@ export async function renderDocumentPdf(snapshot: DocumentSnapshot): Promise<Uin
   text(pen, snapshot.recipient.name, MARGIN, y, { size: 11.5, bold: true, maxWidth: 320 });
   if (snapshot.placeOfSupply) text(pen, `${indianStateName(snapshot.placeOfSupply) ?? snapshot.placeOfSupply} (${snapshot.placeOfSupply})`, right, y, { align: "right" });
   y -= 13;
-  text(pen, [`Member no. ${snapshot.recipient.memberNumber}`, snapshot.recipient.gstin ? `GSTIN ${snapshot.recipient.gstin}` : null].filter(Boolean).join(" · "), MARGIN, y, { color: MUTED });
+  text(pen, [snapshot.recipient.email, snapshot.recipient.gstin ? `GSTIN ${snapshot.recipient.gstin}` : null].filter(Boolean).join(" · "), MARGIN, y, { color: MUTED });
   if (snapshot.sac && snapshot.tax.mode === "GST") text(pen, `SAC ${snapshot.sac}`, right, y, { align: "right", color: MUTED });
 
   // Lines.
@@ -140,10 +140,9 @@ export async function renderDocumentPdf(snapshot: DocumentSnapshot): Promise<Uin
   taxColumns.forEach((column, index) => text(pen, money(snapshot.totals[column.key]), columnXs[index], y, { align: "right", bold: true }));
   text(pen, money(snapshot.totals.amountMinor), amountX, y, { align: "right", bold: true, size: 11 });
 
-  // Payment and membership details.
+  // Payment details.
   y -= 36;
   const details = [
-    snapshot.membership ? `Membership: ${snapshot.membership.plan}${snapshot.membership.startsAt ? `, ${date(snapshot.membership.startsAt, snapshot.timeZone)} to ${date(snapshot.membership.endsAt, snapshot.timeZone)}` : ""}` : null,
     `${snapshot.kind === "CREDIT_NOTE" ? "Refunded" : "Paid"}: ${date(snapshot.payment.paidAt, snapshot.timeZone)}${snapshot.payment.method ? ` by ${snapshot.payment.method.replace(/_/g, " ")}` : ""}${snapshot.payment.provider !== "OFFLINE" ? ` via ${snapshot.payment.provider === "RAZORPAY" ? "Razorpay" : "Stripe"}` : ""}`,
     snapshot.payment.reference ? `Reference: ${snapshot.payment.reference}` : null,
   ].filter(Boolean) as string[];

@@ -25,7 +25,7 @@ export type RevenueSummary = {
   net: CurrencyTotal[];
   payments: number;
   refundCount: number;
-  /** Net ÷ distinct paying members, per currency. */
+  /** Net ÷ distinct paying customers, per currency. */
   perPayingMember: CurrencyTotal[];
   payingMembers: Record<string, number>;
 };
@@ -37,7 +37,7 @@ export function revenueSummary(rows: FinanceRows, window: Window, primary?: stri
   const refunded = totals(refunds, (refund) => ({ currency: refund.currency, minor: refund.amountMinor }), primary);
   const net = subtractTotals(gross, refunded, primary);
   const payers = new Map<string, Set<string>>();
-  for (const payment of paid) payers.set(payment.currency, (payers.get(payment.currency) ?? new Set()).add(payment.memberId));
+  for (const payment of paid) payers.set(payment.currency, (payers.get(payment.currency) ?? new Set()).add(payment.customerEmail));
   const payingMembers = Object.fromEntries([...payers].map(([currency, set]) => [currency, set.size]));
   return {
     gross,
@@ -73,12 +73,12 @@ export function revenueSeries(rows: FinanceRows, buckets: Bucket[], primary?: st
   });
 }
 
-export type RevenueDimension = "plan" | "unit" | "provider" | "method";
+export type RevenueDimension = "provider" | "method";
 
-/** Net revenue split by plan, unit, provider or method: each refund counts against its payment's group. */
+/** Net revenue split by provider or method: each refund counts against its payment's group. */
 export function revenueBy(rows: FinanceRows, window: Window, dimension: RevenueDimension, primary?: string) {
   const byId = new Map(rows.payments.map((payment) => [payment.id, payment]));
-  const keyOf = (payment: FinancePayment) => (dimension === "plan" ? payment.planId : dimension === "unit" ? payment.unitId : dimension === "provider" ? payment.provider : payment.method) ?? "none";
+  const keyOf = (payment: FinancePayment) => (dimension === "provider" ? payment.provider : payment.method) ?? "none";
   const entries = [
     ...collectedPayments(rows, window).map((payment) => ({ key: keyOf(payment), currency: payment.currency, minor: payment.amountMinor })),
     ...windowRefunds(rows, window).flatMap((refund) => {

@@ -54,14 +54,6 @@ write_setup_environment() {
   env_setting SMTP_SECURE "$([[ "$SMTP_PORT" == 465 ]] && echo true || echo false)"
   env_setting SMTP_USER "$SMTP_USER"
   env_setting SMTP_PASSWORD "$SMTP_PASSWORD"
-  if [[ -n "$GOOGLE_CLIENT_ID" ]]; then
-    env_setting AUTH_GOOGLE_ID "$GOOGLE_CLIENT_ID"
-    env_setting AUTH_GOOGLE_SECRET "$GOOGLE_CLIENT_SECRET"
-  fi
-  if [[ -n "$GITHUB_CLIENT_ID" ]]; then
-    env_setting AUTH_GITHUB_ID "$GITHUB_CLIENT_ID"
-    env_setting AUTH_GITHUB_SECRET "$GITHUB_CLIENT_SECRET"
-  fi
   if [[ "$STORAGE" == 2 ]]; then
     env_setting S3_ENDPOINT "$S3_ENDPOINT"
     env_setting S3_REGION "$S3_REGION"

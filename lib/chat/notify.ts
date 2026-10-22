@@ -24,8 +24,7 @@ export function asChatPayload(value: Prisma.JsonValue): ChatPayload | null {
   if (!p || !isId(p.channelId) || !isId(p.organisationId) || !CHAT_EVENTS.includes(p.event as ChatEvent)) return null;
   const refs = (p.refs && typeof p.refs === "object" && !Array.isArray(p.refs) ? p.refs : {}) as Record<string, unknown>;
   const clean: ChatRefs = {};
-  for (const key of ["termId", "paymentId", "requestId"] as const) if (isId(refs[key])) clean[key] = refs[key] as string;
-  if (typeof refs.month === "string" && /^\d{4}-\d{2}$/.test(refs.month)) clean.month = refs.month;
+  if (isId(refs.paymentId)) clean.paymentId = refs.paymentId;
   return { channelId: p.channelId, organisationId: p.organisationId, event: p.event as ChatEvent, refs: clean };
 }
 

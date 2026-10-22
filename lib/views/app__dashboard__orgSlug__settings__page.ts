@@ -10,11 +10,11 @@ export async function loadOrgSettingsView({ params }: Props) {
 
   const org = await prisma.organisation.findUnique({
     where: { id: organisation.id },
-    select: { name: true, description: true, logoUrl: true, slug: true, memberPortal: true },
+    select: { name: true, description: true, logoUrl: true, slug: true },
   });
 
   if (!org) notFound();
 
   const canDelete = canDeleteOrg(membership);
-  return { org, organisation, membership, canDelete, canEditPortal: !membership.unitId };
+  return { org, organisation, membership, canDelete };
 }

@@ -9,12 +9,9 @@ import {
   canManageTeam,
   canManageTeamMember,
   getMembership,
-  orgActionAccess,
   hasAuthenticator,
   STAFF_AUTHENTICATOR_MESSAGE,
 } from "@/lib/permissions";
-import { z } from "zod";
-import { isActionRateLimited } from "@/lib/actionRateLimit";
 import {
   deleteOrganisationSchema,
   removeTeamMemberSchema,
@@ -177,7 +174,7 @@ export async function deleteOrganisation(input: unknown): Promise<ActionResult> 
   }
 
   // Money records are kept for audit (8 years); an organisation that has taken payments is archived instead.
-  if ((await prisma.payment.count({ where: { organisationId: org.id, status: { in: ["PAID", "WAIVED"] } } })) || (await prisma.ledgerEntry.count({ where: { organisationId: org.id } }))) {
+  if (await prisma.payment.count({ where: { organisationId: org.id, status: { in: ["PAID", "WAIVED"] } } })) {
     return { ok: false, error: "This organisation has taken payments, so its records must be kept. Ask a platform admin to archive it instead." };
   }
 
@@ -198,35 +195,5 @@ export async function deleteOrganisation(input: unknown): Promise<ActionResult> 
 
   revalidatePath("/dashboard");
   revalidatePath(`/o/${slug}`);
-  return { ok: true };
-}
-
-const unitScopeSchema = z.object({
-  organisationSlug: z.string().trim().min(1),
-  targetUserId: z.string().trim().min(1).max(64),
-  unitId: z.string().trim().max(64).optional().nullable().transform((value) => value || null),
-});
-
-/**
- * Limit a team member to one unit's subtree (a region or chapter manager), or give them the whole
- * organisation again. Owners are never limited, and only people with org-wide reach can set scopes.
- */
-export async function setTeamMemberUnit(input: unknown): Promise<ActionResult> {
-  const parsed = unitScopeSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Invalid request." };
-  const access = await orgActionAccess(parsed.data.organisationSlug, "team.manage");
-  if (!access.ok) return access;
-  if (access.membership.unitId) return { ok: false, error: "Only owners and organisation-wide managers can set unit access." };
-  if (await isActionRateLimited("action", access.userId)) return { ok: false, error: "Too many requests. Try again shortly." };
-  const target = await getMembership(parsed.data.targetUserId, access.organisation.id);
-  if (!target) return { ok: false, error: "That person isn't on the team." };
-  if (target.role === "OWNER") return { ok: false, error: "Owners always see the whole organisation." };
-  if (!canManageTeamMember(access.membership.role, target.role)) return { ok: false, error: "You can't change this person's access." };
-  if (parsed.data.unitId && !(await prisma.orgUnit.count({ where: { id: parsed.data.unitId, organisationId: access.organisation.id, archivedAt: null } }))) {
-    return { ok: false, error: "That unit no longer exists." };
-  }
-  await prisma.teamMember.update({ where: { id: target.id }, data: { unitId: parsed.data.unitId } });
-  await recordAuditEvent({ action: "TEAM_UNIT_SCOPE_CHANGED", actorUserId: access.userId, organisationId: access.organisation.id, targetType: "teamMember", targetId: target.id, metadata: { scoped: Boolean(parsed.data.unitId) } });
-  revalidatePath(`/dashboard/${access.organisation.slug}/team`);
   return { ok: true };
 }

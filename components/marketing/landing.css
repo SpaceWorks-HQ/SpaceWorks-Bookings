@@ -1,10 +1,7 @@
-/* Landing page (app/page.tsx). Motion, all of it: the hero deck is dealt once, the card flips on demand,
-   the headline lines slide up on load, the sample-card strip slides past under the hero (pausable), the
-   year ruler fills as the year section crosses the screen, the receipt prints once, and the terminal
-   caret blinks. Scroll-driven reveals (the .sr-* classes) give each section its own entrance: the hero
-   deck fans apart as it leaves, headings rise, timeline rows arrive from the left, panels lift, report
-   bars grow and the terminal slides in. Each rests in its final, visible state under reduced motion and in browsers without
-   scroll-driven animation. */
+/* Landing page (app/page.tsx). Motion: the headline lines slide up on load and the hero fades in; the
+   terminal caret blinks. Scroll-driven reveals (the .sr-* classes) give each section its own entrance.
+   Each rests in its final, visible state under reduced motion and in browsers without scroll-driven
+   animation. */
 
 .landing-boxes {
   position: relative;
@@ -51,83 +48,6 @@
 }
 @keyframes landing-fade {
   from { opacity: 0; transform: translateY(14px); }
-}
-
-/* ---- Sample-card strip: slides left forever, half its width per loop ---- */
-.landing-strip {
-  animation: landing-slide 45s linear infinite;
-}
-.landing-strip[data-paused="true"],
-.landing-strip-mask:hover .landing-strip,
-.landing-strip-mask:focus-within .landing-strip {
-  animation-play-state: paused;
-}
-@keyframes landing-slide {
-  /* One set of four: the track is four identical sets, so a quarter is exactly one period. */
-  to { transform: translateX(-25%); }
-}
-.landing-strip-mask {
-  mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
-}
-
-/* ---- Hero deck: three objects dealt onto the table ---- */
-.landing-deal {
-  animation: landing-deal 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--deal-delay, 0ms);
-}
-@keyframes landing-deal {
-  from { opacity: 0; transform: translate3d(48px, 36px, 0) rotate(var(--deal-from, 10deg)); }
-}
-
-/* ---- The member card flip ---- */
-.landing-flip {
-  perspective: 1400px;
-}
-.landing-flip-inner {
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.landing-flip[data-flipped="true"] .landing-flip-inner {
-  transform: rotateY(180deg);
-}
-.landing-face {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.landing-face-back {
-  position: absolute;
-  inset: 0;
-  transform: rotateY(180deg);
-}
-
-/* ---- Year ruler: fills April to March as the year section crosses the screen ---- */
-.landing-ruler-fill {
-  transform-origin: left center;
-}
-@supports (animation-timeline: view()) {
-  .landing-ruler-fill {
-    animation: landing-fill linear both;
-    animation-timeline: --landing-year;
-    animation-range: entry 40% exit 60%;
-  }
-  .landing-year {
-    view-timeline-name: --landing-year;
-  }
-  .landing-print {
-    animation: landing-print linear both;
-    animation-timeline: view();
-    animation-range: entry 20% cover 45%;
-  }
-}
-@keyframes landing-fill {
-  from { transform: scaleX(0.04); }
-  to { transform: scaleX(1); }
-}
-/* The receipt comes out of the printer top first. */
-@keyframes landing-print {
-  from { clip-path: inset(0 0 100% 0); transform: translateY(-12px); }
-  to { clip-path: inset(0 0 0 0); transform: none; }
 }
 
 /* ---- Scroll-driven reveals: content is visible by default; these only run where supported ---- */

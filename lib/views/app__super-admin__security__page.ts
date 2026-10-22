@@ -1,5 +1,4 @@
 import { requireSuperAdmin } from "@/lib/permissions";
-import { TeamRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { DAY_MS, SECURITY_AUDIT_ACTIONS } from "@/lib/superAdminInsights";
 import { auditRowSelect } from "@/components/super-admin/AuditTable";
@@ -11,7 +10,7 @@ export async function loadSuperAdminSecurityView() {
   const now = new Date();
   const actionSince = new Date(now.getTime() - ACTION_WINDOW_DAYS * DAY_MS);
   // Every staff role needs an authenticator before the dashboard opens.
-  const managerWhere = { teamMembers: { some: { role: { in: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.TREASURER, TeamRole.VIEWER] } } } };
+  const managerWhere = { teamMembers: { some: {} } };
   const [
     users,
     mfaUsers,
@@ -19,8 +18,6 @@ export async function loadSuperAdminSecurityView() {
     passwordUsers,
     managers,
     managersWithoutMfa,
-    providerGroups,
-    activeSessions,
     actionCounts,
     recentSecurityEvents,
     platformAdmins,
@@ -32,8 +29,6 @@ export async function loadSuperAdminSecurityView() {
     prisma.user.count({ where: { passwordHash: { not: null } } }),
     prisma.user.count({ where: managerWhere }),
     prisma.user.count({ where: { ...managerWhere, mfaEnabledAt: null } }),
-    prisma.account.groupBy({ by: ["provider"], _count: { _all: true } }),
-    prisma.session.count({ where: { expires: { gt: now } } }),
     prisma.auditEvent.groupBy({
       by: ["action"],
       where: { action: { in: [...SECURITY_AUDIT_ACTIONS] }, createdAt: { gte: actionSince } },
@@ -54,5 +49,5 @@ export async function loadSuperAdminSecurityView() {
     listBlockedIps().catch(() => []),
   ]);
   const sortedActions = [...actionCounts].sort((a, b) => b._count._all - a._count._all);
-  return { mfaUsers, users, managersWithoutMfa, managers, unverifiedUsers, passwordUsers, providerGroups, activeSessions, sortedActions, recentSecurityEvents, platformAdmins, blockedAddresses };
+  return { mfaUsers, users, managersWithoutMfa, managers, unverifiedUsers, passwordUsers, sortedActions, recentSecurityEvents, platformAdmins, blockedAddresses };
 }

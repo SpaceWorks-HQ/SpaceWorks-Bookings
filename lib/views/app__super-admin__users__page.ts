@@ -44,7 +44,7 @@ export async function loadSuperAdminUsersView({ searchParams }: Props) {
       isSuperAdmin: true,
       createdAt: true,
       _count: {
-        select: { teamMembers: true, accounts: true, sessions: true },
+        select: { teamMembers: true, knownDevices: true },
       },
     },
   });

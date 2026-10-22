@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(), recent: vi.fn(), createEnrollment: vi.fn(), decrypt: vi.fn(), encrypt: vi.fn(), generateCodes: vi.fn(), hashCode: vi.fn(), verify: vi.fn(),
   rateLimit: vi.fn(),
-  pending: vi.fn(), userFind: vi.fn(), userUpdate: vi.fn(), sessionDelete: vi.fn(), tokenDelete: vi.fn(), tokenCreate: vi.fn(), auditCreate: vi.fn(), transaction: vi.fn(),
+  pending: vi.fn(), userFind: vi.fn(), userUpdate: vi.fn(), tokenDelete: vi.fn(), tokenCreate: vi.fn(), auditCreate: vi.fn(), transaction: vi.fn(),
 }));
 
 vi.mock("@/lib/permissions", () => ({ requireAuth: mocks.requireAuth }));
@@ -16,7 +16,7 @@ vi.mock("@/lib/mfa", () => ({
 
 const tx = {
   $queryRaw: vi.fn(),
-  user: { update: mocks.userUpdate, updateMany: mocks.userUpdate }, session: { deleteMany: mocks.sessionDelete },
+  user: { update: mocks.userUpdate, updateMany: mocks.userUpdate },
   verificationToken: { deleteMany: mocks.tokenDelete, create: mocks.tokenCreate }, auditEvent: { create: mocks.auditCreate },
 };
 vi.mock("@/lib/db", () => ({ prisma: {
@@ -67,7 +67,7 @@ describe("account security actions", () => {
   it("disables MFA and revokes every session atomically", async () => {
     await expect(disableMfa({ code: "123456" })).resolves.toEqual({ ok: true });
     await expect(revokeAllSessions()).resolves.toEqual({ ok: true });
-    expect(mocks.sessionDelete).toHaveBeenCalledWith({ where: { userId: "user_1" } });
+    expect(mocks.userUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { sessionVersion: { increment: 1 } } }));
   });
 });
 

@@ -2,25 +2,20 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, FileText } from "lucide-react";
 import { loadPaymentView } from "@/lib/views/app__dashboard__orgSlug__payments__paymentId__page";
-import { money } from "@/lib/membership/describe";
-import { formatCalendarDate, lastValidDay, localDate } from "@/lib/membership/periods";
+import { money } from "@/lib/money/currencies";
+import { formatCalendarDate, localDate } from "@/lib/calendarDate";
 import { isCurrencyCode } from "@/lib/money/currencies";
 import { methodLabel, PROVIDER_LABELS, REFUND_STATUS_LABELS } from "@/lib/payments/labels";
 import { DOCUMENT_KIND_LABELS } from "@/lib/payments/numbering";
 import { PaymentActions } from "@/components/payments/PaymentActions";
-import { RefundRequestReview } from "@/components/payments/RefundRequestReview";
 import { PaymentStatusChip } from "@/components/payments/PaymentStatusChip";
 import { Callout, Card, CardHeader, DetailList } from "@/components/ui/display";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 
 export const metadata: Metadata = { title: "Payment", robots: { index: false, follow: false } };
 
-const REQUEST_LABELS = { OPEN: "Open", APPROVED: "Approved", DECLINED: "Declined", WITHDRAWN: "Withdrawn by the member" } as const;
-
 export default async function PaymentPage({ params }: { params: Promise<{ orgSlug: string; paymentId: string }> }) {
-  const { org, payment, names, refundableMinor, canManage, isRecorder, termLive } = await loadPaymentView({ params });
-  const openRequest = payment.refundRequests.find((request) => request.status === "OPEN");
-  const decidedRequests = payment.refundRequests.filter((request) => request.status !== "OPEN");
+  const { org, payment, names, refundableMinor, canManage, isRecorder } = await loadPaymentView({ params });
   const amount = (minor: number) => money(minor, payment.currency, org.locale);
   const day = (date: Date) => formatCalendarDate(localDate(date, org.timezone));
   const taxed = payment.lines.some((line) => line.cgstMinor + line.sgstMinor + line.igstMinor + line.otherTaxMinor > 0);
@@ -33,7 +28,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ orgSlu
       </Link>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-caption text-ink-muted">{payment.term?.plan.name ?? "Payment"} · <Link href={`/dashboard/${org.slug}/members/${payment.member.id}`} className="underline-offset-4 hover:underline">{payment.member.name}</Link> (no. {payment.member.memberNumber})</p>
+          <p className="text-caption text-ink-muted">Payment · {payment.customerName} ({payment.customerEmail})</p>
           <h1 className="text-h1 tabular-nums text-ink">{amount(payment.amountMinor)}</h1>
         </div>
         <PaymentStatusChip status={payment.status} flagged={Boolean(payment.flaggedAt) || payment.documentHeld} size="md" />
@@ -85,20 +80,6 @@ export default async function PaymentPage({ params }: { params: Promise<{ orgSlu
             )}
           </Card>
 
-          {decidedRequests.length ? (
-            <Card as="section" className="rounded-xl">
-              <CardHeader title="Refund requests" />
-              <ul className="flex flex-col divide-y divide-line">
-                {decidedRequests.map((request) => (
-                  <li key={request.id} className="flex flex-col gap-0.5 py-2.5">
-                    <span className="text-label font-semibold text-ink">{REQUEST_LABELS[request.status]} · asked {day(request.createdAt)} for {amount(request.suggestedMinor)}</span>
-                    <span className="text-caption text-ink-muted">“{request.reason}”{request.decidedById && request.status !== "WITHDRAWN" ? ` · by ${names[request.decidedById] ?? "someone"}` : ""}{request.decisionNote ? ` · ${request.decisionNote}` : ""}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          ) : null}
-
           {payment.refunds.length ? (
             <Card as="section" className="rounded-xl">
               <CardHeader title="Refunds" />
@@ -115,24 +96,8 @@ export default async function PaymentPage({ params }: { params: Promise<{ orgSlu
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
-          {canManage && openRequest && isCurrencyCode(payment.currency) ? (
-            <RefundRequestReview
-              slug={org.slug}
-              requestId={openRequest.id}
-              currency={payment.currency}
-              reason={openRequest.reason}
-              askedOn={day(openRequest.createdAt)}
-              suggestedMinor={openRequest.suggestedMinor}
-              suggested={amount(openRequest.suggestedMinor)}
-              refundableMinor={refundableMinor}
-              refundable={amount(refundableMinor)}
-              termLive={termLive}
-              gateway={payment.provider !== "OFFLINE"}
-            />
-          ) : openRequest ? <Callout tone="info" title="Refund requested">The member asked on {day(openRequest.createdAt)} to cancel with a refund of {amount(openRequest.suggestedMinor)}.</Callout> : null}
           {canManage && isCurrencyCode(payment.currency) ? (
             <PaymentActions
-              canEndMembership={termLive}
               slug={org.slug}
               paymentId={payment.id}
               status={payment.status}
@@ -153,8 +118,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ orgSlu
                 { label: "Reference", value: payment.utr ?? payment.gatewayPaymentId ?? payment.reference ?? "—" },
                 { label: "Started", value: day(payment.createdAt) },
                 { label: "Paid", value: payment.paidAt ? day(payment.paidAt) : "—" },
-                ...(payment.term?.startsAt ? [{ label: "Membership", value: `${day(payment.term.startsAt)} – ${payment.term.endsAt ? formatCalendarDate(lastValidDay(payment.term.endsAt, org.timezone)) : "lifetime"}` }] : []),
-                ...(payment.recordedById ? [{ label: "Recorded by", value: names[payment.recordedById] ?? "A member" }] : []),
+                ...(payment.recordedById ? [{ label: "Recorded by", value: names[payment.recordedById] ?? "Someone" }] : []),
                 ...(payment.confirmedById ? [{ label: "Confirmed by", value: names[payment.confirmedById] ?? "Someone" }] : []),
                 ...(payment.note ? [{ label: "Note", value: payment.note }] : []),
               ]}

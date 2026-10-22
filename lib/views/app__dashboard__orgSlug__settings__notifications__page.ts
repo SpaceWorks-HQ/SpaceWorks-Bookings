@@ -5,7 +5,7 @@ import { paymentSecretsConfigured } from "@/lib/payments/secrets";
 /** The organisation's chat channels: where each posts (never its secret) and how its last delivery went. */
 export async function loadOrgNotificationsView({ params }: { params: Promise<{ orgSlug: string }> }) {
   const { orgSlug } = await params;
-  const { organisation, membership } = await requireOrgCapability(orgSlug, "org.settings");
+  const { organisation } = await requireOrgCapability(orgSlug, "org.settings");
   const [org, channels] = await Promise.all([
     prisma.organisation.findUniqueOrThrow({ where: { id: organisation.id }, select: { name: true, slug: true, logoUrl: true, timezone: true } }),
     prisma.chatChannel.findMany({
@@ -14,5 +14,5 @@ export async function loadOrgNotificationsView({ params }: { params: Promise<{ o
       select: { id: true, kind: true, name: true, target: true, events: true, includeNames: true, enabled: true, lastDeliveredAt: true, lastError: true },
     }),
   ]);
-  return { org, canEdit: !membership.unitId, secretsReady: paymentSecretsConfigured(), channels };
+  return { org, canEdit: true, secretsReady: paymentSecretsConfigured(), channels };
 }

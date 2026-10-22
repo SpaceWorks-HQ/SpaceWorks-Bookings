@@ -1,7 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { can, requireOrgCapability } from "@/lib/permissions";
-import { memberWhere, teamScope } from "@/lib/membership/scope";
 import { PAYMENT_FILTERS, type PaymentFilter } from "@/lib/payments/labels";
 
 const PAGE_SIZE = 50;
@@ -13,7 +12,6 @@ function filterWhere(filter: PaymentFilter): Prisma.PaymentWhereInput {
     case "paid": return { status: { in: ["PAID", "WAIVED"] } };
     case "open": return { status: "PENDING" };
     case "refunds": return { refunds: { some: {} } };
-    case "requests": return { refundRequests: { some: { status: "OPEN" } } };
     case "failed": return { status: { in: ["FAILED", "CANCELLED"] } };
     default: return {};
   }
@@ -24,22 +22,19 @@ export async function loadPaymentsDirectory({ params, searchParams }: { params: 
   const { orgSlug } = await params;
   const search = await searchParams;
   const { organisation, membership } = await requireOrgCapability(orgSlug, "payments.view");
-  const scope = await teamScope(organisation.id, membership.unitId);
   const filter = (PAYMENT_FILTERS as readonly string[]).includes(search.status ?? "") ? (search.status as PaymentFilter) : "all";
   const q = (search.q ?? "").trim().slice(0, 80);
   const page = Math.max(1, Math.min(1000, Number.parseInt(search.page ?? "1", 10) || 1));
   const base: Prisma.PaymentWhereInput = {
     organisationId: organisation.id,
-    member: memberWhere(scope),
     ...(q
       ? {
           OR: [
-            { member: { name: { contains: q, mode: "insensitive" } } },
-            { member: { email: { contains: q, mode: "insensitive" } } },
+            { customerName: { contains: q, mode: "insensitive" } },
+            { customerEmail: { contains: q, mode: "insensitive" } },
             { utr: { contains: q.toUpperCase() } },
             { gatewayPaymentId: q },
             { documents: { some: { number: { contains: q.toUpperCase() } } } },
-            ...(/^\d+$/.test(q) ? [{ member: { memberNumber: Number(q) } }] : []),
           ],
         }
       : {}),
@@ -56,14 +51,13 @@ export async function loadPaymentsDirectory({ params, searchParams }: { params: 
       take: PAGE_SIZE,
       select: {
         id: true, status: true, provider: true, method: true, currency: true, amountMinor: true, createdAt: true, paidAt: true, flaggedAt: true, documentHeld: true, utr: true, recordedById: true,
-        member: { select: { id: true, name: true, memberNumber: true } },
-        term: { select: { plan: { select: { name: true } } } },
+        customerName: true, customerEmail: true, bookingId: true,
         documents: { where: { kind: { not: "CREDIT_NOTE" } }, select: { id: true, number: true } },
         refunds: { select: { amountMinor: true, status: true } },
       },
     }),
     prisma.orgPaymentSettings.findUnique({ where: { organisationId: organisation.id }, select: { provider: true, testMode: true } }),
-    prisma.refund.count({ where: { organisationId: organisation.id, status: "PENDING", createdAt: { lt: new Date(Date.now() - 86_400_000) }, payment: { member: memberWhere(scope) } } }),
+    prisma.refund.count({ where: { organisationId: organisation.id, status: "PENDING", createdAt: { lt: new Date(Date.now() - 86_400_000) } } }),
   ]);
   return {
     org,

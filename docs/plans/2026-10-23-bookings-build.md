@@ -226,3 +226,89 @@ methods) with CSV exports, audit log. REST API `/api/v1` with API keys (hashed, 
 4. Ops (install.sh menu, compose, render, smoke), docs (README with screenshots, CLAUDE.md = AGENTS.md),
    e2e suite, design polish (impeccable audit), seed demo data.
 5. Independent review passes until nothing is open; final report.
+
+## v2 amendments (independent plan review, 2026-10-23) — these OVERRIDE anything above
+
+Concurrency
+- **Lock order everywhere:** Booking → its Payments (by id) → Refunds → DocumentCounter. Webhooks look up the
+  bookingId unlocked, then lock the Booking first. No Space row lock.
+- **Inserting occurrences** takes `pg_advisory_xact_lock(hashtext('space:' || spaceId))`, then allocates the
+  lowest free unit (same unit across a series when possible); the exclusion constraint stays as the backstop and
+  23P01 still maps to "That time was just taken". Hold sweeps use `FOR UPDATE SKIP LOCKED` and re-check status.
+  Integration test with parallel inserts.
+- `blocking` is changed only through `setBookingStatus`/occurrence helpers; `CHECK (NOT blocking OR status IN
+  ('SCHEDULED','CHECKED_IN'))`. HELD and CONFIRMED block; REQUESTED blocks per setting. Setting
+  `noShowReleasesSlot`. Occurrence carries makerspaceId and spaceId; `(bookingId, spaceId)` references
+  `Booking(id, spaceId)` ON UPDATE CASCADE (a staff room move updates the booking). CI/test asserts
+  `prisma migrate diff` shows no drift.
+
+Settings
+- Space overrides live in one zod-validated `ruleOverrides Json` (key present = overridden, so "explicitly none"
+  is expressible). Opening hours, hour exceptions and refund tiers override as whole sets. `effectiveRules`
+  returns each value with its source (`makerspace` | `space`) so the UI shows "Inherited".
+- No hardcoded values: half-day and day block lengths are per-space rate fields (defaults 240/480 min);
+  recurrence max occurrences, request expiry, hold minutes, pay-later minimum window are settings.
+- Every settings write goes through `saveSetting(tx, {area, targetType, targetId, before, after, actorUserId})`
+  which writes an AuditEvent with a field diff (secrets redacted). A test enumerates settings actions and
+  asserts each writes an audit row.
+
+Approval and money
+- **No money before approval.** On approve, PAY_NOW/DEPOSIT become due within `approvalPayWithinHours`
+  (overdue → AUTO_CANCEL); PAY_LATER follows its rule. REQUESTED auto-expires after `requestExpiryHours` and
+  hard-stops at start − lead time.
+- Charge modes: `FREE`, `PAY_NOW`, `DEPOSIT`, `PAY_LATER`, plus `allowPayLater` (booker may choose pay later on
+  PAY_NOW/DEPOSIT spaces). No CHOICE mode, no NO_SHOW_FEE purpose.
+- **Drop MoneyEvent.** Payment/Refund rows are the ledger; BookingEvent is the timeline. Booking keeps
+  `chargeMinor` (current obligation, written by the app on every change) and `paidMinor`/`refundedMinor` caches
+  **maintained by DB triggers** on Payment/Refund, plus a consistency check test/job. Payment state is a pure
+  function of (charge, paid, refunded, dueAt, now) — OVERDUE is never stored.
+- **Obligation model** (one formula for every scenario): cancelling an occurrence keeps a fee
+  `(1 − tierBps(hours from policyAnchorAt to now)) × occurrencePrice`; `charge = live occurrences + kept fees +
+  booking-level add-ons`; non-refundable deposit is a floor `charge ≥ min(deposit, paid)`;
+  `refundDue = max(0, netPaid − charge)`, `balanceDue = max(0, charge − netPaid)`. Venue cancel keeps no fees.
+  Unpaid late cancel owes the fee only if setting `chargeLateCancelWhenUnpaid` (default off → balance VOID).
+  Occurrence prices (with tax) are split by largest remainder so they sum exactly.
+- `policyAnchorAt` = earliest start an occurrence ever had; tiers and reschedule price reductions use it (no
+  escaping the policy by rescheduling). Reprice at current rates but keep `rateKind` and tax snapshot.
+- Payment state words: NOT_REQUIRED, UNPAID, PARTIALLY_PAID, PAID, OVERDUE (derived), VOID (cancelled before
+  paying), WRITTEN_OFF (staff action with reason, `refunds.manage`), REFUND_DUE, REFUNDED.
+- **Refund allocator** (pure): a booking refund splits into per-payment Refund rows newest payment first,
+  gateway before offline, falling back to offline when a provider can't refund; rows share `refundGroupId`.
+- Documents: each payment gets a RECEIPT (titled "Receipt voucher" under GST, tax from that payment's lines);
+  each processed refund gets a REFUND_VOUCHER (GST) / CREDIT_NOTE (otherwise). Decide and document in GST.md.
+- Webhooks: match refunds by our refund id in notes/metadata first, then gateway id; EXTERNAL refunds are only
+  created by the reconcile job after ~30 min, flagged. Gateway calls caused by webhooks (auto refunds) run via
+  BullMQ after commit.
+- Holds vs gateway sessions: starting an attempt extends the hold to at least the gateway minimum (Stripe 30
+  min); on hold expiry expire the Stripe session / close the attempt; Razorpay Checkout uses `timeout`. Late
+  capture on EXPIRED → re-block if free and confirm (flagged) else auto-refund; on CANCELLED/DECLINED →
+  auto-refund.
+- Pay-later due = `max(now + payLaterMinWindowHours, min(ruleDue, firstStart))`; inside
+  `payLaterMinLeadHours` of the start pay later isn't offered (pay now / at desk). Recurring pay later: one due
+  date from the first occurrence; staff may change the due date (audited).
+
+Time
+- OpeningHours allow 24:00; bookings may cross midnight when consecutive intervals cover them.
+  `HoursException` (date, closed or special intervals; makerspace or space). Full-day blackouts are local date
+  ranges; timed blackouts are instants. DST: openings take the first fold, closings the last; a recurrence in a
+  missing hour is a conflict. Price on elapsed minutes; peak rules per local-time segment. Advance window
+  applies to the end time. Changing a makerspace timezone with future bookings is refused.
+
+Pricing
+- Peak surcharge base = hourly rate, else day rate ÷ day minutes × 60. Member price never exceeds public.
+  Rounding half-up per line in minor units. Per-person add-ons reprice when attendees change. Tax per line with
+  its SAC (space or add-on).
+
+RBAC
+- Per-space money overrides (charge mode, deposit, pay later, refund tiers, tax/SAC) need `payments.settings`.
+  Makerspace-wide hours, exceptions and blackouts need `makerspace.settings`; per-space ones `spaces.manage`.
+- `bookings.manage` (FRONT_DESK) cancels for the customer (policy applies). New `bookings.override` (venue cancel
+  at 100%, rule overrides) = OWNER, SPACE_MANAGER, BOOKINGS_MANAGER; refund amount overrides need `refunds.manage`.
+
+Other
+- Check-in uses a separate code (reference + HMAC), never the manage URL.
+- ICS UID per occurrence with SEQUENCE; `ReminderLog` unique on (occurrenceId, kind, startsAt).
+- Recurring: booking CANCELLED when all occurrences cancelled; cancel "this" or "this and following"; series
+  approved as a whole; member `validUntil` checked per occurrence.
+- `quantity` (≤ units) books N identical units (N occurrence rows per slot); reducing `units` below what
+  future bookings use is refused.

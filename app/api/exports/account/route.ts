@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { recordAuditEvent } from "@/lib/audit";
 import { buildAccountDataExport, loadAccountExportSource } from "@/lib/accountDataExport";
-import { membershipExportCsv } from "@/lib/portal/dataExport";
 import { checkRateLimitById } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +17,10 @@ function empty(status: number, extra: Record<string, string> = {}) {
 }
 
 /**
- * Personal data export: the signed-in user's own profile, team roles and member records in every
- * organisation (matched by verified email) as a JSON download, or the memberships alone as CSV with
- * `?format=csv`. The user is resolved solely from the session; no request input selects whose data.
+ * Personal data export: the signed-in user's own profile and team roles as a JSON download. The user is
+ * resolved solely from the session; no request input selects whose data.
  */
-export async function GET(request?: Request) {
+export async function GET() {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return empty(401);
@@ -45,15 +43,6 @@ export async function GET(request?: Request) {
 
   const generatedAt = new Date();
   const stamp = generatedAt.toISOString().slice(0, 10);
-  if (request && new URL(request.url).searchParams.get("format") === "csv") {
-    return new Response(membershipExportCsv(source.memberships ?? []), {
-      headers: {
-        ...privateHeaders,
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="space-works-organization-memberships-${stamp}.csv"`,
-      },
-    });
-  }
   const body = JSON.stringify(buildAccountDataExport(source, generatedAt), null, 2);
   return new Response(body, {
     headers: {

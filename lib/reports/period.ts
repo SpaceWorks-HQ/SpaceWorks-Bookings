@@ -3,7 +3,7 @@
  * boundaries are local midnights in the organisation's timezone, so "FY 2026-27" in Asia/Kolkata runs
  * from 1 April 2026 00:00 IST to 1 April 2027 00:00 IST. Definitions: docs/REPORTS.md.
  */
-import { addDays, addMonths, financialYearLabel, financialYearStart, localDate, startOfLocalDay, type CalendarDate } from "@/lib/membership/periods";
+import { addDays, addMonths, financialYearLabel, financialYearStart, localDate, startOfLocalDay, type CalendarDate } from "@/lib/calendarDate";
 
 export type OrgCalendar = { timezone: string; financialYearStartMonth: number };
 

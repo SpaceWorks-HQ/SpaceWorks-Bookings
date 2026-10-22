@@ -11,7 +11,7 @@ const ACTION_WINDOW_DAYS = 7;
 
 export default async function SuperAdminSecurityPage() {
   await requireSuperAdmin();
-  const { mfaUsers, users, managersWithoutMfa, managers, unverifiedUsers, passwordUsers, providerGroups, activeSessions, sortedActions, recentSecurityEvents, platformAdmins, blockedAddresses } = await loadSuperAdminSecurityView();
+  const { mfaUsers, users, managersWithoutMfa, managers, unverifiedUsers, passwordUsers, sortedActions, recentSecurityEvents, platformAdmins, blockedAddresses } = await loadSuperAdminSecurityView();
   const when = (iso: string | null) => (iso ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(iso)) + " UTC" : "Unknown");
   return (
     <div className="flex flex-col gap-6">
@@ -29,8 +29,7 @@ export default async function SuperAdminSecurityPage() {
           <MetricRows
             rows={[
               { label: "Users with a password", value: passwordUsers.toLocaleString() },
-              ...providerGroups.map((group) => ({ label: `Linked ${group.provider} accounts`, value: group._count._all.toLocaleString() })),
-              { label: "Unexpired database sessions", value: activeSessions.toLocaleString() },
+              { label: "Users who sign in by emailed link only", value: (users - passwordUsers).toLocaleString() },
             ]}
           />
         </AdminPanel>

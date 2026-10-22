@@ -19,7 +19,7 @@ question() {
   local key="$1" label="$2" default="$3" rule="${4:-text}" value
   while true; do
     local hint="${default:-required}"
-    case "$rule" in secret|optional|google) hint="${default:-skip}" ;; esac
+    case "$rule" in secret|optional) hint="${default:-skip}" ;; esac
     [[ "$key" != SMTP_PASSWORD ]] || hint=required
     if [[ "$rule" == choices:Y,* ]]; then
       [[ "$default" =~ ^[Yy] ]] && hint=Y/n || hint=y/N
@@ -34,7 +34,6 @@ question() {
     value="${value%$'\r'}"
     value="${value:-$default}"
     case "$rule" in
-      providers) [[ "$value" == none || "$value" =~ ^(google|apple|github)(,(google|apple|github))*$ ]] || { echo 'Use google,apple,github as a comma list, or none.'; continue; } ;;
       choices:*) [[ ",${rule#choices:}," == *",$value,"* ]] || { echo 'Choose one of the listed options.'; continue; } ;;
       repository) [[ "$value" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?/[A-Za-z0-9_.-]{1,100}$ && "$value" != */. && "$value" != */.. ]] || { echo 'Enter a GitHub owner/repo name.'; continue; } ;;
       host) valid_dns_host "$value" || { echo 'Enter a hostname or IPv4 address without a scheme, port or path.'; continue; } ;;
@@ -51,7 +50,6 @@ question() {
       bucket) [[ "$value" =~ ^[a-z0-9][a-z0-9.-]+[a-z0-9]$ && ${#value} -le 63 && "$value" != *..* ]] || { echo 'Use a bucket name of 3-63 lowercase letters, digits, dots or hyphens.'; continue; } ;;
       region) [[ "$value" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo 'Enter a region code without whitespace.'; continue; } ;;
       port) [[ "$value" =~ ^[0-9]{1,5}$ ]] && ((10#$value >= 1 && 10#$value <= 65535)) || { echo 'Use a port from 1 to 65535.'; continue; } ;;
-      google) [[ -z "$value" || "$value" == *.apps.googleusercontent.com ]] || { echo 'A Google client ID ends in .apps.googleusercontent.com.'; continue; } ;;
       secret) [[ -n "$value" || "$key" != SMTP_PASSWORD ]] || { echo 'A value is required.'; continue; } ;;
       password) ((${#value} >= 12 && $(printf '%s' "$value" | LC_ALL=C wc -c) <= 72)) || { echo 'Use 12 to 72 characters.'; continue; } ;;
       optional) ;;
@@ -66,8 +64,7 @@ question() {
 
 SETUP_ANSWER_KEYS=(RUN_FRONTEND SITE_ORIGIN HTTPS_MODE PUBLIC_DOMAIN TLS_EMAIL WEBHOST STORAGE
   S3_ENDPOINT S3_REGION S3_BUCKET S3_ACCESS_KEY S3_SECRET_KEY SUPER_ADMIN_EMAIL SUPER_ADMIN_PASSWORD
-  EMAIL_FROM SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD SETUP_SOCIAL_PROVIDERS
-  GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET
+  EMAIL_FROM SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD
   SWO_REPOSITORY INSTALL_RUNNER ANSWERS_CONFIRMED)
 
 save_setup_answers() {

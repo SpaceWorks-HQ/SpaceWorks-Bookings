@@ -20,7 +20,7 @@ export async function loadOrgMembersView({ params, searchParams }: Props) {
   const recentSince = new Date(now.getTime() - RECENT_DAYS * 86_400_000);
   const where = { organisationId: organisation.id };
   const [profile, memberCount, roleGroups, recentCount, latestJoiner] = await Promise.all([
-    prisma.organisation.findUniqueOrThrow({ where: { id: organisation.id }, select: { logoUrl: true, unitLevels: true } }),
+    prisma.organisation.findUniqueOrThrow({ where: { id: organisation.id }, select: { logoUrl: true } }),
     prisma.teamMember.count({ where }),
     prisma.teamMember.groupBy({ by: ["role"], where, _count: { _all: true } }),
     prisma.teamMember.count({ where: { ...where, createdAt: { gte: recentSince } } }),
@@ -34,7 +34,7 @@ export async function loadOrgMembersView({ params, searchParams }: Props) {
   const memberPage = Math.min(requestedPage, memberPages);
   const members = await prisma.teamMember.findMany({
     where,
-    select: { id: true, userId: true, role: true, unitId: true, createdAt: true, user: { select: { name: true, email: adminView } } },
+    select: { id: true, userId: true, role: true, createdAt: true, user: { select: { name: true, email: adminView } } },
     orderBy: { createdAt: "asc" },
     skip: (memberPage - 1) * MEMBERS_PAGE_SIZE,
     take: MEMBERS_PAGE_SIZE,
@@ -55,10 +55,6 @@ export async function loadOrgMembersView({ params, searchParams }: Props) {
       prisma.teamInvite.count({ where: openInviteWhere }),
     ])
     : [[], 0];
-  // Only people with organisation-wide reach hand out unit scopes, and only when there are units.
-  const units = adminView && !membership.unitId && profile.unitLevels.length
-    ? await prisma.orgUnit.findMany({ where: { organisationId: organisation.id, archivedAt: null }, orderBy: { path: "asc" }, select: { id: true, name: true, level: true } })
-    : [];
   const baseUrl: string =
     process.env.NEXT_PUBLIC_BASE_URL ??
     (() => {
@@ -83,9 +79,8 @@ export async function loadOrgMembersView({ params, searchParams }: Props) {
     name: m.user.name,
     ...(adminView ? { email: m.user.email ?? null } : {}),
     role: m.role,
-    unitId: m.unitId,
     joinedLabel: joinedFormatter.format(m.createdAt),
     isYou: m.userId === membership.userId,
   }));
-  return { organisation, profile, adminView, memberCount, roleCounts, recentCount, recentHint, openInviteCount, rows, membership, memberPages, memberPage, baseUrl, invites, units, now };
+  return { organisation, profile, adminView, memberCount, roleCounts, recentCount, recentHint, openInviteCount, rows, membership, memberPages, memberPage, baseUrl, invites, now };
 }

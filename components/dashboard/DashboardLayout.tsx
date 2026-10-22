@@ -1,5 +1,5 @@
 /**
- * Organisation dashboard wrapper. Navigation (organisation switcher, members,
+ * Organisation dashboard wrapper. Navigation (organisation switcher, team,
  * settings, public page) now lives in the app shell sidebar, so this only
  * keeps a consistent vertical rhythm for the page content.
  */

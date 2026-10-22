@@ -38,7 +38,7 @@ export function DeleteOrganisationButton(props: {
         key={dialogKey}
         open={open}
         title={`Delete ${organisationName}?`}
-        message="All events, registrations, and memberships for this organisation will be permanently removed. This can't be undone."
+        message="Everything this organisation has set up here will be permanently removed. This can't be undone."
         confirmLabel="Delete"
         confirmText={organisationName}
         loading={pending}

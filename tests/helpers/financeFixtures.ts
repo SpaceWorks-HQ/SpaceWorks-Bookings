@@ -3,7 +3,7 @@ import type { FinancePayment, FinancePaymentLine, FinanceRefund, FinanceTaxDocum
 export const at = (iso: string) => new Date(`${iso}T12:00:00+05:30`);
 
 export function payment(id: string, extra: Partial<FinancePayment> = {}): FinancePayment {
-  return { id, memberId: "m1", termId: null, unitId: null, planId: "p1", status: "PAID", provider: "RAZORPAY", method: "upi", currency: "INR", amountMinor: 100_000, createdAt: at("2026-05-01"), paidAt: at("2026-05-01"), flagged: false, recordedById: null, confirmedById: null, ...extra };
+  return { id, customerEmail: "person@example.test", bookingId: null, status: "PAID", provider: "RAZORPAY", method: "upi", currency: "INR", amountMinor: 100_000, createdAt: at("2026-05-01"), paidAt: at("2026-05-01"), flagged: false, recordedById: null, confirmedById: null, ...extra };
 }
 
 export function line(paymentId: string, kind: FinancePaymentLine["kind"], amountMinor: number, currency = "INR"): FinancePaymentLine {
@@ -19,6 +19,6 @@ export function doc(id: string, sequence: number, extra: Partial<FinanceTaxDocum
   return {
     id, paymentId: `pay-${id}`, refundId: null, kind: "TAX_INVOICE", number: `INV/2026-27/${String(sequence).padStart(4, "0")}`, series: "INV", sequence, financialYear: "2026-27",
     issuedAt: at("2026-05-10"), cancelledAt: null, currency: "INR", totalMinor: 118_000, taxableMinor: 100_000, cgstMinor: 9_000, sgstMinor: 9_000, igstMinor: 0, otherTaxMinor: 0,
-    rateBps: 1800, placeOfSupply: "KL", recipientGstin: null, sac: "999599", ...extra,
+    rateBps: 1800, placeOfSupply: "KL", recipientGstin: null, sac: "997212", ...extra,
   };
 }

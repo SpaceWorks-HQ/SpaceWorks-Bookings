@@ -69,21 +69,6 @@ ask_setup_questions() {
   question SMTP_PORT 'SMTP port (implicit TLS: 465)' 587 port || return 1
   question SMTP_USER 'SMTP login' '' text || return 1
   question SMTP_PASSWORD 'SMTP password or key' '' secret || return 1
-  question SETUP_SOCIAL_PROVIDERS 'Which sign-in options besides email + password? Google, Apple, GitHub - comma list, or none' none providers || return 1
-  GOOGLE_CLIENT_ID=''; GOOGLE_CLIENT_SECRET=''; GITHUB_CLIENT_ID=''; GITHUB_CLIENT_SECRET=''
-  if [[ ",$SETUP_SOCIAL_PROVIDERS," == *,google,* ]]; then
-    echo 'Google: a Web client from Google Cloud Console. Leave blank to add it later in Super admin -> Settings.'
-    question GOOGLE_CLIENT_ID 'Google client ID' '' google || return 1
-    [[ -z "$GOOGLE_CLIENT_ID" ]] || question GOOGLE_CLIENT_SECRET 'Google client secret' '' secret || return 1
-  fi
-  if [[ ",$SETUP_SOCIAL_PROVIDERS," == *,github,* ]]; then
-    echo 'GitHub: an OAuth app. Leave blank to add it later in Super admin -> Settings.'
-    question GITHUB_CLIENT_ID 'GitHub client ID' '' optional || return 1
-    [[ -z "$GITHUB_CLIENT_ID" ]] || question GITHUB_CLIENT_SECRET 'GitHub client secret' '' secret || return 1
-  fi
-  if [[ ",$SETUP_SOCIAL_PROVIDERS," == *,apple,* ]]; then
-    echo 'Apple: add the services ID, team ID, key ID and .p8 key in Super admin -> Settings after sign-in.'
-  fi
   if [[ "${SWO_INSTALL_REPOSITORY_PINNED:-0}" == 1 ]]; then
     echo "GitHub repository to follow [$SWO_REPOSITORY] (selected before download)."
   else
@@ -116,8 +101,7 @@ setup_summary() {
   printf '  Server: %s://%s; certificate email: %s\n' "$scheme" "$WEBHOST" "${TLS_EMAIL:-none}"
   printf '  Super admin: %s (password set; sign in at /login, then open /super-admin)\n' "$SUPER_ADMIN_EMAIL"
   printf '  Email: %s via %s:%s as %s (password hidden)\n' "$EMAIL_FROM" "$SMTP_HOST" "$SMTP_PORT" "$SMTP_USER"
-  printf '  Sign-in options: email + password, %s (Google: %s, GitHub: %s; Apple and the rest later in Super admin -> Settings)\n' \
-    "$SETUP_SOCIAL_PROVIDERS" "$([[ -n "$GOOGLE_CLIENT_ID" ]] && echo configured || echo later)" "$([[ -n "$GITHUB_CLIENT_ID" ]] && echo configured || echo later)"
+  echo '  Sign-in options: email + password, or an emailed sign-in link (no single sign-on)'
   printf '  GitHub repository: %s; install GitHub Actions runner: %s\n' "$SWO_REPOSITORY" "$INSTALL_RUNNER"
   echo "  migrate builds the database tables. It runs once and stops. It's required."
   echo "  scheduler sends email, runs the membership sweep and clears expired data, once a minute."

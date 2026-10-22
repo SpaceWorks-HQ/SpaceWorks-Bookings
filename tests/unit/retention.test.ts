@@ -40,7 +40,6 @@ describe("operational retention", () => {
     const now = new Date("2030-03-01T00:00:00.000Z");
     await expect(purgeExpiredOperationalData(now)).resolves.toEqual({
       verificationTokens: 1,
-      expiredSessions: 1,
       unusedTeamInvites: 1,
       sentOutboxMessages: 1,
       failedOutboxMessages: 1,

@@ -11,7 +11,7 @@ export default async function OrgMoneySettingsPage({ params }: { params: Promise
   const { org, canEdit, calendarLocked, timezones } = await loadOrgMoneySettingsView({ params });
   return (
     <div className="flex flex-col gap-6">
-      <OrgPageHeader organisation={org} title="Settings" description="Currency, the membership year and how offline payments are confirmed." />
+      <OrgPageHeader organisation={org} title="Settings" description="Currency, the financial year and how offline payments are confirmed." />
       <SettingsTabs slug={org.slug} />
       <Card as="section" className="max-w-[860px] rounded-xl">
         <MoneySettingsForm

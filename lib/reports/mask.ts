@@ -1,5 +1,5 @@
 /**
- * Contact-detail masking for roles without `members.contact` (VIEWER). Client-safe and deterministic:
+ * Contact-detail masking for roles without `bookings.contact` (VIEWER). Client-safe and deterministic:
  * enough is left to tell two people apart, never enough to reach them.
  */
 
@@ -21,6 +21,6 @@ export function maskPhone(phone: string | null | undefined): string {
 }
 
 /** Apply the mask when the viewer may not see contact details. */
-export function contactFor(showContact: boolean, member: { email: string; phone: string | null }): { email: string; phone: string } {
-  return showContact ? { email: member.email, phone: member.phone ?? "" } : { email: maskEmail(member.email), phone: maskPhone(member.phone) };
+export function contactFor(showContact: boolean, person: { email: string; phone: string | null }): { email: string; phone: string } {
+  return showContact ? { email: person.email, phone: person.phone ?? "" } : { email: maskEmail(person.email), phone: maskPhone(person.phone) };
 }

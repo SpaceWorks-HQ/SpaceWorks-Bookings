@@ -4,18 +4,11 @@ import {
   SECURITY_ACTIVITY_ACTIONS,
   formatMemberSince,
   securityActivityLabel,
-  signInProviderLabel,
 } from "@/lib/accountSecurity";
 
 describe("account tabs", () => {
   it("lists the account tabs in order", () => {
-    expect(ACCOUNT_TABS.map((tab) => tab.href)).toEqual(["/account", "/account/payments", "/account/profile", "/account/privacy", "/account/organisations", "/account/security"]);
-  });
-
-  it("matches the root tab exactly", () => {
-    expect(isAccountTabActive("/account", "/account")).toBe(true);
-    expect(isAccountTabActive("/account/", "/account")).toBe(true);
-    expect(isAccountTabActive("/account/security", "/account")).toBe(false);
+    expect(ACCOUNT_TABS.map((tab) => tab.href)).toEqual(["/account/profile", "/account/privacy", "/account/organisations", "/account/security"]);
   });
 
   it("matches nested paths for other tabs without prefix collisions", () => {
@@ -26,7 +19,7 @@ describe("account tabs", () => {
   });
 
   it("keeps exactly one tab active per account path", () => {
-    for (const path of ["/account", "/account/memberships/spaceworks", "/account/pay/term_1", "/account/privacy", "/account/security", "/account/security/x"]) {
+    for (const path of ["/account/profile", "/account/privacy/", "/account/organisations", "/account/security", "/account/security/x"]) {
       expect(ACCOUNT_TABS.filter((tab) => isAccountTabActive(path, tab.href))).toHaveLength(1);
     }
   });
@@ -48,14 +41,6 @@ describe("security activity labels", () => {
 
   it("does not include non-security events", () => {
     expect(SECURITY_ACTIVITY_ACTIONS).not.toContain("ACCOUNT_PROFILE_UPDATED");
-  });
-});
-
-describe("sign-in provider labels", () => {
-  it("names known and unknown providers", () => {
-    expect(signInProviderLabel("google")).toBe("Google");
-    expect(signInProviderLabel("microsoft-entra-id")).toBe("Microsoft entra id");
-    expect(signInProviderLabel("")).toBe("Single sign-on");
   });
 });
 

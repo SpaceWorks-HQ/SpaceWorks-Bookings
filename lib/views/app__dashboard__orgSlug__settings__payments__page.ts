@@ -14,7 +14,7 @@ export async function loadPaymentSettingsView({ params }: { params: Promise<{ or
     prisma.orgTaxSettings.findUnique({ where: { organisationId: organisation.id } }),
     getRequestOrigin(),
   ]);
-  const canEdit = can(membership.role, "payments.settings") && !membership.unitId;
+  const canEdit = can(membership.role, "payments.settings");
   return {
     org,
     canEdit,
@@ -29,7 +29,6 @@ export async function loadPaymentSettingsView({ params }: { params: Promise<{ or
       webhookUrls: canEdit ? { RAZORPAY: `${origin}${webhookPath("RAZORPAY", settings.webhookPublicCode)}`, STRIPE: `${origin}${webhookPath("STRIPE", settings.webhookPublicCode)}` } : null,
     },
     offline: { upiVpa: settings.upiVpa ?? "", upiPayeeName: settings.upiPayeeName ?? "", offlineInstructions: settings.offlineInstructions },
-    refunds: { refundPolicy: settings.refundPolicy, refundWindowDays: settings.refundWindowDays, refundPolicyText: settings.refundPolicyText },
     tax: {
       mode: tax?.mode ?? "NONE",
       scheme: tax?.scheme ?? "REGULAR",
@@ -37,7 +36,7 @@ export async function loadPaymentSettingsView({ params }: { params: Promise<{ or
       legalName: tax?.legalName ?? org.name,
       address: tax?.address ?? "",
       stateCode: tax?.stateCode ?? org.stateCode ?? "",
-      sacCode: tax?.sacCode ?? "999599",
+      sacCode: tax?.sacCode ?? "997212",
       rateBps: tax?.rateBps ?? 1800,
       inclusive: tax?.inclusive ?? true,
       exempt: tax?.exempt ?? false,

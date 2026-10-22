@@ -108,7 +108,6 @@ export async function revokeAllSessions(): Promise<ActionResult> {
     await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${session.user.id} FOR UPDATE`;
     await tx.user.update({ where: { id: session.user.id }, data: { sessionVersion: { increment: 1 } } });
     await tx.verificationToken.deleteMany({ where: { identifier: `mfa:${session.user.id}` } });
-    await tx.session.deleteMany({ where: { userId: session.user.id } });
     await tx.auditEvent.create({ data: { action: "SESSIONS_REVOKED", actorUserId: session.user.id, targetType: "User", targetId: session.user.id } });
   });
   return { ok: true };

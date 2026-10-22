@@ -85,7 +85,6 @@ async function setPassword(user, password) {
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.$transaction([
     prisma.user.update({ where: { id: user.id }, data: { passwordHash, emailVerified: user.emailVerified ?? new Date(), sessionVersion: { increment: 1 } } }),
-    prisma.session.deleteMany({ where: { userId: user.id } }),
     prisma.verificationToken.deleteMany({ where: { identifier: { in: [`reset:${user.email}`, `mfa:${user.id}`] } } }),
   ]);
 }

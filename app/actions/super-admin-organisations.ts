@@ -29,7 +29,6 @@ const reviewSchema = z.object({
 const limitSchema = z.union([z.literal(""), z.null(), z.coerce.number().int().min(1).max(1_000_000)]).transform((value) => (value === "" ? null : value));
 const limitsSchema = z.object({
   organisationId: z.string().trim().min(1).max(64),
-  memberLimit: limitSchema,
   managerLimit: limitSchema,
 });
 
@@ -83,14 +82,14 @@ export async function reviewOrganisation(input: unknown): Promise<ActionResult> 
   return { ok: true };
 }
 
-/** Cap how many members and team managers an organisation may have. Empty means no cap. */
+/** Cap how many people an organisation may have on its team. Empty means no cap. */
 export async function setOrganisationLimits(input: unknown): Promise<ActionResult> {
   const session = await superAdmin();
   if (!session) return TOO_MANY;
   const parsed = limitsSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Limits must be whole numbers of at least 1, or empty.", fieldErrors: flattenZodErrors(parsed.error) };
-  const { organisationId, memberLimit, managerLimit } = parsed.data;
-  const updated = await prisma.organisation.updateMany({ where: { id: organisationId }, data: { memberLimit, managerLimit } });
+  if (!parsed.success) return { ok: false, error: "The limit must be a whole number of at least 1, or empty.", fieldErrors: flattenZodErrors(parsed.error) };
+  const { organisationId, managerLimit } = parsed.data;
+  const updated = await prisma.organisation.updateMany({ where: { id: organisationId }, data: { managerLimit } });
   if (updated.count !== 1) return { ok: false, error: "Organisation not found." };
   await recordAuditEvent({
     action: "ORGANISATION_LIMITS_CHANGED",
@@ -98,7 +97,7 @@ export async function setOrganisationLimits(input: unknown): Promise<ActionResul
     organisationId,
     targetType: "Organisation",
     targetId: organisationId,
-    metadata: { memberLimit, managerLimit },
+    metadata: { managerLimit },
   });
   revalidatePath(`/super-admin/orgs/${organisationId}`);
   return { ok: true };

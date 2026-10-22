@@ -37,7 +37,7 @@ model User {
   image              String?
   /// User-selected profile image. Provider images remain in `image` as a fallback.
   profileImageUrl    String?
-  /// Bcrypt hash for email + password credential logins. Null for OAuth-only users.
+  /// Bcrypt hash for email + password sign-in. Null until the person sets a password.
   passwordHash       String?
   /// Incremented to invalidate all issued JWT sessions after account recovery.
   sessionVersion     Int       @default(0)
@@ -49,42 +49,12 @@ model User {
   isSuperAdmin       Boolean   @default(false)
   createdAt          DateTime  @default(now())
 
-  accounts          Account[]
-  sessions          Session[]
   knownDevices      KnownDevice[]
   teamMembers       TeamMember[]
   teamInvitesCreated TeamInvite[] @relation("TeamInviteCreatedBy")
   teamInvitesUsed    TeamInvite[] @relation("TeamInviteUsedBy")
   auditEvents       AuditEvent[]
   organisationReviews OrganisationReview[]
-  members           Member[]
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -116,72 +86,6 @@ enum OrganisationVisibility {
   PUBLIC
 }
 
-enum PlanDurationType {
-  /// A fixed number of months from the start date.
-  ROLLING
-  /// Ends on the last day of the organisation's financial year.
-  ORG_YEAR
-  /// Ends on one fixed date for everyone.
-  FIXED_END
-  LIFETIME
-}
-
-enum RejoinFeeRule {
-  NEVER
-  ONCE
-  EACH_JOIN
-  AFTER_LAPSE
-}
-
-enum JoinMode {
-  OPEN
-  APPROVAL
-  INVITE_ONLY
-  CLOSED
-}
-
-enum PaymentTiming {
-  PAY_THEN_ACTIVATE
-  ACTIVATE_THEN_CHARGE
-}
-
-enum PlanFieldType {
-  TEXT
-  LONG_TEXT
-  SELECT
-  DATE
-  EMAIL
-  PHONE
-  NUMBER
-  CHECKBOX
-}
-
-enum MemberSource {
-  JOIN_FORM
-  MANUAL
-  IMPORT
-}
-
-enum TermStatus {
-  PENDING_APPROVAL
-  PENDING_PAYMENT
-  UPCOMING
-  ACTIVE
-  GRACE
-  ENDED
-  LAPSED
-  EXPIRED
-  CANCELLED
-  REJECTED
-  REVOKED
-}
-
-enum TermKind {
-  NEW
-  RENEWAL
-  REINSTATEMENT
-}
-
 enum OrganisationReviewAction {
   SUBMITTED
   RESUBMITTED
@@ -194,7 +98,7 @@ enum OrganisationReviewAction {
   CREATED
 }
 
-/// A tenant. Only ACTIVE organisations can run memberships; see organisationAllows in lib/permissions.ts.
+/// A tenant. Only ACTIVE organisations take bookings; see organisationAllows in lib/permissionRoles.ts.
 model Organisation {
   id          String             @id @default(cuid())
   name        String
@@ -208,9 +112,6 @@ model Organisation {
   /// Free-text kind, e.g. "Club", "Association", "Student society".
   kind        String             @default("")
   contactEmail String?
-  /// Members can sign in to their own portal (memberships, payments, profile). Off: the organisation just keeps
-  /// records; "Pay now" emails carry a secure pay link instead, and /verify still checks cards.
-  memberPortal Boolean            @default(true)
   contactPhone String?
   addressLine String?
   city        String?
@@ -219,19 +120,16 @@ model Organisation {
   postalCode  String?
   country     String             @default("IN")
   website     String?
-  /// Month (1–12) the organisation's financial and membership year starts. India: April.
+  /// Month (1–12) the organisation's financial year starts. India: April.
   financialYearStartMonth Int    @default(4)
   timezone    String             @default("Asia/Kolkata")
   currency    String             @default("INR")
   /// Set by the platform super-admin; null means the instance default.
-  memberLimit  Int?
   managerLimit Int?
   /// Maker-checker for offline payments: the confirmer must differ from the recorder.
   offlineConfirmationRequired Boolean @default(false)
   /// PUBLIC organisations are listed at /organisations and take applications from anyone.
   visibility  OrganisationVisibility @default(UNLISTED)
-  /// Names of the unit levels the organisation uses, top first, e.g. ["Region", "District", "Chapter"].
-  unitLevels  String[]           @default([])
   /// Number formatting override, e.g. "en-IN"; null uses the currency's own locale.
   locale      String?
   createdAt   DateTime           @default(now())
@@ -242,30 +140,14 @@ model Organisation {
   reviews       OrganisationReview[]
   assets        Asset[]
   auditEvents   AuditEvent[]
-  units         OrgUnit[]
-  memberRoles   MemberRole[]
-  plans         MembershipPlan[]
-  members       Member[]
-  terms         MembershipTerm[]
-  counters      OrgCounter[]
   paymentSettings OrgPaymentSettings?
   taxSettings     OrgTaxSettings?
   payments        Payment[]
   refunds         Refund[]
   taxDocuments    TaxDocument[]
   documentCounters DocumentCounter[]
-  cardDesigns   CardDesign[]
-  memberCards   MemberCard[]
-  cardExports   CardExportJob[]
-  page          OrganisationPage?
-  erasureRequests ErasureRequest[]
-  dailyStats    OrgDailyStats[]
-  ledgerEntries LedgerEntry[]
-  openingBalances OpeningBalance[]
-  refundRequests RefundRequest[]
   emailSettings  OrgEmailSettings?
   chatChannels   ChatChannel[]
-  statsDirtyDays OrgStatsDirtyDay[]
 
   @@index([status, createdAt])
   @@index([visibility, status])
@@ -312,21 +194,16 @@ model TeamInvite {
   @@index([usedAt])
 }
 
-/// A person on an organisation's team (managers and staff). Members of the organisation are `Member`.
+/// A person on an organisation's team (staff). Customers who book are not team members.
 model TeamMember {
   id             String   @id @default(cuid())
   userId         String
   organisationId String
   role           TeamRole
-  /// Set to limit this person to one unit's subtree (members, payments and reports there only).
-  unitId         String?
-  /// Email this person a monthly summary of the organisation (their own unit when scoped).
-  reportDigest   Boolean  @default(true)
   createdAt      DateTime @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  unit         OrgUnit?     @relation(fields: [organisationId, unitId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([userId, organisationId])
   @@index([organisationId])
@@ -393,15 +270,6 @@ model InstanceSetting {
   smtpUser              String?
   smtpPasswordEncrypted String?
   smtpAllowUnauthenticated Boolean @default(false)
-  googleClientId        String?
-  googleClientSecretEncrypted String?
-  githubClientId        String?
-  githubClientSecretEncrypted String?
-  /// Apple "Services ID", team id and key id; the .p8 private key is encrypted at rest.
-  appleClientId         String?
-  appleTeamId           String?
-  appleKeyId            String?
-  applePrivateKeyEncrypted String?
   backupProvider        String?
   backupLastSuccessAt   DateTime?
   backupRetentionDays   Int?
@@ -428,312 +296,6 @@ model Asset {
   @@index([provider])
 }
 
-/// A part of an organisation: a region, district, chapter or branch. `path` is the ancestor chain of ids
-/// ("rootId/childId/thisId"), so a subtree is one prefix query. Archived, never deleted, once used.
-model OrgUnit {
-  id             String    @id @default(cuid())
-  organisationId String
-  parentId       String?
-  name           String
-  slug           String
-  /// 0 for top-level units; indexes Organisation.unitLevels.
-  level          Int       @default(0)
-  path           String
-  sortOrder      Int       @default(0)
-  archivedAt     DateTime?
-  createdAt      DateTime  @default(now())
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  parent       OrgUnit?     @relation("UnitTree", fields: [organisationId, parentId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
-  children     OrgUnit[]    @relation("UnitTree")
-  members      Member[]
-  roles        MemberRole[]
-  planUnits    PlanUnit[]
-  teamMembers  TeamMember[]
-  dailyStats   OrgDailyStats[]
-
-  @@unique([organisationId, id])
-  @@unique([organisationId, slug])
-  @@index([organisationId, path])
-}
-
-/// A role an organisation gives its members ("Secretary", "Systems Engineer"). Printed on member cards.
-/// Distinct from team access roles (TeamRole).
-model MemberRole {
-  id             String    @id @default(cuid())
-  organisationId String
-  name           String
-  description    String    @default("")
-  /// One of the brand chip tones: teal, citron, sky, yellow, orange, ink.
-  color          String    @default("teal")
-  sortOrder      Int       @default(0)
-  /// Optional: only offered for members of this unit's subtree.
-  unitId         String?
-  archivedAt     DateTime?
-  createdAt      DateTime  @default(now())
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  unit         OrgUnit?     @relation(fields: [organisationId, unitId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
-  assignments  MemberRoleAssignment[]
-
-  @@unique([organisationId, id])
-  @@unique([organisationId, name])
-}
-
-model MembershipPlan {
-  id                  String           @id @default(cuid())
-  organisationId      String
-  name                String
-  slug                String
-  description         String           @default("")
-  /// ISO 4217; every price below is in this currency's minor units.
-  currency            String           @default("INR")
-  durationType        PlanDurationType @default(ORG_YEAR)
-  durationMonths      Int?
-  fixedEndDate        DateTime?
-  priceNewMinor       Int              @default(0)
-  priceRenewalMinor   Int              @default(0)
-  joiningFeeMinor     Int              @default(0)
-  rejoinFeeRule       RejoinFeeRule    @default(NEVER)
-  rejoinAfterDays     Int?
-  graceDays           Int              @default(15)
-  renewalWindowDays   Int              @default(30)
-  reminderDaysBefore  Int[]            @default([30, 7, 0])
-  reminderDaysAfter   Int[]            @default([7])
-  /// A late renewal starts at the old end date (true) or on the day it is paid (false).
-  lateRenewalBackdate Boolean          @default(true)
-  joinMode            JoinMode         @default(APPROVAL)
-  paymentTiming       PaymentTiming    @default(PAY_THEN_ACTIVATE)
-  /// When false, only members of the units in PlanUnit may join.
-  allUnits            Boolean          @default(true)
-  sortOrder           Int              @default(0)
-  archivedAt          DateTime?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  fields       PlanField[]
-  units        PlanUnit[]
-  terms        MembershipTerm[]
-  invites      MemberInvite[]
-  cardDesigns  CardDesign[]
-  cards        MemberCard[]
-  dailyStats   OrgDailyStats[]
-
-  @@unique([organisationId, id])
-  @@unique([organisationId, slug])
-}
-
-model PlanUnit {
-  organisationId String
-  planId         String
-  unitId         String
-
-  plan MembershipPlan @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Cascade)
-  unit OrgUnit        @relation(fields: [organisationId, unitId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
-
-  @@id([planId, unitId])
-}
-
-/// A question on a plan's join form. Answers live in Member.fieldValues under `key`.
-model PlanField {
-  id             String        @id @default(cuid())
-  organisationId String
-  planId         String
-  key            String
-  label          String
-  helpText       String        @default("")
-  type           PlanFieldType @default(TEXT)
-  required       Boolean       @default(false)
-  options        String[]      @default([])
-  /// Only managers see and fill it; never on the public form.
-  adminOnly      Boolean       @default(false)
-  sortOrder      Int           @default(0)
-
-  plan MembershipPlan @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Cascade)
-
-  @@unique([planId, key])
-}
-
-/// One person in one organisation. Their membership periods are MembershipTerm rows.
-model Member {
-  id             String       @id @default(cuid())
-  organisationId String
-  /// The account that owns this record, once the person signs in with the same verified email.
-  userId         String?
-  email          String
-  name           String
-  phone          String?
-  photoUrl       String?
-  /// Indian state/UT code; place of supply on tax documents.
-  stateCode      String?
-  gstin          String?
-  unitId         String?
-  /// Per-organisation running number, from OrgCounter "member".
-  memberNumber   Int
-  fieldValues    Json         @default("{}")
-  source         MemberSource @default(JOIN_FORM)
-  isMinor        Boolean      @default(false)
-  guardianName   String?
-  guardianEmail  String?
-  guardianPhone  String?
-  notes          String       @default("")
-  anonymisedAt   DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  organisation Organisation           @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  user         User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  unit         OrgUnit?               @relation(fields: [organisationId, unitId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
-  terms        MembershipTerm[]
-  roles        MemberRoleAssignment[]
-  consents     ConsentRecord[]
-  payments     Payment[]
-  refundRequests RefundRequest[]
-  cards        MemberCard[]
-  erasureRequests ErasureRequest[]
-
-  @@unique([organisationId, id])
-  @@unique([organisationId, email])
-  @@unique([organisationId, memberNumber])
-  @@index([userId])
-  @@index([organisationId, unitId])
-  @@index([organisationId, createdAt])
-}
-
-model MemberRoleAssignment {
-  organisationId String
-  memberId       String
-  roleId         String
-  /// The role printed on the member card. At most one per member.
-  isPrimary      Boolean  @default(false)
-  assignedAt     DateTime @default(now())
-
-  member Member     @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Cascade)
-  role   MemberRole @relation(fields: [organisationId, roleId], references: [organisationId, id], onDelete: Cascade)
-
-  @@id([memberId, roleId])
-  @@index([organisationId, roleId])
-}
-
-/// One membership period of one member on one plan. The status is a cache kept aligned by the sweep;
-/// lib/membership/lifecycle.ts deriveStatus is the source of truth for display.
-model MembershipTerm {
-  id              String     @id @default(cuid())
-  organisationId  String
-  memberId        String
-  planId          String
-  status          TermStatus
-  kind            TermKind   @default(NEW)
-  startsAt        DateTime?
-  endsAt          DateTime?
-  graceUntil      DateTime?
-  paymentDueBy    DateTime?
-  /// Price frozen when the term was created, in the plan's currency at that time.
-  currency        String
-  priceMinor      Int
-  joiningFeeMinor Int        @default(0)
-  renewedFromId   String?
-  decidedById     String?
-  decidedAt       DateTime?
-  reason          String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  organisation Organisation      @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  member       Member            @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Cascade)
-  plan         MembershipPlan    @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Restrict)
-  renewedFrom  MembershipTerm?   @relation("Renewal", fields: [renewedFromId], references: [id], onDelete: SetNull)
-  renewals     MembershipTerm[]  @relation("Renewal")
-  events       TermStatusEvent[]
-  reminders    ReminderLog[]
-  payments     Payment[]
-  refundRequests RefundRequest[]
-
-  @@unique([organisationId, id])
-  @@index([organisationId, status, endsAt])
-  @@index([organisationId, createdAt])
-  @@index([memberId, planId])
-}
-
-model TermStatusEvent {
-  id             String      @id @default(cuid())
-  organisationId String
-  termId         String
-  from           TermStatus?
-  to             TermStatus
-  /// Domain time of the change, e.g. the term's end date for an expiry the sweep records later.
-  effectiveAt    DateTime
-  recordedAt     DateTime    @default(now())
-  actorUserId    String?
-  cause          String
-
-  term MembershipTerm @relation(fields: [termId], references: [id], onDelete: Cascade)
-
-  @@index([termId, recordedAt])
-  @@index([organisationId, effectiveAt])
-}
-
-/// A reminder sent for a term. The unique key makes each reminder go out once, however often the sweep runs.
-model ReminderLog {
-  termId String
-  key    String
-  sentAt DateTime @default(now())
-
-  term MembershipTerm @relation(fields: [termId], references: [id], onDelete: Cascade)
-
-  @@id([termId, key])
-}
-
-model ConsentRecord {
-  id             String    @id @default(cuid())
-  organisationId String
-  memberId       String
-  purpose        String
-  noticeVersion  String
-  grantedAt      DateTime  @default(now())
-  withdrawnAt    DateTime?
-  byGuardian     Boolean   @default(false)
-
-  member Member @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Cascade)
-
-  @@index([memberId])
-}
-
-/// Gapless per-organisation counters ("member" numbers now; receipt series join in P7).
-model OrgCounter {
-  organisationId String
-  name           String
-  next           Int    @default(1)
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-
-  @@id([organisationId, name])
-}
-
-/// An invitation to join an INVITE_ONLY plan (any plan, in fact). Optionally bound to one email address.
-model MemberInvite {
-  id             String    @id @default(cuid())
-  organisationId String
-  planId         String
-  token          String    @unique
-  /// When set, only this verified email can use the invite.
-  email          String?
-  /// Optional preselected unit for whoever joins with it.
-  unitId         String?
-  /// Uses allowed; 1 for a personal invite, more for a shared link.
-  maxUses        Int       @default(1)
-  uses           Int       @default(0)
-  createdById    String?
-  createdAt      DateTime  @default(now())
-  expiresAt      DateTime?
-  revokedAt      DateTime?
-
-  plan MembershipPlan @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Cascade)
-
-  @@index([organisationId, planId])
-}
-
 // ── Payments and tax documents (P7) ─────────────────────────────────────────
 
 enum GatewayProvider {
@@ -758,28 +320,15 @@ enum PaymentStatus {
 }
 
 enum PaymentLineKind {
-  TERM_FEE
-  JOINING_FEE
-  REJOIN_FEE
+  BOOKING
+  ADD_ON
+  OTHER
 }
 
 enum RefundStatus {
   PENDING
   PROCESSED
   FAILED
-}
-
-enum RefundPolicy {
-  NONE
-  FULL
-  PRO_RATA
-}
-
-enum RefundRequestStatus {
-  OPEN
-  APPROVED
-  DECLINED
-  WITHDRAWN
 }
 
 enum TaxMode {
@@ -821,10 +370,6 @@ model OrgPaymentSettings {
   upiVpa                 String?
   upiPayeeName           String?
   offlineInstructions    String          @default("")
-  /// What members may get back when they cancel: nothing, everything, or the unused share of the fee.
-  refundPolicy           RefundPolicy    @default(NONE)
-  refundWindowDays       Int             @default(14)
-  refundPolicyText       String          @default("")
   updatedAt              DateTime        @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
@@ -839,7 +384,7 @@ model OrgTaxSettings {
   address            String?
   /// Supplier state code; also the place-of-supply fallback.
   stateCode          String?
-  sacCode            String             @default("999599")
+  sacCode            String             @default("997212")
   rateBps            Int                @default(1800)
   inclusive          Boolean            @default(true)
   exempt             Boolean            @default(false)
@@ -857,8 +402,14 @@ model OrgTaxSettings {
 model Payment {
   id               String          @id @default(cuid())
   organisationId   String
-  memberId         String
-  termId           String?
+  /// The booking this payment is for. Phase 2 turns it into a relation to Booking.
+  bookingId        String?
+  /// Who paid, as typed at the time (also the tax document's recipient).
+  customerName     String
+  customerEmail    String
+  /// Indian state/UT code of the customer: the GST place of supply.
+  customerStateCode String?
+  customerGstin    String?
   status           PaymentStatus   @default(PENDING)
   provider         PaymentProvider
   /// upi, card, netbanking, wallet, cash, bank_transfer, cheque…
@@ -884,24 +435,19 @@ model Payment {
   capturedMinor    Int?
   /// Tax configuration frozen when the payment was created.
   taxSnapshot      Json
-  anonymisedAt     DateTime?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
   organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  member       Member          @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Restrict)
-  term         MembershipTerm? @relation(fields: [organisationId, termId], references: [organisationId, id], onDelete: Restrict, onUpdate: Restrict)
   lines        PaymentLine[]
   refunds      Refund[]
   documents    TaxDocument[]
-  refundRequests RefundRequest[]
 
   @@unique([organisationId, id])
   @@unique([provider, gatewayOrderId])
   @@index([organisationId, status, createdAt])
   @@index([organisationId, paidAt])
-  @@index([organisationId, memberId])
-  @@index([termId])
+  @@index([organisationId, bookingId])
 }
 
 model PaymentLine {
@@ -949,7 +495,6 @@ model Refund {
   processedAt     DateTime?
   /// When the scheduler last asked the gateway about this pending refund.
   lastCheckedAt   DateTime?
-  request         RefundRequest?
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   payment      Payment      @relation(fields: [organisationId, paymentId], references: [organisationId, id], onDelete: Restrict)
@@ -1009,272 +554,7 @@ model DocumentCounter {
   @@id([organisationId, series, financialYear])
 }
 
-// ─── Member cards ────────────────────────────────────────────────────────────
-
-/// A member card design: the organisation default (planId null) or one plan's own. `design` holds the
-/// front and back (lib/cards/design/presets.ts normalises it on every read).
-model CardDesign {
-  id             String   @id @default(cuid())
-  organisationId String
-  planId         String?
-  design         Json
-  /// Prefix of printed card numbers, e.g. "SWO" in SWO-0042. Read from the organisation default only.
-  numberPrefix   String
-  /// Watermark image (a managed upload) for designs that use one.
-  watermarkUrl   String?
-  updatedById    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  plan         MembershipPlan? @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Cascade)
-
-  @@unique([organisationId, id])
-  @@unique([organisationId, planId])
-}
-
-/// A member's card for one plan. The verify token sits in the QR and is unguessable; renewals keep the
-/// card and its QR, because /verify reads the membership live. Reissuing revokes the old card and issues
-/// a new token, so an old QR stops verifying.
-model MemberCard {
-  id             String    @id @default(cuid())
-  organisationId String
-  memberId       String
-  planId         String
-  cardNumber     String
-  /// 32 random bytes, base64url. Treat as a bearer value: never log it.
-  verifyToken    String    @unique
-  issuedAt       DateTime  @default(now())
-  issuedById     String?
-  revokedAt      DateTime?
-  revokedById    String?
-  /// REISSUED (replaced by a newer card), REVOKED (by a manager) or MEMBERSHIP_ENDED.
-  revokedReason  String?
-  lastEmailedAt  DateTime?
-
-  organisation Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  member       Member         @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Cascade)
-  plan         MembershipPlan @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Restrict)
-
-  @@unique([organisationId, id])
-  @@index([memberId, planId])
-  @@index([organisationId, issuedAt])
-}
-
-enum CardExportStatus {
-  PENDING
-  PROCESSING
-  DONE
-  FAILED
-}
-
-/// A bulk card export (one PDF, or a ZIP of PDFs) built in the background and stored privately.
-model CardExportJob {
-  id             String           @id @default(cuid())
-  organisationId String
-  requestedById  String?
-  /// "sheet" (A4 sheets with crop marks), "cards" (one card per page) or "zip" (one PDF per member).
-  format         String
-  /// The member filter chosen on the members page, plus the requester's unit scope.
-  filter         Json
-  status         CardExportStatus @default(PENDING)
-  attempts       Int              @default(0)
-  cardCount      Int?
-  storageKey     String?
-  byteSize       Int?
-  error          String?
-  lockedAt       DateTime?
-  createdAt      DateTime         @default(now())
-  finishedAt     DateTime?
-  /// The file is deleted after this; the row stays as a record of the export.
-  expiresAt      DateTime?
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-
-  @@index([status, createdAt])
-  @@index([organisationId, createdAt])
-}
-
-// ─── Member portal and public page (P8) ─────────────────────────────────────
-
-/**
- * The organisation's public page at /o/[slug]. The columns hold what is published; `draft` holds unpublished
- * edits in the same shape (lib/publicPage/sections.ts). With no publishedAt the plain page shows.
- */
-model OrganisationPage {
-  organisationId String    @id
-  tagline        String    @default("")
-  /// Storage key of the cover image (organisations/<id>/page-images/<uuid>.webp).
-  coverAssetKey  String?
-  /// Validated #RRGGBB; null uses the organisation's accent.
-  accentColor    String?
-  sections       Json      @default("[]")
-  publishedAt    DateTime?
-  draft          Json?
-  updatedById    String?
-  updatedAt      DateTime  @updatedAt
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-}
-
-enum ErasureStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  WITHDRAWN
-}
-
-/**
- * A member asking an organisation to erase their details. A manager approves (the member is anonymised;
- * money rows stay) or rejects with a note.
- */
-model ErasureRequest {
-  id                String        @id @default(cuid())
-  organisationId    String
-  memberId          String
-  /// The account that asked; its email gets the decision.
-  requestedByUserId String?
-  status            ErasureStatus @default(PENDING)
-  reason            String        @default("")
-  decidedById       String?
-  decidedAt         DateTime?
-  decisionNote      String?
-  createdAt         DateTime      @default(now())
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  member       Member       @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Cascade)
-
-  @@unique([organisationId, id])
-  @@index([organisationId, status, createdAt])
-  @@index([memberId])
-}
-
-// ─── Reports ─────────────────────────────────────────────────────────────────
-
-/// Daily membership numbers per organisation, unit and plan, written by the sweep (lib/reports/rollup.ts)
-/// and defined in docs/REPORTS.md. `day` is the organisation's local calendar day. `planId` null is the
-/// all-plans row (distinct members); `unitId` null is members without a unit. Every day is recomputable
-/// from source rows: the rollup deletes and rewrites a whole (organisation, day).
-model OrgDailyStats {
-  id             String   @id @default(cuid())
-  organisationId String
-  day            DateTime @db.Date
-  unitId         String?
-  planId         String?
-  /// Stocks at the end of the day.
-  active         Int      @default(0)
-  grace          Int      @default(0)
-  /// Flows during the day.
-  joined         Int      @default(0)
-  reactivated    Int      @default(0)
-  due            Int      @default(0)
-  renewed        Int      @default(0)
-  lapsed         Int      @default(0)
-  applications   Int      @default(0)
-  computedAt     DateTime @default(now())
-
-  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-  unit         OrgUnit?        @relation(fields: [organisationId, unitId], references: [organisationId, id], onDelete: Cascade, onUpdate: Restrict)
-  plan         MembershipPlan? @relation(fields: [organisationId, planId], references: [organisationId, id], onDelete: Cascade, onUpdate: Restrict)
-
-  @@index([organisationId, day])
-  @@index([day])
-}
-
-/// Days whose rollup must be rebuilt (a backdated change touched them). The next sweep rebuilds and clears them.
-model OrgStatsDirtyDay {
-  organisationId String
-  day            DateTime @db.Date
-  markedAt       DateTime @default(now())
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-
-  @@id([organisationId, day])
-}
-
-// ── Accounts: the organisation's own receipts and payments (owner, 2026-10-20) ──
-
-enum LedgerDirection {
-  RECEIPT
-  PAYMENT
-}
-
-/// Money in or out that isn't a member's payment: donations, grants, rent, equipment, GST paid and so on.
-/// Membership fees and refunds come from the payments tables. Entries are never deleted; a mistake is voided.
-model LedgerEntry {
-  id             String          @id @default(cuid())
-  organisationId String
-  direction      LedgerDirection
-  /// The day the money moved, as a calendar date in the organisation's timezone (stored at UTC midnight).
-  occurredOn     DateTime        @db.Date
-  category       String
-  /// Who paid it (receipts) or who was paid (payments).
-  party          String          @default("")
-  description    String          @default("")
-  currency       String
-  amountMinor    Int
-  /// cash, bank_transfer, upi, cheque, card or other: cash moves the cash balance, everything else the bank.
-  method         String
-  reference      String?
-  recordedById   String?
-  voidedAt       DateTime?
-  voidedById     String?
-  voidReason     String?
-  createdAt      DateTime        @default(now())
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-
-  @@unique([organisationId, id])
-  @@index([organisationId, occurredOn])
-}
-
-/// Cash in hand and at the bank at the start of a financial year, per currency, as the accounts carried forward.
-model OpeningBalance {
-  organisationId String
-  financialYear  String
-  currency       String
-  cashMinor      Int      @default(0)
-  bankMinor      Int      @default(0)
-  updatedById    String?
-  updatedAt      DateTime @updatedAt
-
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
-
-  @@id([organisationId, financialYear, currency])
-}
-
-/// A member asking for their money back, which also asks to end the membership. A manager approves (refund
-/// plus cancellation) or declines; the member may withdraw while it is open. One open request per payment.
-model RefundRequest {
-  id                String              @id @default(cuid())
-  organisationId    String
-  paymentId         String
-  termId            String
-  memberId          String
-  requestedByUserId String?
-  reason            String
-  status            RefundRequestStatus @default(OPEN)
-  /// What the policy offered when the member asked; the manager may approve another amount.
-  suggestedMinor    Int
-  currency          String
-  decidedById       String?
-  decidedAt         DateTime?
-  decisionNote      String?
-  refundId          String?             @unique
-  createdAt         DateTime            @default(now())
-
-  organisation Organisation   @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  payment      Payment        @relation(fields: [organisationId, paymentId], references: [organisationId, id], onDelete: Restrict)
-  term         MembershipTerm @relation(fields: [organisationId, termId], references: [organisationId, id], onDelete: Restrict)
-  member       Member         @relation(fields: [organisationId, memberId], references: [organisationId, id], onDelete: Restrict)
-  refund       Refund?        @relation(fields: [refundId], references: [id], onDelete: Restrict)
-
-  @@unique([organisationId, id])
-  @@index([organisationId, status, createdAt])
-  @@index([paymentId])
-}
-
-/// An organisation's own outgoing email for member emails. Without it (or while disabled) member emails go
+/// An organisation's own outgoing email for customer emails. Without it (or while disabled) customer emails go
 /// through the platform's SMTP, sent as the organisation's name with replies to its contact email. Account
 /// emails (password reset, verification) always use the platform's.
 model OrgEmailSettings {

@@ -1,7 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { isBreachedPassword } from "@/lib/breachedPassword";
 import { isPrivateAddress } from "@/lib/net/publicHost";
-import { payLinkTermId, payLinkToken } from "@/lib/payments/payLink";
 import { deviceLabel, justVerified } from "@/lib/loginSecurity";
 import { senderAddress } from "@/lib/email/orgTransport";
 
@@ -33,18 +32,6 @@ describe("breached passwords", () => {
     expect(await isBreachedPassword("password", vi.fn(async () => { throw new Error("offline"); }) as unknown as typeof fetch)).toBe(false);
     process.env.PWNED_PASSWORDS_CHECK = "0";
     expect(await isBreachedPassword("password", fetcher("1E4C9B93F3F0682250B6CF8331B7EE68FD8:9"))).toBe(false);
-  });
-});
-
-describe("pay links", () => {
-  it("open only the term they were made for, until they expire", () => {
-    const token = payLinkToken("cterm00000001abc", Date.UTC(2026, 9, 1));
-    expect(payLinkTermId(token, Date.UTC(2026, 9, 15))).toBe("cterm00000001abc");
-    expect(payLinkTermId(token, Date.UTC(2026, 11, 1))).toBeNull();
-    const [, expiry, signature] = token.split(".");
-    expect(payLinkTermId(`cterm00000002abc.${expiry}.${signature}`, Date.UTC(2026, 9, 15))).toBeNull();
-    expect(payLinkTermId(`${token}x`, Date.UTC(2026, 9, 15))).toBeNull();
-    expect(payLinkTermId("not-a-token", Date.UTC(2026, 9, 15))).toBeNull();
   });
 });
 

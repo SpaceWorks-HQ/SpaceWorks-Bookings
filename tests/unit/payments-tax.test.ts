@@ -68,10 +68,10 @@ describe("splitTax", () => {
 
 describe("charges and credit notes", () => {
   const snapshot: TaxSnapshot = gst();
-  const lines = chargeLines({ renewal: false, rejoining: true, priceMinor: 118_000, joiningFeeMinor: 59_000, planName: "Annual" }, snapshot, "KL");
+  const lines = chargeLines([{ kind: "BOOKING", description: "Laser studio", amountMinor: 118_000 }, { kind: "ADD_ON", description: "Projector", amountMinor: 59_000 }], snapshot, "KL");
 
-  it("charges the fee and the rejoining fee as separate taxed lines", () => {
-    expect(lines.map((line) => [line.kind, line.amountMinor])).toEqual([["TERM_FEE", 118_000], ["REJOIN_FEE", 59_000]]);
+  it("charges each item as a separate taxed line", () => {
+    expect(lines.map((line) => [line.kind, line.amountMinor])).toEqual([["BOOKING", 118_000], ["ADD_ON", 59_000]]);
     expect(sumSplits(lines).amountMinor).toBe(177_000);
   });
 
@@ -96,7 +96,7 @@ describe("charges and credit notes", () => {
 });
 
 describe("credit notes across several partial refunds", () => {
-  const lines = chargeLines({ renewal: false, rejoining: false, priceMinor: 1_180, joiningFeeMinor: 0, planName: "Tiny" }, gst(), "KL");
+  const lines = chargeLines([{ kind: "BOOKING", description: "Tiny", amountMinor: 1_180 }], gst(), "KL");
 
   it("keeps CGST and SGST equal on every credit note", () => {
     for (const amount of [1, 6, 7, 59, 590, 1_179]) {
@@ -133,11 +133,9 @@ describe("document numbers", () => {
   });
 });
 
-describe("charge line wording", () => {
-  it("names the plan once, whether or not its name already says membership", () => {
-    const line = (planName: string, renewal = false) => chargeLines({ renewal, rejoining: false, priceMinor: 1_000, joiningFeeMinor: 0, planName }, gst(), "KL")[0].description;
-    expect(line("Annual")).toBe("Annual membership");
-    expect(line("Annual membership")).toBe("Annual membership");
-    expect(line("Student Membership", true)).toBe("Student Membership renewal");
+describe("charge items", () => {
+  it("keeps each item's wording and skips zero amounts", () => {
+    const lines = chargeLines([{ kind: "BOOKING", description: "Hot desk, 2 hours", amountMinor: 1_000 }, { kind: "ADD_ON", description: "Locker", amountMinor: 0 }], gst(), "KL");
+    expect(lines.map((line) => line.description)).toEqual(["Hot desk, 2 hours"]);
   });
 });

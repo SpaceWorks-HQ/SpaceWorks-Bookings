@@ -6,7 +6,7 @@ import { senderAddress } from "@/lib/email/orgTransport";
 /** The organisation's own email settings (never the saved password), and what is used without them. */
 export async function loadOrgEmailSettingsView({ params }: { params: Promise<{ orgSlug: string }> }) {
   const { orgSlug } = await params;
-  const { organisation, membership } = await requireOrgCapability(orgSlug, "org.settings");
+  const { organisation } = await requireOrgCapability(orgSlug, "org.settings");
   const [org, settings, platform] = await Promise.all([
     prisma.organisation.findUniqueOrThrow({ where: { id: organisation.id }, select: { name: true, slug: true, logoUrl: true, contactEmail: true } }),
     prisma.orgEmailSettings.findUnique({ where: { organisationId: organisation.id } }),
@@ -14,7 +14,7 @@ export async function loadOrgEmailSettingsView({ params }: { params: Promise<{ o
   ]);
   return {
     org,
-    canEdit: !membership.unitId,
+    canEdit: true,
     platformSender: senderAddress(platform.from),
     settings: {
       enabled: settings?.enabled ?? false,

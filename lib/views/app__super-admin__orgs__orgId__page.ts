@@ -18,7 +18,7 @@ export async function loadSuperAdminOrgDetailView({ params }: Props) {
     select: {
       id: true, name: true, slug: true, description: true, logoUrl: true, status: true, source: true, kind: true,
       contactEmail: true, contactPhone: true, addressLine: true, city: true, stateCode: true, postalCode: true, country: true, website: true,
-      memberLimit: true, managerLimit: true, visibility: true, createdAt: true, updatedAt: true,
+      managerLimit: true, visibility: true, createdAt: true, updatedAt: true,
       _count: { select: { teamMembers: true } },
     },
   });

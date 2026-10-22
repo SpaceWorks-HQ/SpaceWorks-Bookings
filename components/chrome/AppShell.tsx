@@ -19,11 +19,7 @@ import { BrandHomeLink } from "./SiteHeader";
 /** Organisation navigation, in order. Each entry shows only when the role has the capability. */
 const ORG_NAV: Array<{ path: string; label: string; capability: Capability; exact?: boolean }> = [
   { path: "", label: "Overview", capability: "org.view", exact: true },
-  { path: "/members", label: "Members", capability: "members.view" },
-  { path: "/plans", label: "Membership plans", capability: "members.view" },
   { path: "/payments", label: "Payments", capability: "payments.view" },
-  { path: "/accounts", label: "Accounts", capability: "payments.view" },
-  { path: "/reports", label: "Reports", capability: "reports.membership" },
   { path: "/team", label: "Team", capability: "org.view" },
   { path: "/settings", label: "Settings", capability: "org.settings" },
 ];

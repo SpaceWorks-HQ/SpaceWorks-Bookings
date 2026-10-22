@@ -15,7 +15,7 @@ type Props = {
 /** Support lookup for one person: account posture, organisation teams and their audit trail. */
 export default async function SuperAdminUserDetailPage({ params }: Props) {
   await requireSuperAdmin();
-  const { user, hasPassword, accounts, activeSessions, memberships, auditEvents, displayName, viewerId } = await loadSuperAdminUserDetailView({ params });
+  const { user, hasPassword, memberships, auditEvents, displayName, viewerId } = await loadSuperAdminUserDetailView({ params });
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4">
@@ -35,7 +35,6 @@ export default async function SuperAdminUserDetailPage({ params }: Props) {
           <Chip tone={user.mfaEnabledAt ? "success" : "neutral"}>{user.mfaEnabledAt ? `MFA since ${user.mfaEnabledAt.toLocaleDateString()}` : "MFA off"}</Chip>
           {user.isSuperAdmin ? <Chip tone="ink">Platform admin</Chip> : null}
           <Chip tone="outline">{hasPassword > 0 ? "Password set" : "No password"}</Chip>
-          {accounts.map((account) => <Chip key={account.id} tone="outline">{`${account.provider} (${account.type})`}</Chip>)}
           <Chip tone="outline" className="tabular-nums">{user.id}</Chip>
         </div>
       </header>
@@ -47,7 +46,7 @@ export default async function SuperAdminUserDetailPage({ params }: Props) {
           <MetricRows
             rows={[
               { label: "Organisation teams", value: user._count.teamMembers.toLocaleString("en-IN") },
-              { label: "Sessions (unexpired / total)", value: `${activeSessions} / ${user._count.sessions}` },
+              { label: "Known browsers", value: user._count.knownDevices.toLocaleString("en-IN") },
             ]}
           />
         </AdminPanel>

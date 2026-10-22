@@ -1,15 +1,10 @@
-/** Team alerts a chat channel can receive. Client-safe; the database checks the same list (migration 0011). */
-export const CHAT_EVENTS = ["application", "payment", "payment-to-confirm", "refund-requested", "erasure-requested", "member-left", "monthly-summary"] as const;
+/** Team alerts a chat channel can receive. Client-safe; the database checks the same list (migration 0001_init). */
+export const CHAT_EVENTS = ["payment", "payment-to-confirm"] as const;
 export type ChatEvent = (typeof CHAT_EVENTS)[number];
 
 export const CHAT_EVENT_LABELS: Record<ChatEvent, string> = {
-  application: "New application to review",
   payment: "Payment received",
   "payment-to-confirm": "Payment waiting to be confirmed",
-  "refund-requested": "Member asked for a refund",
-  "erasure-requested": "Member asked to erase their details",
-  "member-left": "Member left",
-  "monthly-summary": "Monthly summary",
 };
 
 export const CHAT_KINDS = ["SLACK", "DISCORD", "MATTERMOST", "TELEGRAM", "WHATSAPP"] as const;

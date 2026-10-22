@@ -2,37 +2,35 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { getRequestOrigin } from "@/lib/publicUrl";
-import { createTermPayment, ORG_FOR_PAYMENTS, PaymentError } from "./charges";
+import { createPayment, ORG_FOR_PAYMENTS, PaymentError, type PaymentCustomer } from "./charges";
+import type { ChargeItem } from "./tax";
 import { gatewayTakes, loadGateway } from "./config";
 import { GatewayError, type CheckoutResult } from "./gateway";
 import { verifyCheckoutSignature } from "./razorpay";
 import { failPayment, settlePayment } from "./settle";
 
 /**
- * Start an online payment for a term: create the Payment (with its tax lines) first, then the gateway
- * order. A gateway refusal closes the attempt as FAILED, so nothing is left dangling.
+ * Start an online payment: create the Payment (with its tax lines) first, then the gateway order. A gateway
+ * refusal closes the attempt as FAILED, so nothing is left dangling. Phase 2 calls this for a booking.
  */
-export async function startCheckout(args: { organisationId: string; termId: string; customer: { name: string; email: string }; returnPath: string }): Promise<CheckoutResult & { paymentId: string; amountMinor: number; currency: string }> {
+export async function startCheckout(args: { organisationId: string; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; description: string; returnPath: string }): Promise<CheckoutResult & { paymentId: string; amountMinor: number; currency: string }> {
   const org = await prisma.organisation.findUniqueOrThrow({ where: { id: args.organisationId }, select: ORG_FOR_PAYMENTS });
   if (org.status !== "ACTIVE") throw new PaymentError(`${org.name} isn't taking online payments right now.`);
   const live = await loadGateway(org.id);
-  if (!live) throw new PaymentError("Online payment isn't set up for this organisation. Use the other ways to pay below.");
-  const term = await prisma.membershipTerm.findFirst({ where: { id: args.termId, organisationId: org.id }, select: { currency: true, plan: { select: { name: true } } } });
-  if (!term) throw new PaymentError("Membership not found.");
-  if (!gatewayTakes(live.provider, term.currency)) throw new PaymentError(`Online payment doesn't take ${term.currency}. Use the other ways to pay below.`);
+  if (!live) throw new PaymentError("Online payment isn't set up here. Use the other ways to pay.");
+  if (!gatewayTakes(live.provider, args.currency)) throw new PaymentError(`Online payment doesn't take ${args.currency}. Use the other ways to pay.`);
 
   const origin = await getRequestOrigin();
-  const payment = await prisma.$transaction((tx) => createTermPayment(tx, { org, termId: args.termId, provider: live.provider, status: "PENDING" }));
+  const payment = await prisma.$transaction((tx) => createPayment(tx, { org, customer: args.customer, currency: args.currency, items: args.items, bookingId: args.bookingId, provider: live.provider, status: "PENDING" }));
   try {
     const result = await live.gateway.createCheckout(live.credentials, {
       paymentId: payment.id,
       organisationId: org.id,
-      termId: args.termId,
       amountMinor: payment.amountMinor,
       currency: payment.currency,
-      description: `${term.plan.name} · ${org.name}`,
+      description: `${args.description} · ${org.name}`,
       organisationName: org.name,
-      customer: args.customer,
+      customer: { name: payment.customerName, email: payment.customerEmail },
       successUrl: `${origin}${args.returnPath}?payment=${payment.id}`,
       cancelUrl: `${origin}${args.returnPath}?cancelled=1`,
     });
@@ -46,8 +44,8 @@ export async function startCheckout(args: { organisationId: string; termId: stri
 }
 
 /**
- * Ask the gateway where an open attempt stands and settle or fail it. Used when a member returns from
- * checkout and by the reconcile job, so a missed webhook never leaves a paid member waiting.
+ * Ask the gateway where an open attempt stands and settle or fail it. Used when a customer returns from
+ * checkout and by the reconcile job, so a missed webhook never leaves a paid customer waiting.
  */
 export async function refreshGatewayPayment(organisationId: string, paymentId: string) {
   const payment = await prisma.payment.findFirst({ where: { id: paymentId, organisationId }, select: { id: true, status: true, provider: true, gatewayOrderId: true } });

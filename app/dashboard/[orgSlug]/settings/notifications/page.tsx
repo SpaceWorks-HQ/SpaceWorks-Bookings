@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { loadOrgNotificationsView } from "@/lib/views/app__dashboard__orgSlug__settings__notifications__page";
-import { formatCalendarDate, localDate } from "@/lib/membership/periods";
+import { formatCalendarDate, localDate } from "@/lib/calendarDate";
 import { OrgPageHeader } from "@/components/dashboard/org/OrgPageHeader";
 import { SettingsTabs } from "@/components/settings/SettingsTabs";
 import { ChatChannelsPanel } from "@/components/settings/ChatChannelsPanel";

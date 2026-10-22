@@ -5,7 +5,6 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SocialSignIn, type SocialProvider } from "@/components/auth/SocialSignIn";
 import { loginErrorMessage, MfaStep } from "@/components/auth/MfaStep";
 import { Callout } from "@/components/ui/display";
 import { Field, Input, PasswordInput } from "@/components/ui/field";
@@ -15,16 +14,14 @@ import { resendEmailVerification, signUpWithPassword } from "@/app/actions/auth"
 
 type Mode = "signin" | "signup";
 
-export function LoginForm({ accountCreationEnabled, providers }: { accountCreationEnabled: boolean; providers: SocialProvider[] }) {
+export function LoginForm({ accountCreationEnabled }: { accountCreationEnabled: boolean }) {
   const router = useRouter();
   const sp = useSearchParams();
   const callbackUrl = useMemo(() => {
     return safeAuthRedirect(sp.get("callbackUrl"));
   }, [sp]);
 
-  const [mode, setMode] = useState<Mode>(() =>
-    accountCreationEnabled && sp.get("error") === "google_account_required" ? "signup" : "signin",
-  );
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [totp, setTotp] = useState("");
@@ -215,20 +212,6 @@ export function LoginForm({ accountCreationEnabled, providers }: { accountCreati
             {loading === "resend-verification" ? "Sending…" : "Resend verification email"}
           </Button>
         ) : null}
-
-        <SocialSignIn
-          providers={providers}
-          callbackUrl={callbackUrl}
-          disabled={!!loading}
-          onStart={(provider) => {
-            resetStatus();
-            setLoading(provider);
-          }}
-          onError={(text) => {
-            setLoading(null);
-            setError(text);
-          }}
-        />
 
         <form className="flex flex-col gap-4" onSubmit={isSignUp ? handleSignUp : handleSignIn}>
           {isSignUp ? (

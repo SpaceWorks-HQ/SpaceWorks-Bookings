@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Callout, Card, CardHeader } from "@/components/ui/display";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { CheckboxField } from "@/components/ui/choice";
 import { parseAmount, toInputValue, type CurrencyCode } from "@/lib/money/currencies";
 
 type Props = {
@@ -23,7 +22,6 @@ type Props = {
   refundable: string;
   blockedConfirm: string | null;
   /** The membership this paid for is still running, so a refund may end it. */
-  canEndMembership: boolean;
 };
 
 type Pending = "reject" | "cancel" | "refund" | "release" | null;
@@ -34,7 +32,6 @@ export function PaymentActions(props: Props) {
   const [open, setOpen] = useState<Pending>(null);
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState(toInputValue(props.refundableMinor, props.currency));
-  const [endMembership, setEndMembership] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, startTransition] = useTransition();
   const ref = { organisationSlug: props.slug, paymentId: props.paymentId };
@@ -88,13 +85,12 @@ export function PaymentActions(props: Props) {
         confirmLabel="Refund"
         loading={busy}
         onCancel={() => setOpen(null)}
-        onConfirm={() => refundMinor && run(() => refundPayment({ ...ref, amountMinor: refundMinor, reason, endMembership: props.canEndMembership && endMembership }), props.provider === "OFFLINE" ? "Refund recorded and credit note issued." : "Refund sent to the provider.")}
+        onConfirm={() => refundMinor && run(() => refundPayment({ ...ref, amountMinor: refundMinor, reason }), props.provider === "OFFLINE" ? "Refund recorded and credit note issued." : "Refund sent to the provider.")}
       >
         <Field label={`Amount (${props.currency})`} helperText={`Up to ${props.refundable}.`} error={amount && !refundMinor ? "Enter an amount" : refundMinor && refundMinor > props.refundableMinor ? "That's more than is left to refund" : undefined}>
           <Input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} />
         </Field>
         <Field label="Reason"><Textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={2} maxLength={300} /></Field>
-        {props.canEndMembership ? <CheckboxField checked={endMembership} onCheckedChange={(checked) => setEndMembership(checked === true)} label="Also end the membership" description="The membership this paid for is cancelled now and its card stops verifying." /> : null}
       </ConfirmDialog>
     </Card>
   );

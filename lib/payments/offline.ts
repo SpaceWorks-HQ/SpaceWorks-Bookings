@@ -4,11 +4,9 @@ import type { Prisma } from "@prisma/client";
 import { recordAuditEvent } from "@/lib/audit";
 import { enqueueOutbox } from "@/lib/outbox";
 import { queueChatAlerts } from "@/lib/chat/notify";
-import { markTermPaid } from "@/lib/membership/service";
-import { canTransition, statusAt } from "@/lib/membership/lifecycle";
-import { createTermPayment, lockPayment, lockTermForPayment, PaymentError, payable, type OrgForPayments } from "./charges";
+import { createPayment, lockPayment, PaymentError, type OrgForPayments, type PaymentCustomer } from "./charges";
 import { settlePayment } from "./settle";
-import { chargeLines, placeOfSupply, resolveTaxSnapshot, sumSplits } from "./tax";
+import type { ChargeItem } from "./tax";
 import type { OfflineMethod } from "./offline-methods";
 
 export { OFFLINE_METHODS, OFFLINE_METHOD_LABELS, type OfflineMethod } from "./offline-methods";
@@ -17,13 +15,16 @@ type Tx = Prisma.TransactionClient;
 
 /**
  * A manager records money received outside the gateway. With maker-checker on, it waits for a different
- * owner, manager or treasurer to confirm; otherwise it is paid and receipted straight away.
+ * member of the team to confirm; otherwise it is paid and receipted straight away.
  */
-export async function recordOfflinePayment(tx: Tx, args: { org: OrgForPayments; termId: string; method: OfflineMethod; utr?: string | null; reference?: string | null; note?: string; actorUserId: string; now?: Date }) {
+export async function recordOfflinePayment(tx: Tx, args: { org: OrgForPayments; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; method: OfflineMethod; utr?: string | null; reference?: string | null; note?: string; actorUserId: string; now?: Date }) {
   const now = args.now ?? new Date();
-  const payment = await createTermPayment(tx, {
+  const payment = await createPayment(tx, {
     org: args.org,
-    termId: args.termId,
+    customer: args.customer,
+    currency: args.currency,
+    items: args.items,
+    bookingId: args.bookingId ?? null,
     provider: "OFFLINE",
     status: "AWAITING_CONFIRMATION",
     method: args.method,
@@ -31,7 +32,6 @@ export async function recordOfflinePayment(tx: Tx, args: { org: OrgForPayments; 
     reference: args.reference ?? null,
     note: args.note ?? "",
     recordedById: args.actorUserId,
-    now,
   });
   await recordAuditEvent({ action: "PAYMENT_RECORDED", actorUserId: args.actorUserId, organisationId: args.org.id, targetType: "Payment", targetId: payment.id, metadata: { method: args.method }, client: tx });
   if (args.org.offlineConfirmationRequired) {
@@ -40,17 +40,6 @@ export async function recordOfflinePayment(tx: Tx, args: { org: OrgForPayments; 
   }
   const { payment: settled } = await settlePayment(tx, { org: args.org, paymentId: payment.id, confirmedById: args.actorUserId, now });
   return { payment: settled, settled: true };
-}
-
-/** A member says they've paid by UPI or bank transfer. The reference must be new to this organisation. */
-export async function claimOfflinePayment(tx: Tx, args: { org: OrgForPayments; termId: string; method: "upi" | "bank_transfer"; utr: string; userId: string | null; now?: Date }) {
-  const utr = args.utr.trim().toUpperCase();
-  const clash = await tx.payment.findFirst({ where: { organisationId: args.org.id, provider: "OFFLINE", utr, status: { notIn: ["CANCELLED", "FAILED"] } }, select: { id: true } });
-  if (clash) throw new PaymentError("That reference has already been submitted.");
-  const payment = await createTermPayment(tx, { org: args.org, termId: args.termId, provider: "OFFLINE", status: "AWAITING_CONFIRMATION", method: args.method, utr, recordedById: args.userId, note: "Submitted by the member.", now: args.now });
-  await enqueueOutbox(tx, "payment-notice", { organisationId: args.org.id, paymentId: payment.id, notice: "claim-received" });
-  await queueChatAlerts(tx, args.org.id, "payment-to-confirm", { paymentId: payment.id });
-  return payment;
 }
 
 /** Confirm an offline payment waiting in the queue. The confirmer may not be the person who recorded it. */
@@ -63,12 +52,12 @@ export async function confirmOfflinePayment(tx: Tx, args: { org: OrgForPayments;
   return result.payment;
 }
 
-/** Turn down an offline payment or a member's claim. The member can submit a corrected reference. */
+/** Turn down an offline payment waiting for confirmation. */
 export async function rejectOfflinePayment(tx: Tx, args: { org: OrgForPayments; paymentId: string; actorUserId: string; reason: string }) {
   const payment = await lockPayment(tx, args.org.id, args.paymentId);
   if (payment.provider !== "OFFLINE" || payment.status !== "AWAITING_CONFIRMATION") throw new PaymentError("This payment isn't waiting for confirmation.");
   const updated = await tx.payment.update({ where: { id: payment.id }, data: { status: "FAILED", note: args.reason.slice(0, 300) } });
-  await enqueueOutbox(tx, "payment-notice", { organisationId: args.org.id, paymentId: payment.id, notice: "claim-rejected" });
+  await enqueueOutbox(tx, "payment-notice", { organisationId: args.org.id, paymentId: payment.id, notice: "rejected" });
   await recordAuditEvent({ action: "PAYMENT_REJECTED", actorUserId: args.actorUserId, organisationId: args.org.id, targetType: "Payment", targetId: payment.id, client: tx });
   return updated;
 }
@@ -80,39 +69,4 @@ export async function cancelPayment(tx: Tx, args: { org: OrgForPayments; payment
   const updated = await tx.payment.update({ where: { id: payment.id }, data: { status: "CANCELLED", note: (args.reason ?? "Cancelled.").slice(0, 300) } });
   await recordAuditEvent({ action: "PAYMENT_CANCELLED", actorUserId: args.actorUserId, organisationId: args.org.id, targetType: "Payment", targetId: payment.id, client: tx });
   return updated;
-}
-
-/**
- * Waive what a member owes: the membership starts (or continues) with nothing collected. A waived payment
- * records the amount forgiven and has no tax document, since nothing was received.
- */
-export async function waiveTermFee(tx: Tx, args: { org: OrgForPayments; termId: string; actorUserId: string; reason: string; now?: Date }) {
-  const now = args.now ?? new Date();
-  const term = await lockTermForPayment(tx, args.org.id, args.termId);
-  if (!payable(term, now)) throw new PaymentError("Nothing is due on this membership.");
-  const open = term.payments.filter((payment) => payment.status === "PENDING" || payment.status === "AWAITING_CONFIRMATION");
-  if (open.length) await tx.payment.updateMany({ where: { id: { in: open.map((payment) => payment.id) } }, data: { status: "CANCELLED", note: "Closed: the fee was waived." } });
-  // The forgiven amount is what the member would have paid, tax included.
-  const snapshot = resolveTaxSnapshot(await tx.orgTaxSettings.findUnique({ where: { organisationId: args.org.id } }), term.currency);
-  const forgiven = sumSplits(chargeLines({ renewal: term.kind === "RENEWAL", rejoining: false, priceMinor: term.priceMinor, joiningFeeMinor: term.joiningFeeMinor, planName: term.plan.name }, snapshot, placeOfSupply(term.member.stateCode, snapshot))).amountMinor;
-  const payment = await tx.payment.create({
-    data: {
-      organisationId: args.org.id,
-      memberId: term.memberId,
-      termId: term.id,
-      status: "WAIVED",
-      provider: "OFFLINE",
-      method: "waiver",
-      currency: term.currency,
-      amountMinor: forgiven,
-      paidAt: now,
-      note: args.reason.slice(0, 300),
-      recordedById: args.actorUserId,
-      confirmedById: args.actorUserId,
-      taxSnapshot: {},
-    },
-  });
-  if (canTransition("markPaid", statusAt(term, now))) await markTermPaid(tx, { org: args.org, termId: term.id, actorUserId: args.actorUserId, now });
-  await recordAuditEvent({ action: "PAYMENT_WAIVED", actorUserId: args.actorUserId, organisationId: args.org.id, targetType: "Payment", targetId: payment.id, metadata: { amountMinor: payment.amountMinor, currency: payment.currency }, client: tx });
-  return payment;
 }

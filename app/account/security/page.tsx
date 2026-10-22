@@ -12,12 +12,12 @@ import { Callout, Card, CardHeader } from "@/components/ui/display";
 export const metadata: Metadata = { title: "Account security" };
 
 export default async function AccountSecurityPage() {
-  const { hasPassword, superAdmin, authenticatorRequired, isStaff, user, providers, activity } = await loadAccountSecurityView();
+  const { hasPassword, superAdmin, authenticatorRequired, isStaff, user, activity } = await loadAccountSecurityView();
   return (
     <div className="flex flex-col gap-6">
       {authenticatorRequired ? (
         <Callout tone="warning" title="Set up an authenticator app to open the dashboard">
-          You&apos;re on an organisation&apos;s team, so your account needs an authenticator app (such as Google Authenticator, Microsoft Authenticator or 1Password). Turn on two-step sign-in below. Members&apos; accounts don&apos;t need one.
+          You&apos;re on an organisation&apos;s team, so your account needs an authenticator app (such as Google Authenticator, Microsoft Authenticator or 1Password). Turn on two-step sign-in below. Customers&apos; accounts don&apos;t need one.
         </Callout>
       ) : isStaff && user.mfaEnabledAt ? (
         <Callout tone="success">Your authenticator app is on. <Link href="/dashboard" className="font-semibold underline underline-offset-4">Go to the dashboard</Link>.</Callout>
@@ -29,7 +29,7 @@ export default async function AccountSecurityPage() {
         </Card>
       ) : <AccountPasswordForm hasPassword={hasPassword} />}
       <AccountSecurityClient mfaEnabled={Boolean(user.mfaEnabledAt)} />
-      <SignInMethodsCard hasPassword={hasPassword} providers={providers} />
+      <SignInMethodsCard hasPassword={hasPassword} magicLink={!superAdmin} />
       <SecurityActivityCard
         items={activity.map((event) => ({ id: event.id, label: securityActivityLabel(event.action), at: event.createdAt.toISOString() }))}
       />

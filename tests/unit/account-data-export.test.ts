@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   rateLimit: vi.fn(),
   user: vi.fn(),
-  accounts: vi.fn(),
   teamMembers: vi.fn(),
 }));
 
@@ -14,7 +13,6 @@ vi.mock("@/lib/audit", () => ({ recordAuditEvent: mocks.audit }));
 vi.mock("@/lib/rateLimit", () => ({ checkRateLimitById: mocks.rateLimit }));
 vi.mock("@/lib/db", () => ({ prisma: {
   user: { findUnique: mocks.user },
-  account: { findMany: mocks.accounts },
   teamMember: { findMany: mocks.teamMembers },
 } }));
 
@@ -45,7 +43,7 @@ function pollutedSource(): AccountExportSource {
       recoveryCodeHashes: SECRETS.recoveryCodeHashes,
       sessionVersion: SECRETS.sessionVersion,
     },
-    signInProviders: [{ provider: "google", access_token: SECRETS.access_token, refresh_token: SECRETS.refresh_token, id_token: SECRETS.id_token }],
+    sessions: [{ access_token: SECRETS.access_token, refresh_token: SECRETS.refresh_token, id_token: SECRETS.id_token }],
     teamMembers: [{ role: "OWNER", createdAt: new Date("2030-01-03T00:00:00Z"), organisation: { name: "Analytical Society", slug: "analytical" } }],
   };
   return source as unknown as AccountExportSource;
@@ -61,7 +59,6 @@ describe("account data export shaping", () => {
       emailVerifiedAt: "2030-01-01T00:00:00.000Z",
       accountCreatedAt: "2029-12-01T00:00:00.000Z",
       twoFactorAuthenticationEnabled: true,
-      linkedSignInProviders: ["google"],
     });
     expect(data.organisationTeams).toEqual([{ organisation: "Analytical Society", organisationSlug: "analytical", role: "OWNER", joinedAt: "2030-01-03T00:00:00.000Z" }]);
     expect(data.truncated.organisationTeams).toBe(false);
@@ -92,7 +89,6 @@ describe("account data export route", () => {
     mocks.auth.mockResolvedValue({ user: { id: "user_1" } });
     mocks.rateLimit.mockResolvedValue(true);
     mocks.user.mockResolvedValue({ name: "Ada", email: "ada@example.test", emailVerified: null, createdAt: new Date("2030-01-01T00:00:00Z"), mfaEnabledAt: null });
-    mocks.accounts.mockResolvedValue([]);
     mocks.teamMembers.mockResolvedValue([]);
   });
 
@@ -101,7 +97,7 @@ describe("account data export route", () => {
     const response = await GET();
     expect(response.status).toBe(401);
     expect(response.headers.get("cache-control")).toContain("no-store");
-    for (const query of [mocks.user, mocks.accounts, mocks.teamMembers]) expect(query).not.toHaveBeenCalled();
+    for (const query of [mocks.user, mocks.teamMembers]) expect(query).not.toHaveBeenCalled();
     expect(mocks.audit).not.toHaveBeenCalled();
   });
 
@@ -123,14 +119,12 @@ describe("account data export route", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
 
     expect(mocks.user.mock.calls[0][0].where).toEqual({ id: "user_1" });
-    expect(mocks.accounts.mock.calls[0][0].where).toEqual({ userId: "user_1" });
     expect(mocks.teamMembers.mock.calls[0][0].where).toEqual({ userId: "user_1" });
 
     // Explicit selects never request secret columns.
     expect(mocks.user.mock.calls[0][0].select).not.toHaveProperty("passwordHash");
     expect(mocks.user.mock.calls[0][0].select).not.toHaveProperty("mfaSecretEncrypted");
     expect(mocks.user.mock.calls[0][0].select).not.toHaveProperty("recoveryCodeHashes");
-    expect(mocks.accounts.mock.calls[0][0].select).toEqual({ provider: true });
 
     expect(mocks.audit).toHaveBeenCalledWith({ action: "ACCOUNT_DATA_EXPORTED", actorUserId: "user_1", targetType: "User", targetId: "user_1" });
     const body = JSON.parse(await response.text());

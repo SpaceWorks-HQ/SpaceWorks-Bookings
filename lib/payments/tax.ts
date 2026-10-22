@@ -59,9 +59,9 @@ export function resolveTaxSnapshot(settings: TaxSettings | null, currency: strin
   return { ...gst, documentKind: "TAX_INVOICE", rateBps: settings.rateBps };
 }
 
-/** Place of supply: the member's state, falling back to the supplier's (IGST Act s.12(2)(b)). */
-export function placeOfSupply(memberState: string | null | undefined, snapshot: Pick<TaxSnapshot, "supplierState">): string | null {
-  return memberState || snapshot.supplierState || null;
+/** Place of supply: the customer's state, falling back to the supplier's (IGST Act s.12(2)(b)). */
+export function placeOfSupply(customerState: string | null | undefined, snapshot: Pick<TaxSnapshot, "supplierState">): string | null {
+  return customerState || snapshot.supplierState || null;
 }
 
 export type TaxSplit = { amountMinor: number; taxableMinor: number; cgstMinor: number; sgstMinor: number; igstMinor: number; otherTaxMinor: number };
@@ -90,19 +90,12 @@ export function splitTax(priceMinor: number, snapshot: TaxSnapshot, pos: string 
 
 export type ChargeLine = TaxSplit & { kind: PaymentLineKind; description: string };
 
-/** The lines a term is charged: its fee and any joining (or rejoining) fee, each taxed separately. */
-export function chargeLines(
-  term: { renewal: boolean; rejoining: boolean; priceMinor: number; joiningFeeMinor: number; planName: string },
-  snapshot: TaxSnapshot,
-  pos: string | null,
-): ChargeLine[] {
-  const lines: ChargeLine[] = [];
-  if (term.priceMinor > 0) lines.push({ kind: "TERM_FEE", description: `${/membership$/i.test(term.planName.trim()) ? term.planName.trim() : `${term.planName} membership`}${term.renewal ? " renewal" : ""}`, ...splitTax(term.priceMinor, snapshot, pos) });
-  if (term.joiningFeeMinor > 0) {
-    const kind = term.rejoining ? "REJOIN_FEE" : "JOINING_FEE";
-    lines.push({ kind, description: kind === "REJOIN_FEE" ? "Rejoining fee" : "Joining fee", ...splitTax(term.joiningFeeMinor, snapshot, pos) });
-  }
-  return lines;
+/** An amount to charge before tax: one line on the payment and its tax document. */
+export type ChargeItem = { kind: PaymentLineKind; description: string; amountMinor: number };
+
+/** The taxed lines of a charge: each item is taxed separately under the snapshot. Zero items are skipped. */
+export function chargeLines(items: ChargeItem[], snapshot: TaxSnapshot, pos: string | null): ChargeLine[] {
+  return items.filter((item) => item.amountMinor > 0).map((item) => ({ kind: item.kind, description: item.description, ...splitTax(item.amountMinor, snapshot, pos) }));
 }
 
 export function sumSplits(lines: TaxSplit[]): TaxSplit {
@@ -171,13 +164,4 @@ export function creditNoteLines<T extends TaxSplit & { kind: PaymentLineKind; de
   return lines
     .map((line, index) => ({ kind: line.kind, description: line.description, ...(Object.fromEntries(KEYS.map((key) => [key, after[index][key] - before[index][key]])) as TaxSplit) }))
     .filter((line) => line.amountMinor > 0);
-}
-
-type TermForTotal = { kind: string; priceMinor: number; joiningFeeMinor: number };
-
-/** What a member pays for a term right now, tax included (differs from the plan price under exclusive pricing). */
-export function termTotalMinor(term: TermForTotal, settings: TaxSettings | null, currency: string, memberState: string | null) {
-  const snapshot = resolveTaxSnapshot(settings, currency);
-  const lines = chargeLines({ renewal: term.kind === "RENEWAL", rejoining: false, priceMinor: term.priceMinor, joiningFeeMinor: term.joiningFeeMinor, planName: "" }, snapshot, placeOfSupply(memberState, snapshot));
-  return sumSplits(lines).amountMinor;
 }

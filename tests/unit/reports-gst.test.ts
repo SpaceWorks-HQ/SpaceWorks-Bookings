@@ -61,7 +61,7 @@ describe("GSTR-1 and GSTR-3B (B7)", () => {
   });
 
   it("splits the SAC summary into B2B and B2C rows with UQC NA", () => {
-    expect(r1.hsnB2b).toEqual([{ sac: "999599", rateBps: 1800, uqc: "NA", quantity: 0, taxable: 100_000, igst: 0, cgst: 9_000, sgst: 9_000 }]);
+    expect(r1.hsnB2b).toEqual([{ sac: "997212", rateBps: 1800, uqc: "NA", quantity: 0, taxable: 100_000, igst: 0, cgst: 9_000, sgst: 9_000 }]);
     expect(r1.hsnB2c[0]).toMatchObject({ taxable: 10_190_000, igst: 1_818_000, cgst: 8_100, sgst: 8_100 });
   });
 

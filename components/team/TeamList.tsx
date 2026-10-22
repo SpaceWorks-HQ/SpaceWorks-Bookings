@@ -3,8 +3,6 @@
 import { useMemo, useState } from "react";
 import type { TeamRole } from "@prisma/client";
 import { MemberRoleActions } from "@/components/team/MemberRoleActions";
-import { MemberUnitScope } from "@/components/team/MemberUnitScope";
-import { canManageTeamMember } from "@/lib/permissionRoles";
 import { filterTeam, matchesFilter, type TeamFilter, type TeamMemberRow } from "@/components/team/memberSummary";
 import { Avatar, Chip, EmptyState } from "@/components/ui/display";
 import { SearchInput } from "@/components/ui/field";
@@ -23,13 +21,11 @@ export function TeamList({
   actorRole,
   rows,
   showEmail,
-  units = [],
 }: {
   organisationSlug: string;
   actorRole: TeamRole;
   rows: TeamMemberRow[];
   showEmail: boolean;
-  units?: Array<{ id: string; name: string; level: number }>;
 }) {
   const [filter, setFilter] = useState<TeamFilter>("everyone");
   const [query, setQuery] = useState("");
@@ -86,9 +82,6 @@ export function TeamList({
                       </span>
                     </div>
                     <div className="ml-auto flex min-w-0 max-w-full flex-wrap justify-end gap-2">
-                      {units.length && row.role !== "OWNER" && canManageTeamMember(actorRole, row.role) ? (
-                        <MemberUnitScope organisationSlug={organisationSlug} targetUserId={row.userId} unitId={row.unitId ?? null} units={units} memberName={row.name ?? row.email ?? undefined} />
-                      ) : null}
                       <MemberRoleActions
                         organisationSlug={organisationSlug}
                         targetUserId={row.userId}
