@@ -11,6 +11,8 @@ HOST_BUNDLE_FILES=(
   scripts/restore.sh scripts/runner-release.py scripts/setup-first-run.sh scripts/setup-question-input.sh
   scripts/setup-questions.sh scripts/setup-write-environment.sh scripts/spaceworks-compose.sh
   scripts/spaceworks-repository.sh scripts/update-lock.sh scripts/update-rollback.sh scripts/update.sh
+  scripts/update-source.sh scripts/host-lib.sh scripts/status.sh scripts/backup-settings.sh scripts/reconfigure.sh
+  scripts/harden.sh scripts/recover-admin.sh scripts/support-bundle.sh scripts/uninstall.sh
 )
 
 install_staged_host_bundle() {

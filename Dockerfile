@@ -21,7 +21,10 @@ COPY package.json package-lock.json .npmrc ./
 COPY frontend/package.json ./frontend/package.json
 # `npm ci` runs the Prisma postinstall hook, which needs the schema available.
 COPY prisma/schema.prisma ./prisma/schema.prisma
-RUN npm ci
+# The npm cache mount survives between builds on one builder (local Docker, CI with
+# a cache backend) and retries ride out a flaky registry connection.
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000
 
 # Prisma CLI only, pinned to the lockfile's version, for the backend image's
 # migrate role (and MIGRATE_ON_START=1). Kept apart from the app's node_modules.
@@ -153,7 +156,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 # Prisma CLI for the migrate role and MIGRATE_ON_START=1 (root-owned, read-only).
 COPY --from=prisma-cli /opt/prisma-cli/node_modules /opt/prisma-cli/node_modules
 COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-# Scheduler and operator checks (docker/ops), root-owned.
+# Operator tools (docker/ops: checks and super-admin accounts), root-owned.
 COPY docker/ops ./docker/ops
 COPY --from=ops-modules /opt/ops/node_modules ./docker/ops/node_modules
 

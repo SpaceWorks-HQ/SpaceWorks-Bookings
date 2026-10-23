@@ -12,18 +12,86 @@ curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/m
 
 The installer checks the host (architecture, distribution, Docker, disk space, an existing install), asks which
 GitHub repository to follow, downloads the newest published `main` release into temporary storage and asks the
-deployment questions (see the README). Nothing changes until you confirm the summary. Then it installs missing
-packages (Docker Engine, the Compose plugin, curl, tar), copies the release to `/opt/spaceworks-bookings`
-and runs `setup.sh`, which:
+deployment questions. Nothing changes until you confirm the summary. Then it installs missing packages (Docker
+Engine, the Compose plugin, curl, tar), copies the release to `/opt/spaceworks-bookings` and runs `setup.sh`,
+which:
 
-1. writes the owner-only `.env` with every generated secret (`scripts/setup-write-environment.sh`);
+1. writes the owner-only `.env` with every generated secret (`scripts/setup-write-environment.sh`):
+   `AUTH_SECRET`, `CRON_SECRET`, `HEALTHCHECK_SECRET`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY`,
+   `PAYMENT_SECRETS_KEY`, and the PostgreSQL, Redis and Silo passwords;
 2. pulls the release images (or builds them with `bash setup.sh --build`);
 3. creates a private CA and service certificates for PostgreSQL, Redis and Silo in `tls/`
    (`deploy/certificates.sh`, run inside the backend image so the host needs no openssl);
-4. starts the stack with `up --wait` and runs the operator checks (`--role ops`);
-5. installs the optional GitHub Actions runner.
+4. starts the stack with `up --wait` and runs the operator checks (`--role ops`), worker and beat included;
+5. creates the super admin and installs the optional GitHub Actions runner.
 
-Options: `--repo owner/name` (or `SWB_REPOSITORY`), `SWB_DIR=/path` for another install directory, `--help`.
+The questions: run the website here or on Netlify; HTTPS (**1** plain HTTP for a LAN or trial, **2** automatic
+HTTPS with the bundled Caddy and Let's Encrypt, **3** your own reverse proxy in front of `127.0.0.1:8080`); file
+storage (**1** bundled Silo, **2** your own S3-compatible bucket such as R2); the super-admin email and password;
+the SMTP relay; and the optional runner.
+
+| Option | Environment | Effect |
+|---|---|---|
+| `--repo owner/name` | `SWB_REPOSITORY` | Install from a fork. |
+| `--dir PATH` | `SWB_DIR` | Another install directory. |
+| `--release TAG` | `SWB_RELEASE` | A published release instead of the latest. |
+| `--ref REF` | `SWB_REF` | Build a branch, tag or commit from source on the server (no published images needed; about 4 GiB of memory). Updates rebuild the same ref. |
+| `--action ACTION`, `--update` | `SWB_ACTION` | Run one menu entry on an existing install (below). |
+| `--non-interactive`, `--yes` | `SWB_NONINTERACTIVE=1` | Never ask: the questions take `SWB_ANSWER_<KEY>` values (listed in [CONFIGURATION.md](CONFIGURATION.md#installer-installsh)). |
+| `--dry-run` | `SWB_DRY_RUN=1` | Check the host and print the plan; from a checkout it also asks (or reads) the questions. Changes nothing. |
+
+### Private repository
+
+While the repository is private, `raw.githubusercontent.com` needs a token. Any of these works:
+
+```bash
+export GITHUB_TOKEN=<token with repo and read:packages>
+curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+  https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+
+gh auth login        # once, then:
+gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-HQ/SpaceWorks-Bookings/contents/install.sh | bash
+
+gh repo clone SpaceWorks-HQ/SpaceWorks-Bookings && bash SpaceWorks-Bookings/install.sh
+```
+
+The installer then uses `SWB_GITHUB_TOKEN`, `GITHUB_TOKEN` or `GH_TOKEN` (or, failing those, `gh auth token`) for
+the release download, the updater and `docker login ghcr.io` before pulling the images. The token is passed to
+curl and sudo by name only and is never written to `.env`; Docker keeps its own `ghcr.io` login for later pulls.
+Until the first release is published, install a branch with `--ref main` (or `--ref dev`).
+
+### Unattended installs (CI)
+
+```bash
+SWB_NONINTERACTIVE=1 SWB_ANSWER_HTTPS_MODE=2 SWB_ANSWER_PUBLIC_DOMAIN=book.example.org \
+SWB_ANSWER_TLS_EMAIL=ops@example.org SWB_ANSWER_SUPER_ADMIN_EMAIL=admin@example.org \
+SWB_ANSWER_SUPER_ADMIN_PASSWORD="$ADMIN_PASSWORD" SWB_ANSWER_SMTP_USER=relay \
+SWB_ANSWER_SMTP_PASSWORD="$SMTP_PASSWORD" bash install.sh --ref main
+```
+
+A missing or invalid answer stops the run before anything changes and names the variable to set.
+
+## Maintenance menu
+
+Run the installer again (the same one-liner) on an installed server:
+
+| # | Entry | `--action` | Script |
+|---|---|---|---|
+| 1 | Update | `update` | `scripts/update.sh --force` (or `--source <ref>` for a source install) |
+| 2 | Check status | `status` | `scripts/status.sh`: release, address, services, backend, worker and beat health, disk, newest backup, then the operator checks |
+| 3 | Back up now | `backup` | `scripts/backup.sh` |
+| 4 | Backup settings | `backup-settings` | `scripts/backup-settings.sh`: how often backups run and how long scheduled dumps stay |
+| 5 | Restore from a backup | `restore` | `scripts/restore.sh`: choose one of the newest dumps (and the files) |
+| 6 | Roll back | `rollback` | `scripts/update.sh --force --rollback` |
+| 7 | Change settings | `reconfigure` | `scripts/reconfigure.sh`: web address, outgoing email, external bucket keys |
+| 8 | Server security | `harden` | `scripts/harden.sh`: firewall (ufw or firewalld; SSH, HTTP and HTTPS only), automatic security updates, fail2ban |
+| 9 | Recover super-admin access | `recover-admin` | `scripts/recover-admin.sh`: remove a lost authenticator (`admin.sh reset-mfa`), set a new password, or create a super admin |
+| 10 | Support bundle | `support` | `scripts/support-bundle.sh`: report and logs with secrets redacted, in `support/` |
+| 11 | Automatic deploys | `runner`, `runner-remove` | `scripts/install-runner.sh [--remove]` |
+| 12 | Uninstall | `uninstall` | `scripts/uninstall.sh`: keeps the data volumes and `.env`, `tls/`, `backups/` unless you type `DELETE DATA` |
+| 0 | Cancel | `cancel` | |
+
+Every script also runs on its own from the install directory, for example `bash scripts/status.sh`.
 
 ## What runs
 
@@ -68,14 +136,16 @@ scripts/spaceworks-compose.sh bundled run --rm ops      # TLS, roles, migrations
 | `.env` | Every setting and secret (mode 600). Back it up encrypted, off the server. |
 | `tls/` | The private CA (`ca.key` never leaves this folder) and the service certificates |
 | `backups/` | Database dumps, the bucket mirror, settings archives, replaced host files |
-| `.spaceworks-version`, `.spaceworks-previous-version` | The running release and the one before it |
+| `.spaceworks-version`, `.spaceworks-previous-version` | The running release and the one before it (`local` for a source build) |
+| `.spaceworks-source-ref` | The branch, tag or commit a `--ref` install builds from |
+| `support/` | Support bundles (owner-only) |
 
 ## Backups and restore
 
 - **Scheduled:** the `backup` service dumps the database every `BACKUP_INTERVAL_HOURS` (24) to
   `backups/scheduled-<time>.sql.gz` and keeps `BACKUP_RETENTION_DAYS` (14); `backup-storage` mirrors the bucket
   to `backups/storage`.
-- **On demand:** `bash scripts/backup.sh` (also the installer's menu option 2) writes a dump, refreshes the
+- **On demand:** `bash scripts/backup.sh` (also the installer's menu option 3) writes a dump, refreshes the
   bucket mirror and archives `.env` and `tls/` to `backups/config-<time>.tar.gz`.
 - **Before every update:** `backups/pre-update-<time>.sql.gz`.
 
@@ -91,8 +161,9 @@ Restore asks you to type `RESTORE`, takes a fresh `pre-restore` dump, stops the 
 replaces the schema in one transaction, optionally copies the files back, and starts everything again;
 migrations bring an older dump up to the running release.
 
-**New server:** install with the same answers, stop the stack, put the old `.env` and `tls/` back from the
-settings archive, start it, then restore the dump (and `backups/storage` with `--with-storage`).
+**Restore on a new server:** install with the same answers, stop the stack, put the old `.env` and `tls/` back
+from the settings archive (or from the `<install>.uninstalled-<time>` folder an uninstall leaves), start it, then
+restore the dump (and `backups/storage` with `--with-storage`).
 
 ## Super admins
 
@@ -117,6 +188,7 @@ The installer creates the first one from the email and password you give, and ev
 bash scripts/update.sh --force                                   # newest main release
 bash scripts/update.sh --force --version 0.1.0-main.42.a1b2c3d4e5f6
 bash scripts/update.sh --rollback                                # the release before the last update
+bash scripts/update.sh --force --source main                     # a --ref install: rebuild from that ref
 ```
 
 The updater takes a lock (`flock`, or a PID lock on Git Bash; `--override-lock` clears a verified stale one),
@@ -125,13 +197,16 @@ updater. It dumps the database, checks the new image can be pulled, installs the
 the old ones in `backups/host-config-*`), pulls the images, runs migrations and waits for every service to be
 healthy, then runs the operator checks.
 
+- **Source installs** (`install.sh --ref`): `--source <ref>` downloads the ref, backs up the database, copies the
+  new tree over the install (the archive carries no `.env`, `tls/` or `backups/`), rebuilds the images on the
+  server and restarts. There is no image rollback for a build; restore the pre-update dump instead.
 - **Automatic rollback:** if the new release does not become healthy, the previous host files and images come
   back with `--no-deps`, so older migrations never run against the newer schema.
 - **Manual rollback:** `--rollback` returns to the release recorded in `.spaceworks-previous-version`, again
   without running migrations. Database changes stay; to return the data too, restore the pre-update dump the
   command prints.
 
-The installer menu offers both (options 1 and 3), and the release workflow's `deploy` job runs
+The installer menu offers both (options 1 and 6), and the release workflow's `deploy` job runs
 `update.sh --force --version <release>` on a server with the runner (`scripts/install-runner.sh`).
 
 ## Certificates

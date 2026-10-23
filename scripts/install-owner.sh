@@ -14,14 +14,17 @@ require_install_owner() {
       printf ' %q' "$@" >&2; printf '\n' >&2
       exit 1
     }
-    # Preserve only the host configuration knobs, never ambient secrets.
+    # Preserve only the host configuration knobs and an explicit GitHub token, never ambient secrets.
     for key in SWB_STATIC_ENV_FILE SWB_UPDATE_INSTALL_DIR SWB_COMPOSE_BUILD_LAYER SWB_COMPOSE_PROJECT \
       SWB_REPOSITORY SWB_INSTALL_REPOSITORY_PINNED SWB_RUNNER_DIR \
-      SWB_IMAGE_TAG SWB_BACKEND_IMAGE SWB_FRONTEND_IMAGE; do
-      if [[ -n "${!key:-}" ]]; then forwarded+=("$key=${!key}"); fi
+      SWB_IMAGE_TAG SWB_BACKEND_IMAGE SWB_FRONTEND_IMAGE SWB_GITHUB_TOKEN SWB_GITHUB_USER SWB_NONINTERACTIVE; do
+      if [[ -n "${!key:-}" ]]; then export "${key?}"; forwarded+=("$key"); fi
     done
     printf 'Root-owned install: continuing as root using sudo.\n'
-    exec sudo env ${forwarded[@]+"${forwarded[@]}"} bash "$entrypoint" "$@"
+    # Names only: values (the token) stay out of the process list.
+    local preserve=""
+    ((${#forwarded[@]} == 0)) || preserve="--preserve-env=$(IFS=,; printf '%s' "${forwarded[*]}")"
+    exec sudo ${preserve:+"$preserve"} bash "$entrypoint" "$@"
   fi
   name="$(stat -c %U "$ROOT")"
   printf 'ERROR: %s belongs to %s (UID %s). Sign in as that user and run bash %q' \

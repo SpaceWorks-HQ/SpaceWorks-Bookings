@@ -27,6 +27,31 @@ set -eu
 
 built=${SWB_NEXT_DIR:-/app/.next}
 
+# Platforms that hand out a database URL without TLS parameters (Render's managed
+# PostgreSQL, through render.yaml) set DATABASE_URL_SSLMODE=require: it is added to
+# DATABASE_URL and DIRECT_URL when they name no sslmode, for every role.
+with_sslmode() {
+  case "$1" in
+    ''|*sslmode=*) printf '%s' "$1" ;;
+    *\?*) printf '%s&sslmode=%s' "$1" "$DATABASE_URL_SSLMODE" ;;
+    *) printf '%s?sslmode=%s' "$1" "$DATABASE_URL_SSLMODE" ;;
+  esac
+}
+case "${DATABASE_URL_SSLMODE:-}" in
+  '') ;;
+  require|verify-ca|verify-full)
+    DATABASE_URL=$(with_sslmode "${DATABASE_URL:-}")
+    DIRECT_URL=$(with_sslmode "${DIRECT_URL:-}")
+    export DATABASE_URL DIRECT_URL ;;
+  *) echo "[entrypoint] DATABASE_URL_SSLMODE must be require, verify-ca or verify-full." >&2; exit 64 ;;
+esac
+
+# A platform that runs a one-off command (Render's preDeployCommand) through this
+# entrypoint may pass the entrypoint's own name first; accept either form.
+case "${1:-}" in
+  docker-entrypoint.sh|/usr/local/bin/docker-entrypoint.sh) shift ;;
+esac
+
 migrate() {
   direct=${DIRECT_URL:-${DATABASE_URL:-}}
   DIRECT_URL="$direct" DATABASE_URL="${DATABASE_URL:-$direct}" CHECKPOINT_DISABLE=1 \

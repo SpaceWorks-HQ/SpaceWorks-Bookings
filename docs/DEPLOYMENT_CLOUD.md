@@ -60,24 +60,78 @@ Block `/api/internal/*` at your edge; those endpoints also refuse any request wi
 
 ## Render
 
-[`render.yaml`](../render.yaml) defines a Docker web service (`swbook-backend`, health check `/api/health`,
-`MIGRATE_ON_START=1`) and two workers, `swbook-worker` (`--role worker node dist/worker.js`) and `swbook-beat`
-(`--role beat node dist/beat.js`), sharing the `swbook-prod` environment group. Render builds the Dockerfile's
-last stage with your real `NEXT_PUBLIC_BASE_URL` and `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` as build arguments.
-Render's own Key Value is plain `redis://`, which production refuses, so use a TLS Redis such as Upstash. Free
-web plans cannot run workers; there, point an external cron at `POST /api/internal/outbox` and
-`POST /api/internal/jobs` with `Authorization: Bearer $CRON_SECRET` every minute instead.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings)
+
+The button opens [`render.yaml`](../render.yaml), a Blueprint that creates, in one region (Singapore; change
+`region` in every block to move it):
+
+| Resource | Type | What it runs |
+|---|---|---|
+| `swbook-db` | Render PostgreSQL 16 | The database, with no public access (`ipAllowList: []`). |
+| `swbook-backend` | Docker web service | The app and API, health check `/api/health`. Before each deploy Render runs `docker-entrypoint.sh --role migrate` in the new image (`preDeployCommand`); a failed migration stops the deploy. |
+| `swbook-worker` | Docker background worker | `--role worker node dist/worker.js`: the BullMQ worker (email outbox, payment checks, retention). |
+| `swbook-beat` | Docker background worker | `--role beat node dist/beat.js`: keeps the job schedules in Redis. |
+| `swbook-shared` | Environment group | Generated secrets (`AUTH_SECRET`, `CRON_SECRET`, `HEALTHCHECK_SECRET`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY`, `PAYMENT_SECRETS_KEY`) and the fixed settings. |
+
+All three services build the same Dockerfile (its last stage, `runner`). Render passes the service variables as
+build arguments, so the generated `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` and the public origin are compiled in and
+match at run time.
+
+**What Render asks for** when you create the Blueprint, once, on `swbook-backend` (the worker and beat read the
+same values from it):
+
+| Variable | Value |
+|---|---|
+| `REDIS_URL` | A TLS Redis, `rediss://…`, with `maxmemory-policy noeviction` (Upstash, Redis Cloud). Render Key Value's private URL is plain `redis://`, which the app refuses in production, so the Blueprint does not create one. |
+| `SUPER_ADMIN_EMAIL` | The first super admin. |
+| `EMAIL_FROM`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` | An SMTP relay on a verified sending domain (port 587 is preset). |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | A private bucket and a key limited to it. Cloudflare R2: `https://<account-id>.r2.cloudflarestorage.com` (region `auto` is preset). |
+
+**Database TLS:** Render hands out its private database URL without TLS parameters. The group sets
+`DATABASE_URL_SSLMODE=require`, and the image's entrypoint adds `sslmode=require` to `DATABASE_URL` for every role.
+
+**After the first deploy:**
+
+1. Create the super admin in the `swbook-backend` Shell: `node docker/ops/admin.mjs create --email <address>`
+   (it asks for the password). Super admins are only ever made on the server.
+2. Open `https://<service>.onrender.com/login`. `NEXT_PUBLIC_BASE_URL` and `AUTH_URL` default to the service's
+   own `RENDER_EXTERNAL_URL`.
+3. For a custom domain, add it to `swbook-backend`, set `NEXT_PUBLIC_BASE_URL` and `AUTH_URL` there to
+   `https://<domain>`, and redeploy the three services: the origin is compiled into the build.
+
+The three keys are generated once and never change; keep an offline copy of `MFA_ENCRYPTION_KEY` and
+`PAYMENT_SECRETS_KEY` (Dashboard → Environment groups). Back up the database with Render's own backups.
+
+**Plans:** background workers and `preDeployCommand` need paid instance types (`starter` is preset). The worker
+is not optional: it delivers every email, sign-in links included, and runs the timed jobs. The
+`/api/internal/outbox` and `/api/internal/jobs` triggers only enqueue work for it, so a free web service on its
+own is not enough. For a short trial without `preDeployCommand`, `MIGRATE_ON_START=1` on the web service applies
+migrations at start instead.
+
+**Private repository:** while `SpaceWorks-HQ/SpaceWorks-Bookings` is private, give Render's GitHub app access to it
+(Render → Account settings → GitHub) before using the button.
+
+## DigitalOcean App Platform
+
+[`.do/app.yaml`](../.do/app.yaml) runs the published backend image as a web service, a `PRE_DEPLOY` migration
+job, and the `worker` and `beat` workers, all with an explicit `docker-entrypoint.sh --role …`. Create a managed
+PostgreSQL 16 cluster (`swbook-db`; its bound `${db.DATABASE_URL}` already has `sslmode=require`), a managed
+Valkey cluster with `noeviction` (its `rediss://` URI goes into `REDIS_URL`), a private Spaces bucket and an SMTP
+relay, replace every `CHANGE_ME` and `REPLACE_WITH_IMMUTABLE_RELEASE`, then
+`doctl apps create --spec .do/app.yaml` and set the `SECRET` values in the control panel. While the GHCR
+packages are private, add `registry_credentials` to each image block.
 
 ## Other platforms
 
 Any container platform works with the published image:
 
 - web: `ghcr.io/spaceworks-hq/spaceworks-bookings-backend:<version>` with the default command
-  (`--role backend node server.js`) and the variables in [CONFIGURATION.md](CONFIGURATION.md);
+  (`--role backend node server.js`) and the variables in [CONFIGURATION.md](CONFIGURATION.md). Where the
+  platform replaces the image's entrypoint with your command, prefix it: `docker-entrypoint.sh --role …`;
 - a release or pre-deploy job: the same image with `--role migrate`;
-- two background services from the same image and variables: `--role worker node dist/worker.js` and
-  `--role beat node dist/beat.js` (health on `JOBS_HEALTH_PORT`, 3460), or, without them, an external cron on
-  the two `/api/internal/*` triggers above.
+- two background services from the same image and variables, always: `--role worker node dist/worker.js`
+  and `--role beat node dist/beat.js` (health on `JOBS_HEALTH_PORT`, 3460). The `/api/internal/*` triggers
+  only enqueue work for the worker; they never replace it.
 
 ## Website on Netlify
 

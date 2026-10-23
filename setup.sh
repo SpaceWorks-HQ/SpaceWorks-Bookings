@@ -59,6 +59,7 @@ if [[ "$BUILD_FROM_SOURCE" == 1 ]]; then
   ${COMPOSE[@]+"${COMPOSE[@]}"} build backend
 else
   say "Pulling release images (first run can take a few minutes)..."
+  ghcr_login || die 'Could not sign in to ghcr.io; set SWB_GITHUB_TOKEN (read:packages) for a private repository.'
   ${COMPOSE[@]+"${COMPOSE[@]}"} pull --quiet
 fi
 

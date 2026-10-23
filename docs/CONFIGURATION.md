@@ -14,6 +14,7 @@ a plain-text database or Redis connection, or mismatched public origins.
 | `NODE_ENV` | production | `production` turns on the start-up validation, secure cookies and HSTS. |
 | `DATABASE_URL` | yes | Runtime PostgreSQL URL. Production needs `sslmode=require`, `verify-ca` or `verify-full`; a transaction pooler on `:6543` needs `pgbouncer=true`. The bundled stack uses the least-privilege role `swbook_app`. |
 | `DIRECT_URL` | no | Direct or session connection for `prisma migrate` (a role that owns the schema). Defaults to `DATABASE_URL`. Same TLS rule. |
+| `DATABASE_URL_SSLMODE` | no | `require`, `verify-ca` or `verify-full`: the image's entrypoint adds `sslmode=<value>` to `DATABASE_URL` and `DIRECT_URL` when they name none, for every role. For platforms that hand out a URL without TLS parameters (Render's managed PostgreSQL in `render.yaml`). Empty in the bundled stack, whose URLs already require TLS. |
 | `REDIS_URL` | production | Rate limits, address blocks and the BullMQ job queues. Production requires `rediss://`; the server needs `appendonly yes` and `maxmemory-policy noeviction`. Unset in development to keep everything in memory. |
 | `AUTH_SECRET` | yes | Auth.js secret, 32+ characters. |
 | `AUTH_URL` | production | The public origin. Must equal `NEXT_PUBLIC_BASE_URL`. |
@@ -80,6 +81,7 @@ is the Redis the queue tests use, each run under its own key prefix. `DEMO_PASSW
 | `PUBLIC_APP_BASE_URL` | | The public origin; becomes `AUTH_URL` and `NEXT_PUBLIC_BASE_URL`. |
 | `SITE_ADDRESS` | | Caddy's site: `<domain>` for automatic HTTPS, `http://<host>` for plain HTTP. |
 | `TLS_EMAIL` | | Let's Encrypt account email (`SWB_LAYER=tls`). |
+| `CADDY_GLOBAL_OPTIONS` | | Caddy global options; `docker/compose.tls.yml` sets it to `email <TLS_EMAIL>`. |
 | `HTTP_PORT`, `HTTP_PORT_BIND`, `TLS_HTTPS_PORT` | `80`, `0.0.0.0`, `443` | Caddy's published ports. |
 | `API_BIND`, `API_PORT` | `127.0.0.1`, `8080` | Where the app listens for your proxy (`SWB_LAYER=proxy`). |
 | `APP_BIND`, `APP_PORT` | `127.0.0.1`, `8080` | Where the cloud stack's app listens. |
@@ -109,3 +111,48 @@ is the Redis the queue tests use, each run under its own key prefix. `DEMO_PASSW
 | `SWB_NEXT_DIR` | entrypoint | Where the web build is (`/app/.next`, frontend `/app/frontend/.next`). |
 | `SWB_DISABLE_BUILD_CACHE`, `SWB_FRONTEND_STANDALONE` | Dockerfile | Image build switches. |
 | `SWB_SMOKE_PORT` | `compose-smoke.sh` | The smoke test's edge port (18080). |
+| `SWB_ADMIN_TOPOLOGY` | `admin.sh` | `bundled` (default) or `cloud`: which stack's `ops` container runs `docker/ops/admin.mjs`. |
+| `SWB_UPDATE_STAGE_DIR`, `SWB_UPDATE_STAGED`, `SWB_ROLLBACK` | updater | Internal hand-over from the running updater to the downloaded release's own updater. Never set them yourself. |
+
+## Installer (`install.sh`)
+
+Each option of `install.sh --help` has an environment equivalent, for unattended runs.
+
+| Variable | Option | Description |
+|---|---|---|
+| `SWB_REPOSITORY` | `--repo` | Repository to install from (a fork works). |
+| `SWB_DIR` | `--dir` | Install directory (`/opt/spaceworks-bookings`). |
+| `SWB_RELEASE` | `--release` | A published release (`0.1.0-main.<run>.<sha12>`) instead of the latest. |
+| `SWB_REF` | `--ref` | A branch, tag or commit to build from source on the server; updates rebuild it. Recorded in `.spaceworks-source-ref`. |
+| `SWB_ACTION` | `--action` | On an existing install, one menu entry: `update`, `status`, `backup`, `backup-settings`, `restore`, `rollback`, `reconfigure`, `harden`, `recover-admin`, `support`, `runner`, `runner-remove`, `uninstall`, `cancel`. |
+| `SWB_NONINTERACTIVE` | `--non-interactive`, `--yes` | `1` never asks: questions take `SWB_ANSWER_<KEY>`, else their default, and the run stops on a missing or invalid answer. |
+| `SWB_DRY_RUN` | `--dry-run` | `1` runs the checks (and, from a checkout, the questions), prints the plan and changes nothing. |
+| `SWB_GITHUB_TOKEN`, `GITHUB_TOKEN`, `GH_TOKEN` | | A token (`repo` and `read:packages`) for a private repository: the release download, the updater and the GHCR login. Without one, `gh auth token` is tried. Never written to disk; Docker keeps its own `ghcr.io` login. |
+| `SWB_GITHUB_USER` | | The GHCR user name for that token (default: the token's own login). |
+
+`SWB_ANSWER_<KEY>` answers a deployment question in a non-interactive install (the keys of
+`scripts/setup-questions.sh`):
+
+| Key | Default | Answer |
+|---|---|---|
+| `SWB_ANSWER_RUN_FRONTEND` | `1` | `1` website on this server, `2` backend only (website on Netlify). |
+| `SWB_ANSWER_SITE_ORIGIN` | | The Netlify website's HTTPS origin (with `RUN_FRONTEND=2`). |
+| `SWB_ANSWER_HTTPS_MODE` | `1` (`2` for a backend) | `1` plain HTTP, `2` automatic HTTPS with Caddy, `3` your own reverse proxy. |
+| `SWB_ANSWER_PUBLIC_DOMAIN` | | The domain, for HTTPS modes 2 and 3. |
+| `SWB_ANSWER_TLS_EMAIL` | | Let's Encrypt email, for HTTPS mode 2. |
+| `SWB_ANSWER_WEBHOST` | `localhost` | Host name or IP, for plain HTTP. |
+| `SWB_ANSWER_STORAGE` | `1` | `1` bundled Silo, `2` your own S3-compatible bucket. |
+| `SWB_ANSWER_S3_ENDPOINT`, `SWB_ANSWER_S3_REGION`, `SWB_ANSWER_S3_BUCKET`, `SWB_ANSWER_S3_ACCESS_KEY`, `SWB_ANSWER_S3_SECRET_KEY` | region `auto` | The external bucket, for storage 2. |
+| `SWB_ANSWER_SUPER_ADMIN_EMAIL`, `SWB_ANSWER_SUPER_ADMIN_PASSWORD` | | The first super admin (password 12 to 72 characters). |
+| `SWB_ANSWER_EMAIL_FROM` | `Space Works Bookings <noreply@<domain>>` | Sender. |
+| `SWB_ANSWER_SMTP_HOST`, `SWB_ANSWER_SMTP_PORT` | `smtp-relay.brevo.com`, `587` | SMTP relay. |
+| `SWB_ANSWER_SMTP_USER`, `SWB_ANSWER_SMTP_PASSWORD` | | SMTP login. |
+| `SWB_ANSWER_INSTALL_RUNNER` | `N` | `Y` installs the GitHub Actions runner (Linux with systemd). |
+
+## Hosting platforms
+
+`render.yaml` (Render Blueprint) and `.do/app.yaml` (DigitalOcean App Platform) set the same application
+variables as `cloud.env`. Render generates `AUTH_SECRET`, `CRON_SECRET`, `HEALTHCHECK_SECRET` and the three keys
+(`generateValue`), creates the database and passes its URL with `DATABASE_URL_SSLMODE=require`, and defaults
+`NEXT_PUBLIC_BASE_URL` and `AUTH_URL` to the service's own `RENDER_EXTERNAL_URL`. See
+[DEPLOYMENT_CLOUD.md](DEPLOYMENT_CLOUD.md).

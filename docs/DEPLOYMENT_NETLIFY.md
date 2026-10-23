@@ -25,9 +25,13 @@ to the install's `.env`:
 
 In the cloud topology set the same three values in `cloud.env` ([DEPLOYMENT_CLOUD.md](DEPLOYMENT_CLOUD.md)).
 
+The backend keeps running the BullMQ `worker` and `beat` beside the API: email (sign-in links included),
+payment checks and the timed jobs never run on Netlify.
+
 ## 2. Create the Netlify site
 
-1. In Netlify, add a new site from the GitHub repository `SpaceWorks-HQ/SpaceWorks-Bookings`.
+1. In Netlify, add a new site from the GitHub repository `SpaceWorks-HQ/SpaceWorks-Bookings` (while it is
+   private, grant Netlify's GitHub app access to it first).
 2. **Base directory:** leave empty (the repository root). **Package directory:** `frontend`.
 3. The build command and publish directory come from `frontend/netlify.toml`.
 4. Set these environment variables in the Netlify UI (Site configuration → Environment variables):

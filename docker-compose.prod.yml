@@ -20,6 +20,8 @@ x-app-env: &app-env
   FRONTEND_GATEWAY_SECRET: ${FRONTEND_GATEWAY_SECRET:-}
   DATABASE_URL: *runtime-database-url
   DIRECT_URL: *runtime-database-url
+  # The bundled URLs already require TLS; DATABASE_URL_SSLMODE is for managed databases.
+  DATABASE_URL_SSLMODE: ""
   REDIS_URL: rediss://default:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
   NODE_EXTRA_CA_CERTS: /tls/ca.crt
   AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
