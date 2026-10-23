@@ -21,7 +21,7 @@ those areas were split out into **standalone apps**, each in its own repo:
 
 Sibling apps on the same stack, used as the reference for structure, install and deploy:
 [SpaceWorks-Events](https://github.com/SpaceWorks-HQ/SpaceWorks-Events),
-[SpaceWorks-Workspace](https://github.com/SpaceWorks-HQ/SpaceWorks-Workspace) and SpaceWorks-Organization.
+[SpaceWorks-Workspace](https://github.com/SpaceWorks-HQ/SpaceWorks-Workspace) and the Space Works membership platform (see `NOTICE`).
 Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.github.io/SpaceWorks-Design/).
 
 ## Decisions already made (do not re-open without the owner)
