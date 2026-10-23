@@ -73,7 +73,7 @@ export const razorpay: PaymentGateway = {
       case "refund.processed": {
         const refund = entity(body, "refund");
         const notes = (refund.notes ?? {}) as Record<string, unknown>;
-        return { type: "refund-processed", eventId, gatewayRefundId: str(refund.id) ?? "", refundId: str(notes.refundId), amountMinor: num(refund.amount) };
+        return { type: "refund-processed", eventId, gatewayRefundId: str(refund.id) ?? "", refundId: str(notes.refundId), amountMinor: num(refund.amount), gatewayPaymentId: str(refund.payment_id) };
       }
       case "refund.failed": {
         const refund = entity(body, "refund");

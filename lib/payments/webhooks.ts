@@ -49,7 +49,13 @@ async function apply(tx: Tx, makerspace: MakerspaceForPayments, provider: Paymen
     case "refund-processed": {
       const refund = await findRefund(tx, makerspace.id, event.refundId, event.gatewayRefundId);
       // A refund we closed as failed that the provider later completed: record it for a manager, never 5xx.
-      if (!refund || refund.status === "FAILED") return unmatched(tx, makerspace, provider, event);
+      if (refund?.status === "FAILED") return unmatched(tx, makerspace, provider, event);
+      // None of ours (yet): note it; the reconcile job records it as an EXTERNAL refund once our own had time to match.
+      if (!refund) {
+        if (!event.gatewayRefundId) return unmatched(tx, makerspace, provider, event);
+        await tx.gatewayRefundNotice.createMany({ data: [{ provider, gatewayRefundId: event.gatewayRefundId, makerspaceId: makerspace.id, gatewayPaymentId: event.gatewayPaymentId, amountMinor: event.amountMinor }], skipDuplicates: true });
+        return;
+      }
       await processRefund(tx, { makerspace, refundId: refund.id, gatewayRefundId: event.gatewayRefundId });
       return;
     }

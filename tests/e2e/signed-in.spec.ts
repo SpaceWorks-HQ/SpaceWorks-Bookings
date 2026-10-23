@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { bookPublicSpace, chooseFirstFreeTime, signIn } from "./helpers";
 
 // Signed-in journeys over the demo data from `npm run db:seed-demo` (the Tinkerspace makerspace and its owner).
@@ -54,7 +54,8 @@ test("the owner approves a Laser studio request from the bookings list", async (
   await page.getByRole("button", { name: "Approve booking", exact: true }).click();
   await expect(page.getByText("Approve booking: done.", { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText("Confirmed", { exact: true })).toBeVisible();
+  // Next keeps the previous route hidden in the page: count only what is shown.
+  await expect(page.getByText("Confirmed", { exact: true }).filter({ visible: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Approve booking", exact: true })).toHaveCount(0);
 });
 
@@ -77,7 +78,7 @@ test("front desk checks in an arrival from Today", async ({ page }) => {
 test("the owner changes a booking rule default and sees it saved", async ({ page }) => {
   await signIn(page, "owner@demo.test");
   await page.goto("/dashboard/tinkerspace/settings/bookings", { waitUntil: "networkidle" });
-  const hold = page.getByLabel("Checkout hold (minutes)", { exact: true });
+  const hold = page.getByLabel("Checkout hold (minutes)", { exact: true }).filter({ visible: true });
   const original = await hold.inputValue();
   const changed = original === "15" ? "20" : "15";
   try {

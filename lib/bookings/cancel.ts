@@ -76,7 +76,7 @@ export async function cancelBooking(input: CancelInput, db: DbOrTx = defaultDb()
         cancelKind: input.kind,
       });
     }
-    const charge = await recomputeCharge(tx, booking.id);
+    const charge = await recomputeCharge(tx, booking.id, { refundKind: input.kind === "VENUE" ? "VENUE" : "POLICY", actor: input.actor, now });
     const keptFeeMinor = (await tx.bookingOccurrence.aggregate({ where: { id: { in: targets.map((row) => row.id) } }, _sum: { keptFeeMinor: true } }))._sum.keptFeeMinor ?? 0;
     await recordBookingEvent(tx, {
       makerspaceId: input.makerspaceId,
@@ -90,6 +90,6 @@ export async function cancelBooking(input: CancelInput, db: DbOrTx = defaultDb()
       await enqueueBookingNotice(tx, { makerspaceId: input.makerspaceId, bookingId: booking.id, notice: "cancelled", occurrenceIds: targets.map((row) => row.id), keptFeeMinor, refundDueMinor: charge.refundDueMinor, balanceDueMinor: charge.balanceDueMinor, ...(reason && input.kind === "VENUE" ? { reason } : {}) });
     }
     const saved = await tx.booking.findUniqueOrThrow({ where: { id: booking.id }, select: { status: true } });
-    return { bookingStatus: saved.status, cancelledOccurrenceIds: targets.map((row) => row.id), keptFeeMinor, chargeBeforeMinor: charge.before, chargeAfterMinor: charge.after, refundDueMinor: charge.refundDueMinor, balanceDueMinor: charge.balanceDueMinor };
+    return { bookingStatus: saved.status, cancelledOccurrenceIds: targets.map((row) => row.id), keptFeeMinor, chargeBeforeMinor: charge.before, chargeAfterMinor: charge.after, refundDueMinor: charge.refundDueMinor, balanceDueMinor: charge.balanceDueMinor, refundIds: charge.refundIds };
   });
 }

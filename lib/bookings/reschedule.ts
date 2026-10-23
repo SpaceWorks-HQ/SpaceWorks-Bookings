@@ -109,7 +109,12 @@ export async function rescheduleOccurrence(input: RescheduleInput, db: DbOrTx = 
         if (moved.getTime() !== booking.paymentDueAt.getTime()) data.paymentDueAt = moved;
       }
       await tx.booking.update({ where: { id: booking.id }, data });
-      const charge = await recomputeCharge(tx, booking.id);
+      const charge = await recomputeCharge(tx, booking.id, { refundKind: "RESCHEDULE", actor: input.actor, now });
+      // A dearer time on a booking paid upfront: the difference becomes due (staff are told when it runs late).
+      if (charge.balanceDueMinor > 0 && booking.status === "CONFIRMED" && !booking.paymentDueAt && first) {
+        data.paymentDueAt = new Date(Math.min(first.startsAt.getTime(), now.getTime() + rules.approvalPayWithinHours * 3_600_000));
+        await tx.booking.update({ where: { id: booking.id }, data: { paymentDueAt: data.paymentDueAt, overdueAction: "NOTIFY_STAFF", paymentReminderSentAt: null, overdueNotifiedAt: null } });
+      }
       await recordBookingEvent(tx, {
         makerspaceId: input.makerspaceId,
         bookingId: booking.id,
@@ -119,7 +124,7 @@ export async function rescheduleOccurrence(input: RescheduleInput, db: DbOrTx = 
         data: { from: { start: anchor.startsAt, end: anchor.endsAt }, to: { start: input.start, end: input.end }, priceDifferenceMinor: difference, keptFeeMinor: fee, overridden: checked.overridden.map((violation) => violation.code), overrideReason: checked.overridden.length ? input.overrideReason : null },
       });
       await enqueueBookingNotice(tx, { makerspaceId: input.makerspaceId, bookingId: booking.id, notice: "rescheduled", occurrenceIds: rows.map((row) => row.id) });
-      return { priceDifferenceMinor: difference, keptFeeMinor: fee, chargeBeforeMinor: charge.before, chargeAfterMinor: charge.after, refundDueMinor: charge.refundDueMinor, balanceDueMinor: charge.balanceDueMinor, paymentDueAt: (data.paymentDueAt as Date | undefined) ?? booking.paymentDueAt };
+      return { priceDifferenceMinor: difference, keptFeeMinor: fee, chargeBeforeMinor: charge.before, chargeAfterMinor: charge.after, refundDueMinor: charge.refundDueMinor, balanceDueMinor: charge.balanceDueMinor, refundIds: charge.refundIds, paymentDueAt: (data.paymentDueAt as Date | undefined) ?? booking.paymentDueAt };
     }),
   );
 }

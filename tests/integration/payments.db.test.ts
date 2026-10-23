@@ -24,9 +24,9 @@ afterAll(async () => {
 
 describe.sequential("offline payments", () => {
   it("waits for a second person, then receipts with a GST tax invoice to the customer", async () => {
-    const { payment, settled } = await offline("shaan", { reference: "Book 4/12", bookingId: "booking-placeholder" });
+    const { payment, settled } = await offline("shaan", { reference: "Book 4/12" });
     expect(settled).toBe(false);
-    expect(payment).toMatchObject({ status: "AWAITING_CONFIRMATION", bookingId: "booking-placeholder", customerName: "shaan", customerStateCode: "KL" });
+    expect(payment).toMatchObject({ status: "AWAITING_CONFIRMATION", bookingId: null, customerName: "shaan", customerStateCode: "KL" });
     await expect(prisma.$transaction((tx) => confirmOfflinePayment(tx, { makerspace, paymentId: payment.id, actorUserId: staff[0].id, now: june }))).rejects.toThrow(/Someone else/);
 
     const confirmed = await prisma.$transaction((tx) => confirmOfflinePayment(tx, { makerspace, paymentId: payment.id, actorUserId: staff[1].id, now: june }));
@@ -69,7 +69,7 @@ describe.sequential("refunds and credit notes", () => {
 
 describe.sequential("immutability", () => {
   it("lets a paid payment gain settlement details but never change its amount, customer or booking", async () => {
-    const paid = await prisma.payment.findFirstOrThrow({ where: { makerspaceId: makerspace.id, status: "PAID", bookingId: { not: null } }, include: { documents: true } });
+    const paid = await prisma.payment.findFirstOrThrow({ where: { makerspaceId: makerspace.id, status: "PAID", reference: "Book 4/12" }, include: { documents: true } });
     await prisma.payment.update({ where: { id: paid.id }, data: { settlementId: "setl_1" } });
     await expect(prisma.payment.update({ where: { id: paid.id }, data: { amountMinor: 1 } })).rejects.toThrow();
     await expect(prisma.payment.update({ where: { id: paid.id }, data: { customerEmail: "someone-else@example.test" } })).rejects.toThrow();

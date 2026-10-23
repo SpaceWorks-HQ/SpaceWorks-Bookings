@@ -4,6 +4,7 @@ import { requireMakerspaceCapability } from "@/lib/permissions";
 import { allowed, makerspaceSummary } from "@/lib/bookings/staffView";
 import { paymentState, PAYMENT_STATE_LABELS, balanceDue, refundDue } from "@/lib/bookings/obligation";
 import { eventReason, snapshotLines } from "@/lib/bookings/ui";
+import { bookingMoneyView } from "@/lib/bookings/money/view";
 
 export async function loadBooking({ params }: { params: Promise<{ makerspaceSlug: string; bookingId: string }> }) {
   const { makerspaceSlug, bookingId } = await params;
@@ -27,5 +28,6 @@ export async function loadBooking({ params }: { params: Promise<{ makerspaceSlug
     events: events.map((item) => ({ id: item.id, kind: item.kind, actorKind: item.actorKind, createdAt: item.createdAt.toISOString(), reason: contact ? eventReason(item.data) : null })),
   }, canContact: contact, canManage: allowed(access, "bookings.manage"), canApprove: allowed(access, "bookings.approve"), canOverride: allowed(access, "bookings.override"),
     spaces: await prisma.space.findMany({ where: { makerspaceId, archivedAt: null }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    money: await bookingMoneyView(access, booking.id),
   };
 }

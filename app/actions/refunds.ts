@@ -38,6 +38,9 @@ export async function refundPayment(input: unknown): Promise<ActionResult<{ stat
   if (!ctx.ok) return ctx;
   const payment = await scopedPayment(ctx.makerspace.id, parsed.data.paymentId);
   if (!payment) return { ok: false, error: "Payment not found." };
+  // A booking's payments are refunded from the booking, so the refund policy, its other payments and what is still
+  // owed stay in step (lib/bookings/money).
+  if (await prisma.payment.count({ where: { id: payment.id, bookingId: { not: null } } })) return { ok: false, error: "Refund this payment from its booking, so what the customer owes stays right." };
   let created: Awaited<ReturnType<typeof createRefund>>;
   try {
     created = await prisma.$transaction((tx) => createRefund(tx, { makerspace: ctx.makerspace, paymentId: payment.id, amountMinor: parsed.data.amountMinor, reason: parsed.data.reason, actorUserId: ctx.access.userId }));

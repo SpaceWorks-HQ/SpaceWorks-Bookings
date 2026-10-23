@@ -4,8 +4,16 @@ import { nextTotp } from "./totp";
 export async function signIn(page: Page, email: string) {
   // Type only after hydration, or React resets the controlled fields.
   await page.goto("/login", { waitUntil: "networkidle" });
-  await page.fill('input[autocomplete="email"]', email);
-  await page.fill('input[autocomplete="current-password"]', process.env.DEMO_PASSWORD!);
+  const emailField = page.locator('input[autocomplete="email"]');
+  const passwordField = page.locator('input[autocomplete="current-password"]');
+  // Hydration can still reset a field typed into early: retype until both values stick.
+  await expect(async () => {
+    await emailField.fill(email);
+    await passwordField.fill(process.env.DEMO_PASSWORD!);
+    await page.waitForTimeout(150);
+    await expect(emailField).toHaveValue(email, { timeout: 500 });
+    await expect(passwordField).toHaveValue(process.env.DEMO_PASSWORD!, { timeout: 500 });
+  }).toPass({ timeout: 15_000 });
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   const code = page.getByLabel("Authenticator or recovery code");
   await code.waitFor({ timeout: 30_000 });
@@ -41,7 +49,8 @@ export async function chooseFirstFreeTime(page: Page, nextDay = true) {
 export async function bookPublicSpace(page: Page, name: "Meeting room" | "Laser studio") {
   await page.goto("/m/tinkerspace", { waitUntil: "networkidle" });
   await page.getByRole("link", { name, exact: true }).click();
-  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  // The first visit compiles the space page in development; give it time.
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible({ timeout: 30_000 });
   await chooseFirstFreeTime(page);
   await page.getByLabel("Name", { exact: true }).fill("Playwright customer");
   await page.getByLabel("Email", { exact: true }).fill(`booking-${Date.now()}@example.test`);

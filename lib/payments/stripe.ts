@@ -59,6 +59,7 @@ export const stripe: PaymentGateway = {
         "metadata[paymentId]": request.paymentId,
         "metadata[makerspaceId]": request.makerspaceId,
         "payment_intent_data[metadata][paymentId]": request.paymentId,
+        ...(request.expiresAt ? { expires_at: Math.floor(Math.max(request.expiresAt.getTime(), Date.now() + 31 * 60_000) / 1000) } : {}),
       }),
     });
     const orderId = str(session.id);
@@ -96,7 +97,7 @@ export const stripe: PaymentGateway = {
       case "refund.failed": {
         const id = str(data.id) ?? "";
         const refundId = str(((data.metadata ?? {}) as Record<string, unknown>).refundId);
-        if (data.status === "succeeded") return { type: "refund-processed", eventId, gatewayRefundId: id, refundId, amountMinor: num(data.amount) };
+        if (data.status === "succeeded") return { type: "refund-processed", eventId, gatewayRefundId: id, refundId, amountMinor: num(data.amount), gatewayPaymentId: str(data.payment_intent) };
         if (data.status === "failed" || data.status === "canceled") return { type: "refund-failed", eventId, gatewayRefundId: id, refundId, reason: str(data.failure_reason) ?? "The refund failed at Stripe" };
         return { type: "ignored", eventId };
       }
@@ -133,6 +134,12 @@ export const stripe: PaymentGateway = {
     const items = Array.isArray(list.data) ? (list.data as Array<Record<string, unknown>>) : [];
     const match = items.find((item) => ((item.metadata ?? {}) as Record<string, unknown>).refundId === args.refundId);
     return match ? stripeRefund(match) : null;
+  },
+
+  async expireCheckout(credentials, orderId) {
+    const session = await gatewayRequest(`${API}/checkout/sessions/${encodeURIComponent(orderId)}`, { method: "GET", auth: bearer(credentials.secret) });
+    if (session.status !== "open") return;
+    await gatewayRequest(`${API}/checkout/sessions/${encodeURIComponent(orderId)}/expire`, { method: "POST", auth: bearer(credentials.secret), contentType: "application/x-www-form-urlencoded", body: "" });
   },
 
   async testConnection(credentials) {

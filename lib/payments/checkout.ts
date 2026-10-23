@@ -3,7 +3,8 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { getRequestOrigin } from "@/lib/publicUrl";
 import { createPayment, MAKERSPACE_FOR_PAYMENTS, PaymentError, type PaymentCustomer } from "./charges";
-import type { ChargeItem } from "./tax";
+import type { ChargeItem, TaxSnapshot } from "./tax";
+import type { PaymentPurpose } from "@prisma/client";
 import { gatewayTakes, loadGateway } from "./config";
 import { GatewayError, type CheckoutResult } from "./gateway";
 import { verifyCheckoutSignature } from "./razorpay";
@@ -13,7 +14,7 @@ import { failPayment, settlePayment } from "./settle";
  * Start an online payment: create the Payment (with its tax lines) first, then the gateway order. A gateway
  * refusal closes the attempt as FAILED, so nothing is left dangling. Phase 2 calls this for a booking.
  */
-export async function startCheckout(args: { makerspaceId: string; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; description: string; returnPath: string }): Promise<CheckoutResult & { paymentId: string; amountMinor: number; currency: string }> {
+export async function startCheckout(args: { makerspaceId: string; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; purpose?: PaymentPurpose | null; taxSnapshot?: TaxSnapshot; expiresAt?: Date; description: string; returnPath: string }): Promise<CheckoutResult & { paymentId: string; amountMinor: number; currency: string }> {
   const makerspace = await prisma.makerspace.findUniqueOrThrow({ where: { id: args.makerspaceId }, select: MAKERSPACE_FOR_PAYMENTS });
   if (makerspace.status !== "ACTIVE") throw new PaymentError(`${makerspace.name} isn't taking online payments right now.`);
   const live = await loadGateway(makerspace.id);
@@ -21,7 +22,7 @@ export async function startCheckout(args: { makerspaceId: string; customer: Paym
   if (!gatewayTakes(live.provider, args.currency)) throw new PaymentError(`Online payment doesn't take ${args.currency}. Use the other ways to pay.`);
 
   const origin = await getRequestOrigin();
-  const payment = await prisma.$transaction((tx) => createPayment(tx, { makerspace, customer: args.customer, currency: args.currency, items: args.items, bookingId: args.bookingId, provider: live.provider, status: "PENDING" }));
+  const payment = await prisma.$transaction((tx) => createPayment(tx, { makerspace, customer: args.customer, currency: args.currency, items: args.items, bookingId: args.bookingId, purpose: args.purpose, taxSnapshot: args.taxSnapshot, provider: live.provider, status: "PENDING" }));
   try {
     const result = await live.gateway.createCheckout(live.credentials, {
       paymentId: payment.id,
@@ -31,8 +32,9 @@ export async function startCheckout(args: { makerspaceId: string; customer: Paym
       description: `${args.description} · ${makerspace.name}`,
       makerspaceName: makerspace.name,
       customer: { name: payment.customerName, email: payment.customerEmail },
-      successUrl: `${origin}${args.returnPath}?payment=${payment.id}`,
-      cancelUrl: `${origin}${args.returnPath}?cancelled=1`,
+      successUrl: `${origin}${args.returnPath}${args.returnPath.includes("?") ? "&" : "?"}payment=${payment.id}`,
+      cancelUrl: `${origin}${args.returnPath}${args.returnPath.includes("?") ? "&" : "?"}cancelled=1`,
+      expiresAt: args.expiresAt,
     });
     await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: result.orderId } });
     return { ...result, paymentId: payment.id, amountMinor: payment.amountMinor, currency: payment.currency };

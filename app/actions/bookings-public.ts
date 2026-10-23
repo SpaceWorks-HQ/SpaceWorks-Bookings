@@ -19,6 +19,7 @@ import { forbidden, invalidInput } from "@/lib/bookings/errors";
 import { customerBooking, customerHold, ownHoldExclusions, publicAction, publishedSpace, verifiedMemberEmail } from "@/lib/actions/publicBookingContext";
 import { assertBookingBounds, assertScheduleWindow } from "@/lib/bookings/inputBounds";
 import { inputFailure } from "@/lib/actions/bookingContext";
+import { sendBookingRefunds } from "@/lib/bookings/money/send";
 import * as inputs from "@/lib/actions/bookingInputs";
 import type { ActionResult } from "./makerspace";
 
@@ -91,31 +92,39 @@ export async function requestManageLink(input: unknown): Promise<ActionResult<{ 
 }
 
 export async function cancelByManageToken(input: unknown) {
-  return publicAction(inputs.tokenCancelSchema, input, async (data, ctx) => {
+  const result = await publicAction(inputs.tokenCancelSchema, input, async (data, ctx) => {
     const owned = await customerBooking(ctx.makerspaceId, ctx.actor, data);
     return cancel.cancelBooking({ ...data, makerspaceId: ctx.makerspaceId, bookingId: owned.booking.id, actor: owned.actor, kind: "CUSTOMER" });
   }, { mutation: true });
+  if (result.ok && result.data) await sendBookingRefunds(result.data.refundIds);
+  return result;
 }
 
 export async function rescheduleByManageToken(input: unknown) {
-  return publicAction(inputs.tokenRescheduleSchema, input, async (data, ctx) => {
+  const result = await publicAction(inputs.tokenRescheduleSchema, input, async (data, ctx) => {
     const owned = await customerBooking(ctx.makerspaceId, ctx.actor, data);
     return reschedule.rescheduleOccurrence({ ...data, makerspaceId: ctx.makerspaceId, bookingId: owned.booking.id, actor: owned.actor });
   }, { active: true, mutation: true });
+  if (result.ok && result.data) await sendBookingRefunds(result.data.refundIds);
+  return result;
 }
 
 export async function cancelBooking(input: unknown) {
-  return publicAction(inputs.cancelSchema, input, async (data, ctx) => {
+  const result = await publicAction(inputs.cancelSchema, input, async (data, ctx) => {
     const owned = await customerBooking(ctx.makerspaceId, ctx.actor, data);
     return cancel.cancelBooking({ ...data, makerspaceId: ctx.makerspaceId, actor: owned.actor, kind: "CUSTOMER" });
   }, { signedIn: true, mutation: true });
+  if (result.ok && result.data) await sendBookingRefunds(result.data.refundIds);
+  return result;
 }
 
 export async function rescheduleOccurrence(input: unknown) {
-  return publicAction(inputs.rescheduleSchema, input, async (data, ctx) => {
+  const result = await publicAction(inputs.rescheduleSchema, input, async (data, ctx) => {
     const owned = await customerBooking(ctx.makerspaceId, ctx.actor, data);
     return reschedule.rescheduleOccurrence({ ...data, makerspaceId: ctx.makerspaceId, actor: owned.actor });
   }, { active: true, signedIn: true, mutation: true });
+  if (result.ok && result.data) await sendBookingRefunds(result.data.refundIds);
+  return result;
 }
 
 export async function issuePersonalCalendarFeed(input: unknown) {

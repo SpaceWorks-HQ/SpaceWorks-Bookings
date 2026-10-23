@@ -81,6 +81,25 @@ spaces, front desk (`front@demo.test`) and a customer (`customer@demo.test`). Pa
 boundary: HELD awaiting payment, REQUESTED, or pay-later CONFIRMED with a due date; taking money is Phase 2.
 Gates on that commit: lint, typecheck, 834 unit, 118 integration, 15 e2e (no skips), builds, catalog, no drift.
 
+**Phase 2 (done, 2026-10-24):** booking money (`lib/bookings/money/*`, migration `0003_booking_money`): payments
+linked to bookings with a purpose, paid/refunded caches kept by triggers, refunds for every scenario of the build
+plan's table through `recomputeCharge` and a pure allocator, sending after commit with a claim, late and duplicate
+captures, provider-dashboard (EXTERNAL) refunds, overdue and reminder jobs, the team's money actions (desk payment,
+refund, retry, offline refund, write-off, due date), the customer pay panel (Razorpay Checkout, Stripe Checkout,
+offline/UPI instructions), the booking statement PDF and the reconciliation page. See `docs/PAYMENTS.md` "Booking
+money" and `docs/GST.md` "Booking payments".
+
+## Open questions (conservative choices made, owner to confirm)
+
+- **GST documents for advances.** Booking payments get the existing tax invoice / receipt; refunds a credit note.
+  Rule 50/51 receipt and refund vouchers for advances (with the invoice at the time of use) are not built
+  (`docs/GST.md`). Confirm with the accountant before going live under GST.
+- **Overdue notices to staff** go to the customer (email) and the audit log; no team chat alert, because adding a
+  chat event needs the chat events CHECK constraint widened (`lib/chat/events.ts`). The reconciliation page lists
+  what needs attention.
+- **Manual and provider-dashboard refunds beyond what is due are concessions** (`Booking.concessionMinor`), so the
+  customer never owes them again. A team that wants such refunds to leave a balance would need a different rule.
+
 ## What is left
 
 Phases 1 (finish) to 5 from the build plan:

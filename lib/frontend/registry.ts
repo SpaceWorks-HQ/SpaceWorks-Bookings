@@ -16,144 +16,154 @@ import { loadMembers as endpoint12 } from "@/lib/views/app__dashboard__makerspac
 import { loadMakerspaceOverviewView as endpoint13 } from "@/lib/views/app__dashboard__makerspaceSlug__page";
 import { loadPaymentsDirectory as endpoint14 } from "@/lib/views/app__dashboard__makerspaceSlug__payments__page";
 import { loadPaymentView as endpoint15 } from "@/lib/views/app__dashboard__makerspaceSlug__payments__paymentId__page";
-import { loadBookingSettings as endpoint16 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__bookings__page";
-import { loadMakerspaceEmailSettingsView as endpoint17 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__email__page";
-import { loadHoursSettings as endpoint18 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__hours__page";
-import { loadMakerspaceMoneySettingsView as endpoint19 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__money__page";
-import { loadMakerspaceNotificationsView as endpoint20 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__notifications__page";
-import { loadMakerspaceSettingsView as endpoint21 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__page";
-import { loadPaymentSettingsView as endpoint22 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__payments__page";
-import { loadNewSpace as endpoint23 } from "@/lib/views/app__dashboard__makerspaceSlug__spaces__new__page";
-import { loadSpaces as endpoint24 } from "@/lib/views/app__dashboard__makerspaceSlug__spaces__page";
-import { loadSpace as endpoint25 } from "@/lib/views/app__dashboard__makerspaceSlug__spaces__spaceId__page";
-import { loadMakerspaceMembersView as endpoint26 } from "@/lib/views/app__dashboard__makerspaceSlug__team__page";
-import { loadToday as endpoint27 } from "@/lib/views/app__dashboard__makerspaceSlug__today__page";
-import { loadDashboardView as endpoint28 } from "@/lib/views/app__dashboard__page";
-import { loadJoinMakerspaceView as endpoint29 } from "@/lib/views/app__join__makerspace__token__page";
-import { loadFindBookingPage as endpoint30 } from "@/lib/views/app__m__makerspaceSlug__bookings__find__page";
-import { loadPublicBookingPage as endpoint31 } from "@/lib/views/app__m__makerspaceSlug__bookings__reference__page";
-import { loadPublicMakerspaceLayout as endpoint32 } from "@/lib/views/app__m__makerspaceSlug__layout";
-import { loadPublicMakerspacePage as endpoint33 } from "@/lib/views/app__m__makerspaceSlug__page";
-import { loadPublicSpacePage as endpoint34 } from "@/lib/views/app__m__makerspaceSlug__spaces__spaceSlug__page";
-import { loadMakerspacesDirectory as endpoint35 } from "@/lib/views/app__makerspaces__page";
-import { loadSitemapMakerspaces as endpoint36 } from "@/lib/views/app__sitemap";
-import { loadStartView as endpoint37 } from "@/lib/views/app__start__page";
-import { loadSuperAdminAuditView as endpoint38 } from "@/lib/views/app__super-admin__audit__page";
-import { loadSuperAdminEmailView as endpoint39 } from "@/lib/views/app__super-admin__email__page";
-import { loadSuperAdminJobsView as endpoint40 } from "@/lib/views/app__super-admin__jobs__page";
-import { loadSuperAdminShell as endpoint41 } from "@/lib/views/app__super-admin__layout";
-import { loadSuperAdminMakerspaceDetailView as endpoint42 } from "@/lib/views/app__super-admin__makerspaces__makerspaceId__page";
-import { loadSuperAdminNewMakerspaceView as endpoint43 } from "@/lib/views/app__super-admin__makerspaces__new__page";
-import { loadSuperAdminOrgsView as endpoint44 } from "@/lib/views/app__super-admin__makerspaces__page";
-import { loadSuperAdminMonitoringView as endpoint45 } from "@/lib/views/app__super-admin__monitoring__page";
-import { loadSuperAdminOperationsView as endpoint46 } from "@/lib/views/app__super-admin__operations__page";
-import { loadSuperAdminOverviewView as endpoint47 } from "@/lib/views/app__super-admin__page";
-import { loadSuperAdminSecurityView as endpoint48 } from "@/lib/views/app__super-admin__security__page";
-import { loadSuperAdminSettingsView as endpoint49 } from "@/lib/views/app__super-admin__settings__page";
-import { loadSuperAdminStorageView as endpoint50 } from "@/lib/views/app__super-admin__storage__page";
-import { loadSuperAdminUsersView as endpoint51 } from "@/lib/views/app__super-admin__users__page";
-import { loadSuperAdminUserDetailView as endpoint52 } from "@/lib/views/app__super-admin__users__userId__page";
-import { leaveMakerspace as endpoint53 } from "@/app/actions/account-makerspaces";
-import { updateAccountProfile as endpoint54 } from "@/app/actions/account";
-import { updateAccountPassword as endpoint55 } from "@/app/actions/account";
-import { signUpWithPassword as endpoint56 } from "@/app/actions/auth";
-import { confirmEmailVerification as endpoint57 } from "@/app/actions/auth";
-import { resendEmailVerification as endpoint58 } from "@/app/actions/auth";
-import { loadBookingAvailability as endpoint59 } from "@/app/actions/booking-availability";
-import { previewBookingConflicts as endpoint60 } from "@/app/actions/booking-availability";
-import { updateBookingSettings as endpoint61 } from "@/app/actions/booking-settings";
-import { updateSpaceRuleOverrides as endpoint62 } from "@/app/actions/booking-settings";
-import { previewQuote as endpoint63 } from "@/app/actions/bookings-public";
-import { createHold as endpoint64 } from "@/app/actions/bookings-public";
-import { submitBooking as endpoint65 } from "@/app/actions/bookings-public";
-import { releaseHold as endpoint66 } from "@/app/actions/bookings-public";
-import { requestManageLink as endpoint67 } from "@/app/actions/bookings-public";
-import { cancelByManageToken as endpoint68 } from "@/app/actions/bookings-public";
-import { rescheduleByManageToken as endpoint69 } from "@/app/actions/bookings-public";
-import { cancelBooking as endpoint70 } from "@/app/actions/bookings-public";
-import { rescheduleOccurrence as endpoint71 } from "@/app/actions/bookings-public";
-import { issuePersonalCalendarFeed as endpoint72 } from "@/app/actions/bookings-public";
-import { revokePersonalCalendarFeed as endpoint73 } from "@/app/actions/bookings-public";
-import { createHold as endpoint74 } from "@/app/actions/bookings-staff";
-import { submitBooking as endpoint75 } from "@/app/actions/bookings-staff";
-import { approveBooking as endpoint76 } from "@/app/actions/bookings-staff";
-import { declineBooking as endpoint77 } from "@/app/actions/bookings-staff";
-import { cancelBooking as endpoint78 } from "@/app/actions/bookings-staff";
-import { rescheduleOccurrence as endpoint79 } from "@/app/actions/bookings-staff";
-import { moveBooking as endpoint80 } from "@/app/actions/bookings-staff";
-import { checkIn as endpoint81 } from "@/app/actions/bookings-staff";
-import { checkInByCode as endpoint82 } from "@/app/actions/bookings-staff";
-import { markNoShow as endpoint83 } from "@/app/actions/bookings-staff";
-import { issueStaffCalendarFeed as endpoint84 } from "@/app/actions/bookings-staff";
-import { revokeStaffCalendarFeed as endpoint85 } from "@/app/actions/bookings-staff";
-import { saveChatChannel as endpoint86 } from "@/app/actions/chat-channels";
-import { deleteChatChannel as endpoint87 } from "@/app/actions/chat-channels";
-import { testChatChannel as endpoint88 } from "@/app/actions/chat-channels";
-import { setNewUserRegistrationEnabled as endpoint89 } from "@/app/actions/instance-settings";
-import { setMakerspaceApplicationsEnabled as endpoint90 } from "@/app/actions/instance-settings";
-import { saveInstanceServiceSettings as endpoint91 } from "@/app/actions/instance-settings";
-import { deliverInstanceOutbox as endpoint92 } from "@/app/actions/instance";
-import { purgeExpiredVerificationTokens as endpoint93 } from "@/app/actions/instance";
-import { retryFailedOutboxMessages as endpoint94 } from "@/app/actions/instance";
-import { recordBackupRestoreVerification as endpoint95 } from "@/app/actions/instance";
-import { acceptMakerspaceInvite as endpoint96 } from "@/app/actions/invite-acceptance";
-import { unblockAddress as endpoint97 } from "@/app/actions/ip-blocks";
-import { manageJobsAction as endpoint98 } from "@/app/actions/jobs";
-import { requestMagicLink as endpoint99 } from "@/app/actions/magic-link";
-import { checkMakerspaceSlug as endpoint100 } from "@/app/actions/makerspace-application";
-import { submitMakerspaceApplication as endpoint101 } from "@/app/actions/makerspace-application";
-import { resubmitMakerspaceApplication as endpoint102 } from "@/app/actions/makerspace-application";
-import { saveMakerspaceEmailSettings as endpoint103 } from "@/app/actions/makerspace-email";
-import { sendMakerspaceTestEmail as endpoint104 } from "@/app/actions/makerspace-email";
-import { createMakerspaceInvite as endpoint105 } from "@/app/actions/makerspace-invites";
-import { revokeMakerspaceInvite as endpoint106 } from "@/app/actions/makerspace-invites";
-import { updateMakerspace as endpoint107 } from "@/app/actions/makerspace";
-import { uploadMakerspaceLogo as endpoint108 } from "@/app/actions/media";
-import { uploadAccountProfileImage as endpoint109 } from "@/app/actions/media";
-import { upsertMember as endpoint110 } from "@/app/actions/members";
-import { removeMember as endpoint111 } from "@/app/actions/members";
-import { importMembersCsv as endpoint112 } from "@/app/actions/members";
-import { requestPasswordReset as endpoint113 } from "@/app/actions/password-reset";
-import { confirmPasswordReset as endpoint114 } from "@/app/actions/password-reset";
-import { savePaymentGateway as endpoint115 } from "@/app/actions/payment-settings";
-import { testPaymentGateway as endpoint116 } from "@/app/actions/payment-settings";
-import { saveTaxSettings as endpoint117 } from "@/app/actions/payment-settings";
-import { saveOfflinePaymentSettings as endpoint118 } from "@/app/actions/payment-settings";
-import { confirmPayment as endpoint119 } from "@/app/actions/payments";
-import { rejectPayment as endpoint120 } from "@/app/actions/payments";
-import { cancelOpenPayment as endpoint121 } from "@/app/actions/payments";
-import { releaseDocument as endpoint122 } from "@/app/actions/payments";
-import { clearFlag as endpoint123 } from "@/app/actions/payments";
-import { updateMakerspacePreferences as endpoint124 } from "@/app/actions/preferences";
-import { refundPayment as endpoint125 } from "@/app/actions/refunds";
-import { beginMfaEnrollment as endpoint126 } from "@/app/actions/security";
-import { confirmMfaEnrollment as endpoint127 } from "@/app/actions/security";
-import { disableMfa as endpoint128 } from "@/app/actions/security";
-import { revokeAllSessions as endpoint129 } from "@/app/actions/security";
-import { replaceOpeningHours as endpoint130 } from "@/app/actions/space-calendar";
-import { setHoursException as endpoint131 } from "@/app/actions/space-calendar";
-import { removeHoursException as endpoint132 } from "@/app/actions/space-calendar";
-import { createBlackout as endpoint133 } from "@/app/actions/space-calendar";
-import { removeBlackout as endpoint134 } from "@/app/actions/space-calendar";
-import { createSpace as endpoint135 } from "@/app/actions/spaces";
-import { updateSpace as endpoint136 } from "@/app/actions/spaces";
-import { setSpaceArchived as endpoint137 } from "@/app/actions/spaces";
-import { addSpacePhoto as endpoint138 } from "@/app/actions/spaces";
-import { removeSpacePhoto as endpoint139 } from "@/app/actions/spaces";
-import { reorderSpacePhotos as endpoint140 } from "@/app/actions/spaces";
-import { saveAddOn as endpoint141 } from "@/app/actions/spaces";
-import { removeAddOn as endpoint142 } from "@/app/actions/spaces";
-import { savePeakRule as endpoint143 } from "@/app/actions/spaces";
-import { removePeakRule as endpoint144 } from "@/app/actions/spaces";
-import { replaceRefundTiers as endpoint145 } from "@/app/actions/spaces";
-import { reviewMakerspace as endpoint146 } from "@/app/actions/super-admin-makerspaces";
-import { setMakerspaceLimits as endpoint147 } from "@/app/actions/super-admin-makerspaces";
-import { createMakerspaceForOwner as endpoint148 } from "@/app/actions/super-admin-makerspaces";
-import { resendOwnerInvite as endpoint149 } from "@/app/actions/super-admin-makerspaces";
-import { setMakerspaceVisibility as endpoint150 } from "@/app/actions/super-admin-makerspaces";
-import { updateTeamRole as endpoint151 } from "@/app/actions/team";
-import { removeTeamMember as endpoint152 } from "@/app/actions/team";
-import { deleteMakerspace as endpoint153 } from "@/app/actions/team";
+import { loadReconciliation as endpoint16 } from "@/lib/views/app__dashboard__makerspaceSlug__payments__reconciliation__page";
+import { loadBookingSettings as endpoint17 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__bookings__page";
+import { loadMakerspaceEmailSettingsView as endpoint18 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__email__page";
+import { loadHoursSettings as endpoint19 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__hours__page";
+import { loadMakerspaceMoneySettingsView as endpoint20 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__money__page";
+import { loadMakerspaceNotificationsView as endpoint21 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__notifications__page";
+import { loadMakerspaceSettingsView as endpoint22 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__page";
+import { loadPaymentSettingsView as endpoint23 } from "@/lib/views/app__dashboard__makerspaceSlug__settings__payments__page";
+import { loadNewSpace as endpoint24 } from "@/lib/views/app__dashboard__makerspaceSlug__spaces__new__page";
+import { loadSpaces as endpoint25 } from "@/lib/views/app__dashboard__makerspaceSlug__spaces__page";
+import { loadSpace as endpoint26 } from "@/lib/views/app__dashboard__makerspaceSlug__spaces__spaceId__page";
+import { loadMakerspaceMembersView as endpoint27 } from "@/lib/views/app__dashboard__makerspaceSlug__team__page";
+import { loadToday as endpoint28 } from "@/lib/views/app__dashboard__makerspaceSlug__today__page";
+import { loadDashboardView as endpoint29 } from "@/lib/views/app__dashboard__page";
+import { loadJoinMakerspaceView as endpoint30 } from "@/lib/views/app__join__makerspace__token__page";
+import { loadFindBookingPage as endpoint31 } from "@/lib/views/app__m__makerspaceSlug__bookings__find__page";
+import { loadPublicBookingPage as endpoint32 } from "@/lib/views/app__m__makerspaceSlug__bookings__reference__page";
+import { loadPublicMakerspaceLayout as endpoint33 } from "@/lib/views/app__m__makerspaceSlug__layout";
+import { loadPublicMakerspacePage as endpoint34 } from "@/lib/views/app__m__makerspaceSlug__page";
+import { loadPublicSpacePage as endpoint35 } from "@/lib/views/app__m__makerspaceSlug__spaces__spaceSlug__page";
+import { loadMakerspacesDirectory as endpoint36 } from "@/lib/views/app__makerspaces__page";
+import { loadSitemapMakerspaces as endpoint37 } from "@/lib/views/app__sitemap";
+import { loadStartView as endpoint38 } from "@/lib/views/app__start__page";
+import { loadSuperAdminAuditView as endpoint39 } from "@/lib/views/app__super-admin__audit__page";
+import { loadSuperAdminEmailView as endpoint40 } from "@/lib/views/app__super-admin__email__page";
+import { loadSuperAdminJobsView as endpoint41 } from "@/lib/views/app__super-admin__jobs__page";
+import { loadSuperAdminShell as endpoint42 } from "@/lib/views/app__super-admin__layout";
+import { loadSuperAdminMakerspaceDetailView as endpoint43 } from "@/lib/views/app__super-admin__makerspaces__makerspaceId__page";
+import { loadSuperAdminNewMakerspaceView as endpoint44 } from "@/lib/views/app__super-admin__makerspaces__new__page";
+import { loadSuperAdminOrgsView as endpoint45 } from "@/lib/views/app__super-admin__makerspaces__page";
+import { loadSuperAdminMonitoringView as endpoint46 } from "@/lib/views/app__super-admin__monitoring__page";
+import { loadSuperAdminOperationsView as endpoint47 } from "@/lib/views/app__super-admin__operations__page";
+import { loadSuperAdminOverviewView as endpoint48 } from "@/lib/views/app__super-admin__page";
+import { loadSuperAdminSecurityView as endpoint49 } from "@/lib/views/app__super-admin__security__page";
+import { loadSuperAdminSettingsView as endpoint50 } from "@/lib/views/app__super-admin__settings__page";
+import { loadSuperAdminStorageView as endpoint51 } from "@/lib/views/app__super-admin__storage__page";
+import { loadSuperAdminUsersView as endpoint52 } from "@/lib/views/app__super-admin__users__page";
+import { loadSuperAdminUserDetailView as endpoint53 } from "@/lib/views/app__super-admin__users__userId__page";
+import { leaveMakerspace as endpoint54 } from "@/app/actions/account-makerspaces";
+import { updateAccountProfile as endpoint55 } from "@/app/actions/account";
+import { updateAccountPassword as endpoint56 } from "@/app/actions/account";
+import { signUpWithPassword as endpoint57 } from "@/app/actions/auth";
+import { confirmEmailVerification as endpoint58 } from "@/app/actions/auth";
+import { resendEmailVerification as endpoint59 } from "@/app/actions/auth";
+import { loadBookingAvailability as endpoint60 } from "@/app/actions/booking-availability";
+import { previewBookingConflicts as endpoint61 } from "@/app/actions/booking-availability";
+import { recordBookingPayment as endpoint62 } from "@/app/actions/booking-money";
+import { refundBooking as endpoint63 } from "@/app/actions/booking-money";
+import { retryBookingRefund as endpoint64 } from "@/app/actions/booking-money";
+import { recordBookingRefundOffline as endpoint65 } from "@/app/actions/booking-money";
+import { writeOffBooking as endpoint66 } from "@/app/actions/booking-money";
+import { changePaymentDueDate as endpoint67 } from "@/app/actions/booking-money";
+import { startBookingPayment as endpoint68 } from "@/app/actions/booking-payments";
+import { confirmBookingRazorpay as endpoint69 } from "@/app/actions/booking-payments";
+import { refreshBookingPayment as endpoint70 } from "@/app/actions/booking-payments";
+import { updateBookingSettings as endpoint71 } from "@/app/actions/booking-settings";
+import { updateSpaceRuleOverrides as endpoint72 } from "@/app/actions/booking-settings";
+import { previewQuote as endpoint73 } from "@/app/actions/bookings-public";
+import { createHold as endpoint74 } from "@/app/actions/bookings-public";
+import { submitBooking as endpoint75 } from "@/app/actions/bookings-public";
+import { releaseHold as endpoint76 } from "@/app/actions/bookings-public";
+import { requestManageLink as endpoint77 } from "@/app/actions/bookings-public";
+import { cancelByManageToken as endpoint78 } from "@/app/actions/bookings-public";
+import { rescheduleByManageToken as endpoint79 } from "@/app/actions/bookings-public";
+import { cancelBooking as endpoint80 } from "@/app/actions/bookings-public";
+import { rescheduleOccurrence as endpoint81 } from "@/app/actions/bookings-public";
+import { issuePersonalCalendarFeed as endpoint82 } from "@/app/actions/bookings-public";
+import { revokePersonalCalendarFeed as endpoint83 } from "@/app/actions/bookings-public";
+import { createHold as endpoint84 } from "@/app/actions/bookings-staff";
+import { submitBooking as endpoint85 } from "@/app/actions/bookings-staff";
+import { approveBooking as endpoint86 } from "@/app/actions/bookings-staff";
+import { declineBooking as endpoint87 } from "@/app/actions/bookings-staff";
+import { cancelBooking as endpoint88 } from "@/app/actions/bookings-staff";
+import { rescheduleOccurrence as endpoint89 } from "@/app/actions/bookings-staff";
+import { moveBooking as endpoint90 } from "@/app/actions/bookings-staff";
+import { checkIn as endpoint91 } from "@/app/actions/bookings-staff";
+import { checkInByCode as endpoint92 } from "@/app/actions/bookings-staff";
+import { markNoShow as endpoint93 } from "@/app/actions/bookings-staff";
+import { issueStaffCalendarFeed as endpoint94 } from "@/app/actions/bookings-staff";
+import { revokeStaffCalendarFeed as endpoint95 } from "@/app/actions/bookings-staff";
+import { saveChatChannel as endpoint96 } from "@/app/actions/chat-channels";
+import { deleteChatChannel as endpoint97 } from "@/app/actions/chat-channels";
+import { testChatChannel as endpoint98 } from "@/app/actions/chat-channels";
+import { setNewUserRegistrationEnabled as endpoint99 } from "@/app/actions/instance-settings";
+import { setMakerspaceApplicationsEnabled as endpoint100 } from "@/app/actions/instance-settings";
+import { saveInstanceServiceSettings as endpoint101 } from "@/app/actions/instance-settings";
+import { deliverInstanceOutbox as endpoint102 } from "@/app/actions/instance";
+import { purgeExpiredVerificationTokens as endpoint103 } from "@/app/actions/instance";
+import { retryFailedOutboxMessages as endpoint104 } from "@/app/actions/instance";
+import { recordBackupRestoreVerification as endpoint105 } from "@/app/actions/instance";
+import { acceptMakerspaceInvite as endpoint106 } from "@/app/actions/invite-acceptance";
+import { unblockAddress as endpoint107 } from "@/app/actions/ip-blocks";
+import { manageJobsAction as endpoint108 } from "@/app/actions/jobs";
+import { requestMagicLink as endpoint109 } from "@/app/actions/magic-link";
+import { checkMakerspaceSlug as endpoint110 } from "@/app/actions/makerspace-application";
+import { submitMakerspaceApplication as endpoint111 } from "@/app/actions/makerspace-application";
+import { resubmitMakerspaceApplication as endpoint112 } from "@/app/actions/makerspace-application";
+import { saveMakerspaceEmailSettings as endpoint113 } from "@/app/actions/makerspace-email";
+import { sendMakerspaceTestEmail as endpoint114 } from "@/app/actions/makerspace-email";
+import { createMakerspaceInvite as endpoint115 } from "@/app/actions/makerspace-invites";
+import { revokeMakerspaceInvite as endpoint116 } from "@/app/actions/makerspace-invites";
+import { updateMakerspace as endpoint117 } from "@/app/actions/makerspace";
+import { uploadMakerspaceLogo as endpoint118 } from "@/app/actions/media";
+import { uploadAccountProfileImage as endpoint119 } from "@/app/actions/media";
+import { upsertMember as endpoint120 } from "@/app/actions/members";
+import { removeMember as endpoint121 } from "@/app/actions/members";
+import { importMembersCsv as endpoint122 } from "@/app/actions/members";
+import { requestPasswordReset as endpoint123 } from "@/app/actions/password-reset";
+import { confirmPasswordReset as endpoint124 } from "@/app/actions/password-reset";
+import { savePaymentGateway as endpoint125 } from "@/app/actions/payment-settings";
+import { testPaymentGateway as endpoint126 } from "@/app/actions/payment-settings";
+import { saveTaxSettings as endpoint127 } from "@/app/actions/payment-settings";
+import { saveOfflinePaymentSettings as endpoint128 } from "@/app/actions/payment-settings";
+import { confirmPayment as endpoint129 } from "@/app/actions/payments";
+import { rejectPayment as endpoint130 } from "@/app/actions/payments";
+import { cancelOpenPayment as endpoint131 } from "@/app/actions/payments";
+import { releaseDocument as endpoint132 } from "@/app/actions/payments";
+import { clearFlag as endpoint133 } from "@/app/actions/payments";
+import { updateMakerspacePreferences as endpoint134 } from "@/app/actions/preferences";
+import { refundPayment as endpoint135 } from "@/app/actions/refunds";
+import { beginMfaEnrollment as endpoint136 } from "@/app/actions/security";
+import { confirmMfaEnrollment as endpoint137 } from "@/app/actions/security";
+import { disableMfa as endpoint138 } from "@/app/actions/security";
+import { revokeAllSessions as endpoint139 } from "@/app/actions/security";
+import { replaceOpeningHours as endpoint140 } from "@/app/actions/space-calendar";
+import { setHoursException as endpoint141 } from "@/app/actions/space-calendar";
+import { removeHoursException as endpoint142 } from "@/app/actions/space-calendar";
+import { createBlackout as endpoint143 } from "@/app/actions/space-calendar";
+import { removeBlackout as endpoint144 } from "@/app/actions/space-calendar";
+import { createSpace as endpoint145 } from "@/app/actions/spaces";
+import { updateSpace as endpoint146 } from "@/app/actions/spaces";
+import { setSpaceArchived as endpoint147 } from "@/app/actions/spaces";
+import { addSpacePhoto as endpoint148 } from "@/app/actions/spaces";
+import { removeSpacePhoto as endpoint149 } from "@/app/actions/spaces";
+import { reorderSpacePhotos as endpoint150 } from "@/app/actions/spaces";
+import { saveAddOn as endpoint151 } from "@/app/actions/spaces";
+import { removeAddOn as endpoint152 } from "@/app/actions/spaces";
+import { savePeakRule as endpoint153 } from "@/app/actions/spaces";
+import { removePeakRule as endpoint154 } from "@/app/actions/spaces";
+import { replaceRefundTiers as endpoint155 } from "@/app/actions/spaces";
+import { reviewMakerspace as endpoint156 } from "@/app/actions/super-admin-makerspaces";
+import { setMakerspaceLimits as endpoint157 } from "@/app/actions/super-admin-makerspaces";
+import { createMakerspaceForOwner as endpoint158 } from "@/app/actions/super-admin-makerspaces";
+import { resendOwnerInvite as endpoint159 } from "@/app/actions/super-admin-makerspaces";
+import { setMakerspaceVisibility as endpoint160 } from "@/app/actions/super-admin-makerspaces";
+import { updateTeamRole as endpoint161 } from "@/app/actions/team";
+import { removeTeamMember as endpoint162 } from "@/app/actions/team";
+import { deleteMakerspace as endpoint163 } from "@/app/actions/team";
 
 export const viewReaders = Object.freeze({
   "app__account__bookings__page:loadAccountBookingsPage": endpoint0,
@@ -172,144 +182,154 @@ export const viewReaders = Object.freeze({
   "app__dashboard__makerspaceSlug__page:loadMakerspaceOverviewView": endpoint13,
   "app__dashboard__makerspaceSlug__payments__page:loadPaymentsDirectory": endpoint14,
   "app__dashboard__makerspaceSlug__payments__paymentId__page:loadPaymentView": endpoint15,
-  "app__dashboard__makerspaceSlug__settings__bookings__page:loadBookingSettings": endpoint16,
-  "app__dashboard__makerspaceSlug__settings__email__page:loadMakerspaceEmailSettingsView": endpoint17,
-  "app__dashboard__makerspaceSlug__settings__hours__page:loadHoursSettings": endpoint18,
-  "app__dashboard__makerspaceSlug__settings__money__page:loadMakerspaceMoneySettingsView": endpoint19,
-  "app__dashboard__makerspaceSlug__settings__notifications__page:loadMakerspaceNotificationsView": endpoint20,
-  "app__dashboard__makerspaceSlug__settings__page:loadMakerspaceSettingsView": endpoint21,
-  "app__dashboard__makerspaceSlug__settings__payments__page:loadPaymentSettingsView": endpoint22,
-  "app__dashboard__makerspaceSlug__spaces__new__page:loadNewSpace": endpoint23,
-  "app__dashboard__makerspaceSlug__spaces__page:loadSpaces": endpoint24,
-  "app__dashboard__makerspaceSlug__spaces__spaceId__page:loadSpace": endpoint25,
-  "app__dashboard__makerspaceSlug__team__page:loadMakerspaceMembersView": endpoint26,
-  "app__dashboard__makerspaceSlug__today__page:loadToday": endpoint27,
-  "app__dashboard__page:loadDashboardView": endpoint28,
-  "app__join__makerspace__token__page:loadJoinMakerspaceView": endpoint29,
-  "app__m__makerspaceSlug__bookings__find__page:loadFindBookingPage": endpoint30,
-  "app__m__makerspaceSlug__bookings__reference__page:loadPublicBookingPage": endpoint31,
-  "app__m__makerspaceSlug__layout:loadPublicMakerspaceLayout": endpoint32,
-  "app__m__makerspaceSlug__page:loadPublicMakerspacePage": endpoint33,
-  "app__m__makerspaceSlug__spaces__spaceSlug__page:loadPublicSpacePage": endpoint34,
-  "app__makerspaces__page:loadMakerspacesDirectory": endpoint35,
-  "app__sitemap:loadSitemapMakerspaces": endpoint36,
-  "app__start__page:loadStartView": endpoint37,
-  "app__super-admin__audit__page:loadSuperAdminAuditView": endpoint38,
-  "app__super-admin__email__page:loadSuperAdminEmailView": endpoint39,
-  "app__super-admin__jobs__page:loadSuperAdminJobsView": endpoint40,
-  "app__super-admin__layout:loadSuperAdminShell": endpoint41,
-  "app__super-admin__makerspaces__makerspaceId__page:loadSuperAdminMakerspaceDetailView": endpoint42,
-  "app__super-admin__makerspaces__new__page:loadSuperAdminNewMakerspaceView": endpoint43,
-  "app__super-admin__makerspaces__page:loadSuperAdminOrgsView": endpoint44,
-  "app__super-admin__monitoring__page:loadSuperAdminMonitoringView": endpoint45,
-  "app__super-admin__operations__page:loadSuperAdminOperationsView": endpoint46,
-  "app__super-admin__page:loadSuperAdminOverviewView": endpoint47,
-  "app__super-admin__security__page:loadSuperAdminSecurityView": endpoint48,
-  "app__super-admin__settings__page:loadSuperAdminSettingsView": endpoint49,
-  "app__super-admin__storage__page:loadSuperAdminStorageView": endpoint50,
-  "app__super-admin__users__page:loadSuperAdminUsersView": endpoint51,
-  "app__super-admin__users__userId__page:loadSuperAdminUserDetailView": endpoint52,
+  "app__dashboard__makerspaceSlug__payments__reconciliation__page:loadReconciliation": endpoint16,
+  "app__dashboard__makerspaceSlug__settings__bookings__page:loadBookingSettings": endpoint17,
+  "app__dashboard__makerspaceSlug__settings__email__page:loadMakerspaceEmailSettingsView": endpoint18,
+  "app__dashboard__makerspaceSlug__settings__hours__page:loadHoursSettings": endpoint19,
+  "app__dashboard__makerspaceSlug__settings__money__page:loadMakerspaceMoneySettingsView": endpoint20,
+  "app__dashboard__makerspaceSlug__settings__notifications__page:loadMakerspaceNotificationsView": endpoint21,
+  "app__dashboard__makerspaceSlug__settings__page:loadMakerspaceSettingsView": endpoint22,
+  "app__dashboard__makerspaceSlug__settings__payments__page:loadPaymentSettingsView": endpoint23,
+  "app__dashboard__makerspaceSlug__spaces__new__page:loadNewSpace": endpoint24,
+  "app__dashboard__makerspaceSlug__spaces__page:loadSpaces": endpoint25,
+  "app__dashboard__makerspaceSlug__spaces__spaceId__page:loadSpace": endpoint26,
+  "app__dashboard__makerspaceSlug__team__page:loadMakerspaceMembersView": endpoint27,
+  "app__dashboard__makerspaceSlug__today__page:loadToday": endpoint28,
+  "app__dashboard__page:loadDashboardView": endpoint29,
+  "app__join__makerspace__token__page:loadJoinMakerspaceView": endpoint30,
+  "app__m__makerspaceSlug__bookings__find__page:loadFindBookingPage": endpoint31,
+  "app__m__makerspaceSlug__bookings__reference__page:loadPublicBookingPage": endpoint32,
+  "app__m__makerspaceSlug__layout:loadPublicMakerspaceLayout": endpoint33,
+  "app__m__makerspaceSlug__page:loadPublicMakerspacePage": endpoint34,
+  "app__m__makerspaceSlug__spaces__spaceSlug__page:loadPublicSpacePage": endpoint35,
+  "app__makerspaces__page:loadMakerspacesDirectory": endpoint36,
+  "app__sitemap:loadSitemapMakerspaces": endpoint37,
+  "app__start__page:loadStartView": endpoint38,
+  "app__super-admin__audit__page:loadSuperAdminAuditView": endpoint39,
+  "app__super-admin__email__page:loadSuperAdminEmailView": endpoint40,
+  "app__super-admin__jobs__page:loadSuperAdminJobsView": endpoint41,
+  "app__super-admin__layout:loadSuperAdminShell": endpoint42,
+  "app__super-admin__makerspaces__makerspaceId__page:loadSuperAdminMakerspaceDetailView": endpoint43,
+  "app__super-admin__makerspaces__new__page:loadSuperAdminNewMakerspaceView": endpoint44,
+  "app__super-admin__makerspaces__page:loadSuperAdminOrgsView": endpoint45,
+  "app__super-admin__monitoring__page:loadSuperAdminMonitoringView": endpoint46,
+  "app__super-admin__operations__page:loadSuperAdminOperationsView": endpoint47,
+  "app__super-admin__page:loadSuperAdminOverviewView": endpoint48,
+  "app__super-admin__security__page:loadSuperAdminSecurityView": endpoint49,
+  "app__super-admin__settings__page:loadSuperAdminSettingsView": endpoint50,
+  "app__super-admin__storage__page:loadSuperAdminStorageView": endpoint51,
+  "app__super-admin__users__page:loadSuperAdminUsersView": endpoint52,
+  "app__super-admin__users__userId__page:loadSuperAdminUserDetailView": endpoint53,
 });
 export const backendActions = Object.freeze({
-  "account-makerspaces:leaveMakerspace": endpoint53,
-  "account:updateAccountProfile": endpoint54,
-  "account:updateAccountPassword": endpoint55,
-  "auth:signUpWithPassword": endpoint56,
-  "auth:confirmEmailVerification": endpoint57,
-  "auth:resendEmailVerification": endpoint58,
-  "booking-availability:loadBookingAvailability": endpoint59,
-  "booking-availability:previewBookingConflicts": endpoint60,
-  "booking-settings:updateBookingSettings": endpoint61,
-  "booking-settings:updateSpaceRuleOverrides": endpoint62,
-  "bookings-public:previewQuote": endpoint63,
-  "bookings-public:createHold": endpoint64,
-  "bookings-public:submitBooking": endpoint65,
-  "bookings-public:releaseHold": endpoint66,
-  "bookings-public:requestManageLink": endpoint67,
-  "bookings-public:cancelByManageToken": endpoint68,
-  "bookings-public:rescheduleByManageToken": endpoint69,
-  "bookings-public:cancelBooking": endpoint70,
-  "bookings-public:rescheduleOccurrence": endpoint71,
-  "bookings-public:issuePersonalCalendarFeed": endpoint72,
-  "bookings-public:revokePersonalCalendarFeed": endpoint73,
-  "bookings-staff:createHold": endpoint74,
-  "bookings-staff:submitBooking": endpoint75,
-  "bookings-staff:approveBooking": endpoint76,
-  "bookings-staff:declineBooking": endpoint77,
-  "bookings-staff:cancelBooking": endpoint78,
-  "bookings-staff:rescheduleOccurrence": endpoint79,
-  "bookings-staff:moveBooking": endpoint80,
-  "bookings-staff:checkIn": endpoint81,
-  "bookings-staff:checkInByCode": endpoint82,
-  "bookings-staff:markNoShow": endpoint83,
-  "bookings-staff:issueStaffCalendarFeed": endpoint84,
-  "bookings-staff:revokeStaffCalendarFeed": endpoint85,
-  "chat-channels:saveChatChannel": endpoint86,
-  "chat-channels:deleteChatChannel": endpoint87,
-  "chat-channels:testChatChannel": endpoint88,
-  "instance-settings:setNewUserRegistrationEnabled": endpoint89,
-  "instance-settings:setMakerspaceApplicationsEnabled": endpoint90,
-  "instance-settings:saveInstanceServiceSettings": endpoint91,
-  "instance:deliverInstanceOutbox": endpoint92,
-  "instance:purgeExpiredVerificationTokens": endpoint93,
-  "instance:retryFailedOutboxMessages": endpoint94,
-  "instance:recordBackupRestoreVerification": endpoint95,
-  "invite-acceptance:acceptMakerspaceInvite": endpoint96,
-  "ip-blocks:unblockAddress": endpoint97,
-  "jobs:manageJobsAction": endpoint98,
-  "magic-link:requestMagicLink": endpoint99,
-  "makerspace-application:checkMakerspaceSlug": endpoint100,
-  "makerspace-application:submitMakerspaceApplication": endpoint101,
-  "makerspace-application:resubmitMakerspaceApplication": endpoint102,
-  "makerspace-email:saveMakerspaceEmailSettings": endpoint103,
-  "makerspace-email:sendMakerspaceTestEmail": endpoint104,
-  "makerspace-invites:createMakerspaceInvite": endpoint105,
-  "makerspace-invites:revokeMakerspaceInvite": endpoint106,
-  "makerspace:updateMakerspace": endpoint107,
-  "media:uploadMakerspaceLogo": endpoint108,
-  "media:uploadAccountProfileImage": endpoint109,
-  "members:upsertMember": endpoint110,
-  "members:removeMember": endpoint111,
-  "members:importMembersCsv": endpoint112,
-  "password-reset:requestPasswordReset": endpoint113,
-  "password-reset:confirmPasswordReset": endpoint114,
-  "payment-settings:savePaymentGateway": endpoint115,
-  "payment-settings:testPaymentGateway": endpoint116,
-  "payment-settings:saveTaxSettings": endpoint117,
-  "payment-settings:saveOfflinePaymentSettings": endpoint118,
-  "payments:confirmPayment": endpoint119,
-  "payments:rejectPayment": endpoint120,
-  "payments:cancelOpenPayment": endpoint121,
-  "payments:releaseDocument": endpoint122,
-  "payments:clearFlag": endpoint123,
-  "preferences:updateMakerspacePreferences": endpoint124,
-  "refunds:refundPayment": endpoint125,
-  "security:beginMfaEnrollment": endpoint126,
-  "security:confirmMfaEnrollment": endpoint127,
-  "security:disableMfa": endpoint128,
-  "security:revokeAllSessions": endpoint129,
-  "space-calendar:replaceOpeningHours": endpoint130,
-  "space-calendar:setHoursException": endpoint131,
-  "space-calendar:removeHoursException": endpoint132,
-  "space-calendar:createBlackout": endpoint133,
-  "space-calendar:removeBlackout": endpoint134,
-  "spaces:createSpace": endpoint135,
-  "spaces:updateSpace": endpoint136,
-  "spaces:setSpaceArchived": endpoint137,
-  "spaces:addSpacePhoto": endpoint138,
-  "spaces:removeSpacePhoto": endpoint139,
-  "spaces:reorderSpacePhotos": endpoint140,
-  "spaces:saveAddOn": endpoint141,
-  "spaces:removeAddOn": endpoint142,
-  "spaces:savePeakRule": endpoint143,
-  "spaces:removePeakRule": endpoint144,
-  "spaces:replaceRefundTiers": endpoint145,
-  "super-admin-makerspaces:reviewMakerspace": endpoint146,
-  "super-admin-makerspaces:setMakerspaceLimits": endpoint147,
-  "super-admin-makerspaces:createMakerspaceForOwner": endpoint148,
-  "super-admin-makerspaces:resendOwnerInvite": endpoint149,
-  "super-admin-makerspaces:setMakerspaceVisibility": endpoint150,
-  "team:updateTeamRole": endpoint151,
-  "team:removeTeamMember": endpoint152,
-  "team:deleteMakerspace": endpoint153,
+  "account-makerspaces:leaveMakerspace": endpoint54,
+  "account:updateAccountProfile": endpoint55,
+  "account:updateAccountPassword": endpoint56,
+  "auth:signUpWithPassword": endpoint57,
+  "auth:confirmEmailVerification": endpoint58,
+  "auth:resendEmailVerification": endpoint59,
+  "booking-availability:loadBookingAvailability": endpoint60,
+  "booking-availability:previewBookingConflicts": endpoint61,
+  "booking-money:recordBookingPayment": endpoint62,
+  "booking-money:refundBooking": endpoint63,
+  "booking-money:retryBookingRefund": endpoint64,
+  "booking-money:recordBookingRefundOffline": endpoint65,
+  "booking-money:writeOffBooking": endpoint66,
+  "booking-money:changePaymentDueDate": endpoint67,
+  "booking-payments:startBookingPayment": endpoint68,
+  "booking-payments:confirmBookingRazorpay": endpoint69,
+  "booking-payments:refreshBookingPayment": endpoint70,
+  "booking-settings:updateBookingSettings": endpoint71,
+  "booking-settings:updateSpaceRuleOverrides": endpoint72,
+  "bookings-public:previewQuote": endpoint73,
+  "bookings-public:createHold": endpoint74,
+  "bookings-public:submitBooking": endpoint75,
+  "bookings-public:releaseHold": endpoint76,
+  "bookings-public:requestManageLink": endpoint77,
+  "bookings-public:cancelByManageToken": endpoint78,
+  "bookings-public:rescheduleByManageToken": endpoint79,
+  "bookings-public:cancelBooking": endpoint80,
+  "bookings-public:rescheduleOccurrence": endpoint81,
+  "bookings-public:issuePersonalCalendarFeed": endpoint82,
+  "bookings-public:revokePersonalCalendarFeed": endpoint83,
+  "bookings-staff:createHold": endpoint84,
+  "bookings-staff:submitBooking": endpoint85,
+  "bookings-staff:approveBooking": endpoint86,
+  "bookings-staff:declineBooking": endpoint87,
+  "bookings-staff:cancelBooking": endpoint88,
+  "bookings-staff:rescheduleOccurrence": endpoint89,
+  "bookings-staff:moveBooking": endpoint90,
+  "bookings-staff:checkIn": endpoint91,
+  "bookings-staff:checkInByCode": endpoint92,
+  "bookings-staff:markNoShow": endpoint93,
+  "bookings-staff:issueStaffCalendarFeed": endpoint94,
+  "bookings-staff:revokeStaffCalendarFeed": endpoint95,
+  "chat-channels:saveChatChannel": endpoint96,
+  "chat-channels:deleteChatChannel": endpoint97,
+  "chat-channels:testChatChannel": endpoint98,
+  "instance-settings:setNewUserRegistrationEnabled": endpoint99,
+  "instance-settings:setMakerspaceApplicationsEnabled": endpoint100,
+  "instance-settings:saveInstanceServiceSettings": endpoint101,
+  "instance:deliverInstanceOutbox": endpoint102,
+  "instance:purgeExpiredVerificationTokens": endpoint103,
+  "instance:retryFailedOutboxMessages": endpoint104,
+  "instance:recordBackupRestoreVerification": endpoint105,
+  "invite-acceptance:acceptMakerspaceInvite": endpoint106,
+  "ip-blocks:unblockAddress": endpoint107,
+  "jobs:manageJobsAction": endpoint108,
+  "magic-link:requestMagicLink": endpoint109,
+  "makerspace-application:checkMakerspaceSlug": endpoint110,
+  "makerspace-application:submitMakerspaceApplication": endpoint111,
+  "makerspace-application:resubmitMakerspaceApplication": endpoint112,
+  "makerspace-email:saveMakerspaceEmailSettings": endpoint113,
+  "makerspace-email:sendMakerspaceTestEmail": endpoint114,
+  "makerspace-invites:createMakerspaceInvite": endpoint115,
+  "makerspace-invites:revokeMakerspaceInvite": endpoint116,
+  "makerspace:updateMakerspace": endpoint117,
+  "media:uploadMakerspaceLogo": endpoint118,
+  "media:uploadAccountProfileImage": endpoint119,
+  "members:upsertMember": endpoint120,
+  "members:removeMember": endpoint121,
+  "members:importMembersCsv": endpoint122,
+  "password-reset:requestPasswordReset": endpoint123,
+  "password-reset:confirmPasswordReset": endpoint124,
+  "payment-settings:savePaymentGateway": endpoint125,
+  "payment-settings:testPaymentGateway": endpoint126,
+  "payment-settings:saveTaxSettings": endpoint127,
+  "payment-settings:saveOfflinePaymentSettings": endpoint128,
+  "payments:confirmPayment": endpoint129,
+  "payments:rejectPayment": endpoint130,
+  "payments:cancelOpenPayment": endpoint131,
+  "payments:releaseDocument": endpoint132,
+  "payments:clearFlag": endpoint133,
+  "preferences:updateMakerspacePreferences": endpoint134,
+  "refunds:refundPayment": endpoint135,
+  "security:beginMfaEnrollment": endpoint136,
+  "security:confirmMfaEnrollment": endpoint137,
+  "security:disableMfa": endpoint138,
+  "security:revokeAllSessions": endpoint139,
+  "space-calendar:replaceOpeningHours": endpoint140,
+  "space-calendar:setHoursException": endpoint141,
+  "space-calendar:removeHoursException": endpoint142,
+  "space-calendar:createBlackout": endpoint143,
+  "space-calendar:removeBlackout": endpoint144,
+  "spaces:createSpace": endpoint145,
+  "spaces:updateSpace": endpoint146,
+  "spaces:setSpaceArchived": endpoint147,
+  "spaces:addSpacePhoto": endpoint148,
+  "spaces:removeSpacePhoto": endpoint149,
+  "spaces:reorderSpacePhotos": endpoint150,
+  "spaces:saveAddOn": endpoint151,
+  "spaces:removeAddOn": endpoint152,
+  "spaces:savePeakRule": endpoint153,
+  "spaces:removePeakRule": endpoint154,
+  "spaces:replaceRefundTiers": endpoint155,
+  "super-admin-makerspaces:reviewMakerspace": endpoint156,
+  "super-admin-makerspaces:setMakerspaceLimits": endpoint157,
+  "super-admin-makerspaces:createMakerspaceForOwner": endpoint158,
+  "super-admin-makerspaces:resendOwnerInvite": endpoint159,
+  "super-admin-makerspaces:setMakerspaceVisibility": endpoint160,
+  "team:updateTeamRole": endpoint161,
+  "team:removeTeamMember": endpoint162,
+  "team:deleteMakerspace": endpoint163,
 });

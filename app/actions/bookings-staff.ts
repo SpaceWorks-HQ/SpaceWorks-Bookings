@@ -12,6 +12,7 @@ import * as feeds from "@/lib/ics/feeds";
 import { verifyCheckInCode } from "@/lib/bookings/tokens";
 import { invalidInput, notFound } from "@/lib/bookings/errors";
 import { staffAction } from "@/lib/actions/bookingContext";
+import { sendBookingRefunds } from "@/lib/bookings/money/send";
 import * as inputs from "@/lib/actions/bookingInputs";
 import type { Capability } from "@/lib/permissionRoles";
 
@@ -46,14 +47,18 @@ export async function declineBooking(input: unknown) {
 }
 
 export async function cancelBooking(input: unknown) {
-  return staffAction(inputs.staffCancelSchema, input,
+  const result = await staffAction(inputs.staffCancelSchema, input,
     (data) => data.kind === "VENUE" ? ["bookings.manage", "bookings.override"] : ["bookings.manage"],
     (data, ctx) => cancel.cancelBooking({ ...data, ...ctx }));
+  if (result.ok && result.data) await sendBookingRefunds(result.data.refundIds);
+  return result;
 }
 
 export async function rescheduleOccurrence(input: unknown) {
-  return staffAction(inputs.staffRescheduleSchema, input, manageCapabilities,
+  const result = await staffAction(inputs.staffRescheduleSchema, input, manageCapabilities,
     (data, ctx) => reschedule.rescheduleOccurrence({ ...data, ...ctx }));
+  if (result.ok && result.data) await sendBookingRefunds(result.data.refundIds);
+  return result;
 }
 
 export async function moveBooking(input: unknown) {

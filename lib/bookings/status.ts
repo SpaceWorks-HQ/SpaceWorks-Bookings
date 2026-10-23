@@ -67,6 +67,21 @@ export async function setBookingStatus(
   await refreshBlocking(tx, booking.id, bookingBlocks(to, options.requestsBlockSlot));
 }
 
+/**
+ * The one exception to the transitions above: a payment captured after its checkout hold expired confirms the
+ * booking again when every one of its times is still free (lib/bookings/money/settled.ts checks that under the
+ * space lock first). The rows cancelled by the expiry come back blocking.
+ */
+export async function reviveExpiredBooking(tx: Tx, booking: { id: string; status: BookingStatus; expiredAt: Date | null }, now: Date): Promise<void> {
+  if (booking.status !== "EXPIRED" || !booking.expiredAt) throw invalidState("Only an expired hold can be confirmed again.");
+  const updated = await tx.booking.updateMany({ where: { id: booking.id, status: "EXPIRED" }, data: { status: "CONFIRMED", awaitingPayment: false, confirmedAt: now, holdExpiresAt: null } });
+  if (updated.count !== 1) throw invalidState("The booking changed while you were working on it. Try again.");
+  await tx.bookingOccurrence.updateMany({
+    where: { bookingId: booking.id, status: "CANCELLED", cancelledAt: booking.expiredAt },
+    data: { status: "SCHEDULED", blocking: true, cancelledAt: null, cancelKind: null, sequence: { increment: 1 } },
+  });
+}
+
 /** Set `blocking` on a booking's live rows (deferred no-shows keep blocking until the slot ends). */
 export async function refreshBlocking(tx: Tx, bookingId: string, blocks: boolean): Promise<void> {
   await tx.bookingOccurrence.updateMany({ where: { bookingId, status: { in: [...BLOCKING_OCCURRENCE_STATUSES] }, blocking: !blocks }, data: { blocking: blocks } });

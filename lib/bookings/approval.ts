@@ -100,7 +100,7 @@ export async function confirmPaidBooking(tx: Tx, input: { makerspaceId: string; 
   const rules = (await loadRules(tx, input.makerspaceId, space)).values;
   await setBookingStatus(tx, booking, "CONFIRMED", { requestsBlockSlot: rules.requestsBlockSlot, now, data: { awaitingPayment: false, confirmedAt: now, holdExpiresAt: booking.holdExpiresAt } });
   await refreshBlocking(tx, booking.id, true);
-  await recomputeCharge(tx, booking.id);
+  await recomputeCharge(tx, booking.id, { refundKind: "DUPLICATE", now });
   await recordBookingEvent(tx, { makerspaceId: input.makerspaceId, bookingId: booking.id, kind: "confirmed", actor, data: { paid: true } });
   await enqueueBookingNotice(tx, { makerspaceId: input.makerspaceId, bookingId: booking.id, notice: "confirmed" });
   await runBookingConfirmed(tx, booking.id);

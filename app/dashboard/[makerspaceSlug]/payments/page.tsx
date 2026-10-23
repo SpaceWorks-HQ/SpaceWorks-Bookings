@@ -34,12 +34,15 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
         makerspace={makerspace}
         title="Payments"
         description={view.gateway ? <>Online payments by {PROVIDER_LABELS[view.gateway.provider as "RAZORPAY" | "STRIPE"]}{view.gateway.testMode ? <Chip size="sm" tone="warning" className="ml-2 align-middle">Test mode</Chip> : null}</> : "Offline payments only. Connect Razorpay or Stripe to take payments online."}
-        actions={view.canConfigure ? (
-          <Link href={`/dashboard/${makerspace.slug}/settings/payments`} className={buttonClasses({ variant: "secondary" })}>
-            <Settings aria-hidden className="size-4" />
-            Payment settings
-          </Link>
-        ) : null}
+        actions={<div className="flex flex-wrap gap-3">
+          <Link href={`/dashboard/${makerspace.slug}/payments/reconciliation`} className={buttonClasses({ variant: "secondary" })}>Reconciliation</Link>
+          {view.canConfigure ? (
+            <Link href={`/dashboard/${makerspace.slug}/settings/payments`} className={buttonClasses({ variant: "secondary" })}>
+              <Settings aria-hidden className="size-4" />
+              Payment settings
+            </Link>
+          ) : null}
+        </div>}
       />
 
       <nav aria-label="Filter payments" className="flex flex-wrap gap-2">

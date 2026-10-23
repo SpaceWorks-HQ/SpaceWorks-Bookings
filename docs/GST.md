@@ -67,3 +67,17 @@ how and when it was paid; and the notes the kind requires (LUT, bill of supply,
 
 GSTR-1 and GSTR-3B style summaries are pure functions in `lib/reports/finance/` (`gst.ts`, `gstr1Json.ts`,
 `documents.ts`); the report pages and exports that use them come in Phase 3.
+
+## Booking payments
+
+A booking's price already includes its tax (each line taxed at the space's or add-on's rate when it was priced,
+frozen in the booking's price snapshot). A booking payment therefore uses that frozen snapshot made **inclusive**:
+the amount the customer owes is split into taxable value and tax rather than taxed again, whatever the
+makerspace's current inclusive/exclusive setting. A deposit, balance or difference is one `BOOKING` line at the
+space's rate; the place of supply is where the space is (the supplier's state), so it is CGST + SGST.
+
+Document kinds stay as above: a GST-registered makerspace issues a **tax invoice** for each booking payment, a bill
+of supply under composition or exemption, otherwise a receipt; each processed refund gets a **credit note**. Strictly,
+an advance taken before the booked time is a *receipt voucher* (Rule 50) and its refund a *refund voucher* (Rule 51),
+with the tax invoice due when the space is used. That split is not built: it is listed under "Open questions" in
+`docs/HANDOFF.md` for the owner to decide with their accountant.

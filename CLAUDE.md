@@ -106,8 +106,13 @@ npx vitest run tests/unit/health.test.ts
   - Paid rows are never edited or deleted; reverse them with credit notes. Triggers in `0001_init` enforce it.
   - Payments live in `lib/payments/*` (see `docs/PAYMENTS.md` and `docs/GST.md`). Create them with
     `createPayment` (customer, currency, items, optional `bookingId`), settle only through `settlePayment`, refund
-    through `createRefund` then `sendRefundToGateway`. `Payment.bookingId` is a placeholder until Phase 2 re-points
-    payments at bookings. Gateway secrets need `PAYMENT_SECRETS_KEY`.
+    through `createRefund` then `sendRefundToGateway`. Gateway secrets need `PAYMENT_SECRETS_KEY`.
+  - Booking money lives in `lib/bookings/money/*` (docs/PAYMENTS.md "Booking money"). Lock order: Booking → Payments
+    (by id) → Refunds → DocumentCounter; settling a payment or processing a refund locks its booking first.
+    `Booking.paidMinor`/`refundedMinor` are trigger caches (never write them); write `chargeMinor` only through
+    `recomputeCharge`, which also opens the refunds that become due. Refunds opened in a transaction are sent after
+    it commits (`sendBookingRefunds`, else the `booking-refunds-send` job). A booking payment is never refunded
+    from the Payments page, only from its booking.
 - **Accounts and sign-in** (`docs/SECURITY.md`):
   - Password or emailed one-time link (`lib/magicLink.ts`: hashed `VerificationToken` `magic-link:<email>`, 15
     minutes, single use, rate limited, IP-block aware, no account enumeration, still asks for the authenticator).

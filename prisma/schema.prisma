@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Runtime queries use DATABASE_URL, which may be a transaction pooler
   // (for example Supabase Supavisor :6543 with ?pgbouncer=true). Migrations need a
   // direct or session-mode connection, so the Prisma CLI uses DIRECT_URL.
@@ -51,14 +51,14 @@ model User {
   isSuperAdmin       Boolean   @default(false)
   createdAt          DateTime  @default(now())
 
-  knownDevices      KnownDevice[]
-  teamMembers       TeamMember[]
-  teamInvitesCreated TeamInvite[] @relation("TeamInviteCreatedBy")
-  teamInvitesUsed    TeamInvite[] @relation("TeamInviteUsedBy")
-  auditEvents       AuditEvent[]
-  makerspaceReviews MakerspaceReview[]
-  bookings          Booking[]
-  calendarFeeds     CalendarFeed[]
+  knownDevices       KnownDevice[]
+  teamMembers        TeamMember[]
+  teamInvitesCreated TeamInvite[]       @relation("TeamInviteCreatedBy")
+  teamInvitesUsed    TeamInvite[]       @relation("TeamInviteUsedBy")
+  auditEvents        AuditEvent[]
+  makerspaceReviews  MakerspaceReview[]
+  bookings           Booking[]
+  calendarFeeds      CalendarFeed[]
 }
 
 model VerificationToken {
@@ -104,67 +104,67 @@ enum MakerspaceReviewAction {
 
 /// A tenant. Only ACTIVE makerspaces take bookings; see makerspaceAllows in lib/permissionRoles.ts.
 model Makerspace {
-  id          String             @id @default(cuid())
-  name        String
-  slug        String             @unique
-  description String             @default("")
-  logoUrl     String?
+  id                          String               @id @default(cuid())
+  name                        String
+  slug                        String               @unique
+  description                 String               @default("")
+  logoUrl                     String?
   /// Makerspace accent for its public pages (validated #RRGGBB).
-  accentColor String?
-  status      MakerspaceStatus @default(PENDING_REVIEW)
-  source      MakerspaceSource @default(SELF_SIGNUP)
+  accentColor                 String?
+  status                      MakerspaceStatus     @default(PENDING_REVIEW)
+  source                      MakerspaceSource     @default(SELF_SIGNUP)
   /// Free-text kind, e.g. "Club", "Association", "Student society".
-  kind        String             @default("")
-  contactEmail String?
-  contactPhone String?
-  addressLine String?
-  city        String?
+  kind                        String               @default("")
+  contactEmail                String?
+  contactPhone                String?
+  addressLine                 String?
+  city                        String?
   /// Indian state/UT code (two letters, e.g. "KL"); also the GST supplier state.
-  stateCode   String?
-  postalCode  String?
-  country     String             @default("IN")
-  website     String?
+  stateCode                   String?
+  postalCode                  String?
+  country                     String               @default("IN")
+  website                     String?
   /// Month (1–12) the makerspace's financial year starts. India: April.
-  financialYearStartMonth Int    @default(4)
-  timezone    String             @default("Asia/Kolkata")
-  currency    String             @default("INR")
+  financialYearStartMonth     Int                  @default(4)
+  timezone                    String               @default("Asia/Kolkata")
+  currency                    String               @default("INR")
   /// Set by the platform super-admin; null means the instance default.
-  managerLimit Int?
+  managerLimit                Int?
   /// Maker-checker for offline payments: the confirmer must differ from the recorder.
-  offlineConfirmationRequired Boolean @default(false)
+  offlineConfirmationRequired Boolean              @default(false)
   /// PUBLIC makerspaces are listed at /makerspaces and take applications from anyone.
-  visibility  MakerspaceVisibility @default(UNLISTED)
+  visibility                  MakerspaceVisibility @default(UNLISTED)
   /// Number formatting override, e.g. "en-IN"; null uses the currency's own locale.
-  locale      String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  locale                      String?
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
 
-  teamMembers   TeamMember[]
-  teamInvites   TeamInvite[]
-  reviews       MakerspaceReview[]
-  assets        Asset[]
-  auditEvents   AuditEvent[]
-  paymentSettings MakerspacePaymentSettings?
-  taxSettings     MakerspaceTaxSettings?
-  payments        Payment[]
-  refunds         Refund[]
-  taxDocuments    TaxDocument[]
+  teamMembers      TeamMember[]
+  teamInvites      TeamInvite[]
+  reviews          MakerspaceReview[]
+  assets           Asset[]
+  auditEvents      AuditEvent[]
+  paymentSettings  MakerspacePaymentSettings?
+  taxSettings      MakerspaceTaxSettings?
+  payments         Payment[]
+  refunds          Refund[]
+  taxDocuments     TaxDocument[]
   documentCounters DocumentCounter[]
-  emailSettings  MakerspaceEmailSettings?
-  chatChannels   ChatChannel[]
-  bookingSettings MakerspaceBookingSettings?
-  spaces          Space[]
-  spacePhotos     SpacePhoto[]
-  openingHours    OpeningHours[]
-  hoursExceptions HoursException[]
-  blackouts       Blackout[]
-  peakRules       PeakRule[]
-  addOns          AddOn[]
-  refundTiers     RefundTier[]
-  members         MakerspaceMember[]
-  bookings        Booking[]
-  bookingEvents   BookingEvent[]
-  calendarFeeds   CalendarFeed[]
+  emailSettings    MakerspaceEmailSettings?
+  chatChannels     ChatChannel[]
+  bookingSettings  MakerspaceBookingSettings?
+  spaces           Space[]
+  spacePhotos      SpacePhoto[]
+  openingHours     OpeningHours[]
+  hoursExceptions  HoursException[]
+  blackouts        Blackout[]
+  peakRules        PeakRule[]
+  addOns           AddOn[]
+  refundTiers      RefundTier[]
+  members          MakerspaceMember[]
+  bookings         Booking[]
+  bookingEvents    BookingEvent[]
+  calendarFeeds    CalendarFeed[]
 
   @@index([status, createdAt])
   @@index([visibility, status])
@@ -172,39 +172,39 @@ model Makerspace {
 
 /// Append-only history of a makerspace's application and lifecycle decisions.
 model MakerspaceReview {
-  id             String                   @id @default(cuid())
-  makerspaceId String
-  action         MakerspaceReviewAction
-  actorUserId    String?
+  id                  String                 @id @default(cuid())
+  makerspaceId        String
+  action              MakerspaceReviewAction
+  actorUserId         String?
   /// Required for REJECTED and CHANGES_REQUESTED; shown to the applicant.
-  reason         String?
+  reason              String?
   /// The application as submitted (name, contact, address, purpose…) at SUBMITTED/RESUBMITTED.
   applicationSnapshot Json?
-  createdAt      DateTime                 @default(now())
+  createdAt           DateTime               @default(now())
 
   makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
-  actor        User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actor      User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([makerspaceId, createdAt])
   @@index([action, createdAt])
 }
 
 model TeamInvite {
-  id              String   @id @default(cuid())
-  makerspaceId  String
-  token           String   @unique
-  role            TeamRole @default(VIEWER)
+  id              String    @id @default(cuid())
+  makerspaceId    String
+  token           String    @unique
+  role            TeamRole  @default(VIEWER)
   createdByUserId String?
   /// Set when the platform super-admin creates a makerspace for someone: only this email may accept.
   email           String?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
   expiresAt       DateTime?
   usedAt          DateTime?
   usedByUserId    String?
 
   makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
-  createdBy    User?        @relation("TeamInviteCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  usedBy       User?        @relation("TeamInviteUsedBy", fields: [usedByUserId], references: [id], onDelete: SetNull)
+  createdBy  User?      @relation("TeamInviteCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  usedBy     User?      @relation("TeamInviteUsedBy", fields: [usedByUserId], references: [id], onDelete: SetNull)
 
   @@index([makerspaceId])
   @@index([makerspaceId, createdAt])
@@ -213,13 +213,13 @@ model TeamInvite {
 
 /// A person on a makerspace's team (staff). Customers who book are not team members.
 model TeamMember {
-  id             String   @id @default(cuid())
-  userId         String
+  id           String   @id @default(cuid())
+  userId       String
   makerspaceId String
-  role           TeamRole
-  createdAt      DateTime @default(now())
+  role         TeamRole
+  createdAt    DateTime @default(now())
 
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, makerspaceId])
@@ -229,17 +229,17 @@ model TeamMember {
 // ─── Operations ──────────────────────────────────────────────────────────────
 
 model AuditEvent {
-  id               String   @id @default(cuid())
-  action           String
-  actorUserId      String?
-  makerspaceId   String?
-  targetType       String?
-  targetId         String?
-  metadata         Json?
-  createdAt        DateTime @default(now())
+  id           String   @id @default(cuid())
+  action       String
+  actorUserId  String?
+  makerspaceId String?
+  targetType   String?
+  targetId     String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
 
-  actor          User?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
-  makerspace   Makerspace? @relation(fields: [makerspaceId], references: [id], onDelete: SetNull)
+  actor      User?       @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  makerspace Makerspace? @relation(fields: [makerspaceId], references: [id], onDelete: SetNull)
 
   @@index([makerspaceId, createdAt])
   @@index([actorUserId, createdAt])
@@ -275,36 +275,36 @@ model OperationalHeartbeat {
 
 /// Instance-wide, super-admin-managed controls. The singleton row is created on first change.
 model InstanceSetting {
-  id                    String   @id
-  allowNewUserSignups   Boolean  @default(true)
+  id                          String    @id
+  allowNewUserSignups         Boolean   @default(true)
   /// Self-service makerspace applications (/start). Super-admins can always create makerspaces.
-  allowMakerspaceApplications Boolean @default(true)
-  emailFrom             String?
-  smtpService           String?
-  smtpHost              String?
-  smtpPort              Int?
-  smtpSecure            Boolean  @default(false)
-  smtpUser              String?
-  smtpPasswordEncrypted String?
-  smtpAllowUnauthenticated Boolean @default(false)
-  backupProvider        String?
-  backupLastSuccessAt   DateTime?
-  backupRetentionDays   Int?
-  updatedAt             DateTime @updatedAt
+  allowMakerspaceApplications Boolean   @default(true)
+  emailFrom                   String?
+  smtpService                 String?
+  smtpHost                    String?
+  smtpPort                    Int?
+  smtpSecure                  Boolean   @default(false)
+  smtpUser                    String?
+  smtpPasswordEncrypted       String?
+  smtpAllowUnauthenticated    Boolean   @default(false)
+  backupProvider              String?
+  backupLastSuccessAt         DateTime?
+  backupRetentionDays         Int?
+  updatedAt                   DateTime  @updatedAt
 }
 
 /// Stored files (Silo/S3/R2) for per-makerspace storage accounting, or the database fallback.
 model Asset {
-  id             String   @id @default(cuid())
+  id           String   @id @default(cuid())
   makerspaceId String?
   /// Provider-specific object key (or path).
-  key            String   @unique
-  publicUrl      String?
-  contentType    String?
-  byteSize       BigInt?
-  provider       String   @default("unknown")
-  fileData       Bytes?
-  createdAt      DateTime @default(now())
+  key          String   @unique
+  publicUrl    String?
+  contentType  String?
+  byteSize     BigInt?
+  provider     String   @default("unknown")
+  fileData     Bytes?
+  createdAt    DateTime @default(now())
 
   makerspace Makerspace? @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
@@ -348,6 +348,25 @@ enum RefundStatus {
   FAILED
 }
 
+/// What a booking payment pays for.
+enum PaymentPurpose {
+  FULL
+  DEPOSIT
+  BALANCE
+  DIFFERENCE
+}
+
+/// Why a refund was made (docs/PAYMENTS.md "Refunds").
+enum RefundKind {
+  POLICY
+  VENUE
+  MANUAL
+  RESCHEDULE
+  DUPLICATE
+  LATE_CAPTURE
+  EXTERNAL
+}
+
 enum TaxMode {
   GST
   SIMPLE
@@ -374,7 +393,7 @@ enum TaxDocumentKind {
 
 /// The makerspace's payment gateway. Secrets are AES-GCM encrypted with PAYMENT_SECRETS_KEY.
 model MakerspacePaymentSettings {
-  makerspaceId         String          @id
+  makerspaceId           String          @id
   provider               GatewayProvider @default(NONE)
   /// Razorpay key id (public). Stripe needs only the secret key.
   keyId                  String?
@@ -393,7 +412,7 @@ model MakerspacePaymentSettings {
 }
 
 model MakerspaceTaxSettings {
-  makerspaceId     String             @id
+  makerspaceId       String             @id
   mode               TaxMode            @default(NONE)
   scheme             GstScheme          @default(REGULAR)
   gstin              String?
@@ -417,48 +436,50 @@ model MakerspaceTaxSettings {
 }
 
 model Payment {
-  id               String          @id @default(cuid())
-  makerspaceId   String
-  /// The booking this payment is for. Phase 2 turns it into a relation to Booking.
-  bookingId        String?
+  id                String          @id @default(cuid())
+  makerspaceId      String
+  /// The booking this payment is for (a trigger checks it belongs to the same makerspace).
+  bookingId         String?
+  purpose           PaymentPurpose?
   /// Who paid, as typed at the time (also the tax document's recipient).
-  customerName     String
-  customerEmail    String
+  customerName      String
+  customerEmail     String
   /// Indian state/UT code of the customer: the GST place of supply.
   customerStateCode String?
-  customerGstin    String?
-  status           PaymentStatus   @default(PENDING)
-  provider         PaymentProvider
+  customerGstin     String?
+  status            PaymentStatus   @default(PENDING)
+  provider          PaymentProvider
   /// upi, card, netbanking, wallet, cash, bank_transfer, cheque…
-  method           String?
-  currency         String
-  amountMinor      Int
+  method            String?
+  currency          String
+  amountMinor       Int
   /// Razorpay order id or Stripe Checkout Session id.
-  gatewayOrderId   String?
+  gatewayOrderId    String?
   /// Razorpay payment id or Stripe PaymentIntent id.
-  gatewayPaymentId String?
-  settlementId     String?
-  utr              String?
-  reference        String?
-  note             String          @default("")
-  paidAt           DateTime?
-  recordedById     String?
-  confirmedById    String?
+  gatewayPaymentId  String?
+  settlementId      String?
+  utr               String?
+  reference         String?
+  note              String          @default("")
+  paidAt            DateTime?
+  recordedById      String?
+  confirmedById     String?
   /// Set when a captured payment needs a manager's attention (late, mismatched, duplicate).
-  flaggedAt        DateTime?
-  flagReason       String?
+  flaggedAt         DateTime?
+  flagReason        String?
   /// The tax document waits for review (amount mismatch).
-  documentHeld     Boolean         @default(false)
-  capturedMinor    Int?
+  documentHeld      Boolean         @default(false)
+  capturedMinor     Int?
   /// Tax configuration frozen when the payment was created.
-  taxSnapshot      Json
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  taxSnapshot       Json
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   makerspace Makerspace    @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
-  lines        PaymentLine[]
-  refunds      Refund[]
-  documents    TaxDocument[]
+  booking    Booking?      @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  lines      PaymentLine[]
+  refunds    Refund[]
+  documents  TaxDocument[]
 
   @@unique([makerspaceId, id])
   @@unique([provider, gatewayOrderId])
@@ -468,18 +489,18 @@ model Payment {
 }
 
 model PaymentLine {
-  id             String          @id @default(cuid())
-  makerspaceId String
-  paymentId      String
-  kind           PaymentLineKind
-  description    String
-  currency       String
-  amountMinor    Int
-  taxableMinor   Int
-  cgstMinor      Int             @default(0)
-  sgstMinor      Int             @default(0)
-  igstMinor      Int             @default(0)
-  otherTaxMinor  Int             @default(0)
+  id            String          @id @default(cuid())
+  makerspaceId  String
+  paymentId     String
+  kind          PaymentLineKind
+  description   String
+  currency      String
+  amountMinor   Int
+  taxableMinor  Int
+  cgstMinor     Int             @default(0)
+  sgstMinor     Int             @default(0)
+  igstMinor     Int             @default(0)
+  otherTaxMinor Int             @default(0)
 
   payment Payment @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict)
 
@@ -488,10 +509,10 @@ model PaymentLine {
 
 /// Webhook idempotency: a provider event is applied once.
 model ProcessedWebhookEvent {
-  provider       PaymentProvider
-  eventId        String
+  provider     PaymentProvider
+  eventId      String
   makerspaceId String
-  receivedAt     DateTime        @default(now())
+  receivedAt   DateTime        @default(now())
 
   @@id([provider, eventId])
   @@index([makerspaceId, receivedAt])
@@ -499,7 +520,7 @@ model ProcessedWebhookEvent {
 
 model Refund {
   id              String       @id @default(cuid())
-  makerspaceId  String
+  makerspaceId    String
   paymentId       String
   status          RefundStatus @default(PENDING)
   currency        String
@@ -512,20 +533,51 @@ model Refund {
   processedAt     DateTime?
   /// When the scheduler last asked the gateway about this pending refund.
   lastCheckedAt   DateTime?
+  kind            RefundKind   @default(MANUAL)
+  /// Refund rows split from one booking refund share a group (lib/bookings/money/allocate.ts).
+  refundGroupId   String?
+  /// A retry of a failed refund is a new row pointing at it.
+  retryOfId       String?      @unique
+  /// The money goes back outside the gateway: a person hands it back and records method and reference.
+  offlineRequired Boolean      @default(false)
+  method          String?
+  reference       String?
+  flaggedAt       DateTime?
+  flagReason      String?
+  /// Claimed for sending to the gateway (lib/bookings/money/send.ts); null until then.
+  sentAt          DateTime?
 
-  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
-  payment      Payment      @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict)
-  document     TaxDocument?
+  makerspace Makerspace   @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
+  payment    Payment      @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict)
+  document   TaxDocument?
+  retryOf    Refund?      @relation("RefundRetry", fields: [retryOfId], references: [id], onDelete: Restrict)
+  retry      Refund?      @relation("RefundRetry")
 
   @@unique([makerspaceId, id])
   @@index([makerspaceId, createdAt])
   @@index([paymentId])
+  @@index([status, sentAt])
+}
+
+/// A refund the provider reported that matches none of ours (made in the provider's dashboard). The reconcile job
+/// records it as an EXTERNAL refund after a grace period, so our own refunds' webhooks can arrive first.
+model GatewayRefundNotice {
+  provider         PaymentProvider
+  gatewayRefundId  String
+  makerspaceId     String
+  gatewayPaymentId String?
+  amountMinor      Int
+  receivedAt       DateTime        @default(now())
+  resolvedAt       DateTime?
+
+  @@id([provider, gatewayRefundId])
+  @@index([resolvedAt, receivedAt])
 }
 
 /// Receipts, tax invoices, bills of supply and credit notes. The PDF is rendered from `snapshot`.
 model TaxDocument {
   id              String          @id @default(cuid())
-  makerspaceId  String
+  makerspaceId    String
   paymentId       String?
   refundId        String?         @unique
   kind            TaxDocumentKind
@@ -550,8 +602,8 @@ model TaxDocument {
   cancelledAt     DateTime?
 
   makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
-  payment      Payment?     @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict, onUpdate: Restrict)
-  refund       Refund?      @relation(fields: [refundId], references: [id], onDelete: Restrict)
+  payment    Payment?   @relation(fields: [makerspaceId, paymentId], references: [makerspaceId, id], onDelete: Restrict, onUpdate: Restrict)
+  refund     Refund?    @relation(fields: [refundId], references: [id], onDelete: Restrict)
 
   @@unique([makerspaceId, number])
   @@unique([makerspaceId, series, financialYear, sequence])
@@ -561,10 +613,10 @@ model TaxDocument {
 
 /// Gapless document numbering per makerspace, series and financial year.
 model DocumentCounter {
-  makerspaceId String
-  series         String
-  financialYear  String
-  next           Int    @default(1)
+  makerspaceId  String
+  series        String
+  financialYear String
+  next          Int    @default(1)
 
   makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
 
@@ -575,7 +627,7 @@ model DocumentCounter {
 /// through the platform's SMTP, sent as the makerspace's name with replies to its contact email. Account
 /// emails (password reset, verification) always use the platform's.
 model MakerspaceEmailSettings {
-  makerspaceId        String    @id
+  makerspaceId          String    @id
   enabled               Boolean   @default(false)
   fromName              String    @default("")
   fromAddress           String?
@@ -604,7 +656,7 @@ enum ChatChannelKind {
 /// `configEncrypted`; `target` is a safe, non-secret description for the settings page.
 model ChatChannel {
   id              String          @id @default(cuid())
-  makerspaceId  String
+  makerspaceId    String
   kind            ChatChannelKind
   name            String
   configEncrypted String
@@ -974,74 +1026,80 @@ model MakerspaceMember {
 
 /// The order: one customer, one space, one or more occurrences. Status changes only via setBookingStatus.
 model Booking {
-  id                String         @id @default(cuid())
-  makerspaceId      String
-  spaceId           String
+  id                    String         @id @default(cuid())
+  makerspaceId          String
+  spaceId               String
   /// BK-XXXXXX, unique per makerspace.
-  reference         String
-  status            BookingStatus  @default(HELD)
-  source            BookingSource
-  customerUserId    String?
-  contactName       String
-  contactEmail      String
-  contactPhone      String?
-  attendees         Int            @default(1)
+  reference             String
+  status                BookingStatus  @default(HELD)
+  source                BookingSource
+  customerUserId        String?
+  contactName           String
+  contactEmail          String
+  contactPhone          String?
+  attendees             Int            @default(1)
   /// Identical units booked per slot (one occurrence row each).
-  quantity          Int            @default(1)
-  purpose           String         @default("")
-  internalNotes     String         @default("")
-  rateKind          RateKind       @default(PUBLIC)
-  chargeMode        ChargeMode     @default(FREE)
-  allowPayLater     Boolean        @default(false)
+  quantity              Int            @default(1)
+  purpose               String         @default("")
+  internalNotes         String         @default("")
+  rateKind              RateKind       @default(PUBLIC)
+  chargeMode            ChargeMode     @default(FREE)
+  allowPayLater         Boolean        @default(false)
   /// The booking is (or became) pay later: CONFIRMED with paymentDueAt.
-  payLater          Boolean        @default(false)
+  payLater              Boolean        @default(false)
   /// HELD waiting for an upfront payment (Phase 2 settles it with confirmPaidBooking).
-  awaitingPayment   Boolean        @default(false)
-  currency          String
-  subtotalMinor     Int            @default(0)
-  taxMinor          Int            @default(0)
-  totalMinor        Int            @default(0)
-  depositMinor      Int            @default(0)
+  awaitingPayment       Boolean        @default(false)
+  currency              String
+  subtotalMinor         Int            @default(0)
+  taxMinor              Int            @default(0)
+  totalMinor            Int            @default(0)
+  depositMinor          Int            @default(0)
   /// The current obligation (lib/bookings/obligation.ts), written on every change.
-  chargeMinor       Int            @default(0)
+  chargeMinor           Int            @default(0)
   /// Caches maintained by Phase 2 triggers on Payment and Refund.
-  paidMinor         Int            @default(0)
-  refundedMinor     Int            @default(0)
-  paymentDueAt      DateTime?
-  overdueAction     OverdueAction?
+  paidMinor             Int            @default(0)
+  refundedMinor         Int            @default(0)
+  paymentDueAt          DateTime?
+  overdueAction         OverdueAction?
   /// Frozen price lines, tax snapshot and rates (lib/pricing/quote.ts).
-  priceSnapshot     Json           @default("{}")
+  priceSnapshot         Json           @default("{}")
   /// Frozen cancellation terms: refund tiers, deposit, no-show and late-cancel rules.
-  policySnapshot    Json           @default("{}")
-  holdExpiresAt     DateTime?
-  requestExpiresAt  DateTime?
-  submittedAt       DateTime?
+  policySnapshot        Json           @default("{}")
+  holdExpiresAt         DateTime?
+  requestExpiresAt      DateTime?
+  submittedAt           DateTime?
   /// sha256 of the manage token; the token itself is only ever emailed or returned once.
-  manageTokenHash   String         @unique
-  createdById       String?
-  overrideReason    String?
-  confirmedAt       DateTime?
-  approvedAt        DateTime?
-  approvedById      String?
-  declinedAt        DateTime?
-  declinedById      String?
-  declineReason     String?
-  expiredAt         DateTime?
-  cancelledAt       DateTime?
-  cancelledById     String?
-  cancelKind        CancelKind?
-  cancelReason      String?
-  writtenOffAt      DateTime?
-  writtenOffById    String?
-  writtenOffReason  String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  manageTokenHash       String         @unique
+  createdById           String?
+  overrideReason        String?
+  confirmedAt           DateTime?
+  approvedAt            DateTime?
+  approvedById          String?
+  declinedAt            DateTime?
+  declinedById          String?
+  declineReason         String?
+  expiredAt             DateTime?
+  cancelledAt           DateTime?
+  cancelledById         String?
+  cancelKind            CancelKind?
+  cancelReason          String?
+  writtenOffAt          DateTime?
+  writtenOffById        String?
+  writtenOffReason      String?
+  /// Money the team gave back beyond what was due (manual or provider-dashboard refunds); lowers the charge.
+  concessionMinor       Int            @default(0)
+  /// Payment reminders sent (lib/bookings/money/jobs.ts): before the due date, and once overdue.
+  paymentReminderSentAt DateTime?
+  overdueNotifiedAt     DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   makerspace  Makerspace          @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
   space       Space               @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: NoAction, onUpdate: Cascade)
   customer    User?               @relation(fields: [customerUserId], references: [id], onDelete: SetNull)
   occurrences BookingOccurrence[]
   events      BookingEvent[]
+  payments    Payment[]
 
   @@unique([makerspaceId, reference])
   @@unique([makerspaceId, id])

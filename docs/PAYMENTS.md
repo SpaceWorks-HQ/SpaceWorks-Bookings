@@ -2,10 +2,9 @@
 
 How money is taken, recorded and receipted. Tax rules are in [GST.md](GST.md).
 
-Phase 0 keeps the payment infrastructure from the platform this product was forked from and decouples it
-from what was being sold. Bookings arrive in Phase 1; Phase 2 connects payments to them (charge modes,
-deposits, pay later, tiered refund policies, the booking ledger). Where this page says **Phase 2**, the code
-does not exist yet.
+The payment infrastructure (gateways, receipts, credit notes, webhooks, reconcile) comes from the platform this
+product was forked from. Bookings pay through it: charge modes, deposits, pay later, tiered refund policies and
+every refund scenario are in "Booking money" below (`lib/bookings/money/*`).
 
 ## Ways to pay
 
@@ -28,16 +27,16 @@ Every charge starts as a `Payment` with its `PaymentLine`s and a frozen `taxSnap
 order exists, so the amount, tax and receipt are identical whichever way the customer pays.
 
 A payment carries who paid as typed at the time (`customerName`, `customerEmail` lowercased,
-`customerStateCode` for the GST place of supply, `customerGstin`) and a nullable `bookingId`. In Phase 0
-`bookingId` is a plain column with no relation; Phase 2 turns it into a relation to `Booking`. Line kinds are
-`BOOKING`, `ADD_ON` and `OTHER`.
+`customerStateCode` for the GST place of supply, `customerGstin`), a nullable `bookingId` (a relation to `Booking`;
+a trigger checks it is the same makerspace's) and, for bookings, a `purpose` (FULL, DEPOSIT, BALANCE,
+DIFFERENCE). Line kinds are `BOOKING`, `ADD_ON` and `OTHER`.
 
 | Status | Meaning |
 | --- | --- |
 | `PENDING` | A gateway attempt was started |
 | `AWAITING_CONFIRMATION` | Offline money waiting for a second person (maker-checker) |
 | `PAID` | Money received; document issued (or held, see below) |
-| `WAIVED` | Reserved for forgiven charges (Phase 2); no document |
+| `WAIVED` | Reserved for forgiven charges; no document (bookings use a write-off instead) |
 | `FAILED` | The gateway failed or the team rejected an offline payment |
 | `CANCELLED` | Cancelled by the team, or closed by a newer attempt |
 
@@ -49,13 +48,15 @@ The entry points (`lib/payments/*`) take a customer and a list of charge items:
   `checkout.ts` creates the payment, then the gateway order;
 - `recordOfflinePayment(tx, { makerspace, customer, currency, items, method, … })` in `offline.ts`.
 
-Phase 2 locks the booking before calling them and adds the per-booking "one open payment" rule.
+Booking payments start from `startBookingPayment` (`lib/bookings/money/start.ts`), which locks the booking first and
+keeps one open attempt per booking.
 
 ## Settling
 
-`settlePayment` runs in one transaction: lock the payment, mark it `PAID`, allocate the document number and
-insert the document. It confirms nothing else; in Phase 2 the caller confirms the booking in the same
-transaction. Lock order is always **payment → document counter**.
+`settlePayment` runs in one transaction: lock the payment's booking (if any), then the payment, mark it `PAID`,
+allocate the document number and insert the document, then apply the payment to its booking
+(`onBookingPaymentSettled`). Lock order is always **Booking → Payments (by id) → Refunds → DocumentCounter**;
+anything that settles a payment or processes a refund looks the booking id up unlocked and locks the Booking first.
 
 Money received is **never refused**. These still become `PAID` with a document, and are flagged for review:
 
@@ -102,8 +103,8 @@ money already handed back and processed at once. Gateway refunds go to the provi
 commits and stay `PENDING` until the provider (or its webhook) confirms; a timeout keeps them pending rather
 than guessing. Each processed refund gets a **credit note** with tax apportioned pro rata.
 
-There are no refund requests or refund policies yet. Phase 2 adds policy tiers per space and makerspace,
-automatic refunds on cancellation, retries and the other scenarios in the build plan.
+A booking payment is refunded from its booking (the Payments page refuses it and says so), so the refund policy,
+the booking's other payments and what is still owed stay in step; see "Booking money".
 
 ### Pending refund follow-up
 
@@ -138,3 +139,44 @@ email matches the payment), so a rendering problem never burns a number. Amounts
 search by customer name, email, UTR or document number, and a page per payment with its lines, documents,
 refunds and the actions the role allows (confirm, reject, cancel, release a held document, clear a flag,
 refund).
+
+## Booking money
+
+`lib/bookings/money/*`, on the obligation model of `lib/bookings/obligation.ts` (build plan, v2 amendments).
+
+- **Caches by trigger.** `Booking.paidMinor` (PAID payments, captured amount) and `refundedMinor` (PROCESSED refunds)
+  are written only by `booking_money_refresh` (migration `0003_booking_money`); `Booking_money_guard` refuses any
+  other writer. The app writes `chargeMinor`. The hourly `booking-money-check` job audits any disagreement
+  (`BOOKING_MONEY_MISMATCH`) and never rewrites money.
+- **One step after every change.** `recomputeCharge` writes the charge (less `concessionMinor`), then refunds what
+  was paid beyond it and isn't already on its way back (pending refunds, and failed ones nobody retried yet, which
+  wait for a person). The refund kind says why: POLICY (customer cancel by the frozen tiers from `policyAnchorAt`),
+  VENUE (everything back), RESCHEDULE (a cheaper time), DUPLICATE (paid twice), LATE_CAPTURE (paid after the booking
+  ended), MANUAL (by the team), EXTERNAL (made in the provider's dashboard).
+- **Allocation** (`allocate.ts`, pure): a refund splits over the booking's payments, gateway payments first, newest
+  first, then offline ones; rows share a `refundGroupId`. Refunds of offline payments, or of a gateway that is no
+  longer connected, are `offlineRequired`: a person hands the money back and records method and reference.
+- **Sending after commit** (`send.ts`). Refunds are opened inside the booking's transaction and sent to the gateway
+  after it commits: by the action that caused them, else by the `booking-refunds-send` job (every minute). A refund
+  is claimed (`sentAt`) before the call; a claim older than 30 minutes without a provider id is looked up with the
+  provider by our refund id before it is sent again.
+- **Settling** (`settled.ts`): a HELD booking awaiting payment is confirmed; an EXPIRED hold is confirmed again when
+  every time is still free (else LATE_CAPTURE refund); money for a cancelled or declined booking is refunded; money
+  beyond the charge is a DUPLICATE refund. Any surprise flags the payment.
+- **No money before approval.** Requests can't be paid; on approval PAY_NOW/DEPOSIT become due within
+  `approvalPayWithinHours` (overdue: auto-cancel), pay later by its rule. Starting an attempt closes the booking's
+  older open attempts (Stripe sessions are expired) and stretches a hold to the checkout window (Stripe 31 minutes,
+  Razorpay 16). `booking-checkouts-close` closes attempts of bookings that ended.
+- **Due dates** (`jobs.ts`): reminders at each `paymentReminderHoursBeforeDue` offset, then AUTO_CANCEL (a system
+  cancel; a non-refundable deposit is kept) or NOTIFY_STAFF (the customer is told and the booking flagged in the
+  audit log, at each `overdueReminderHoursAfterDue` offset). A dearer reschedule of a paid booking makes the
+  difference due within the approval window.
+- **The team** (`staff.ts`, booking page "Money"): record a desk payment (maker-checker applies), refund with a
+  reason (beyond what is due it is a concession: the charge drops by the same amount), retry a failed refund (a new
+  row, `retryOfId`), record a refund handed back offline, write off a balance, change the due date.
+- **Provider-dashboard refunds**: a refund webhook that matches none of ours is noted (`GatewayRefundNotice`); after
+  30 minutes `booking-refunds-external` records it as a PROCESSED, flagged EXTERNAL refund with a credit note.
+- **Documents**: each payment gets its receipt or tax invoice (see GST.md), each processed refund a credit note, and
+  every booking an unnumbered statement PDF (`/api/bookings/{slug}/{reference}/statement`) for the customer and staff.
+- **Reconciliation** (`/dashboard/{slug}/payments/reconciliation`): refunds to finish, payments to review, open
+  checkouts and 14 days of totals per provider.

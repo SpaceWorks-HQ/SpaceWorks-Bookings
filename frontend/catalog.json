@@ -81,6 +81,11 @@
       "id": "app__dashboard__makerspaceSlug__payments__paymentId__page:loadPaymentView"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__payments__reconciliation__page",
+      "name": "loadReconciliation",
+      "id": "app__dashboard__makerspaceSlug__payments__reconciliation__page:loadReconciliation"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__settings__bookings__page",
       "name": "loadBookingSettings",
       "id": "app__dashboard__makerspaceSlug__settings__bookings__page:loadBookingSettings"
@@ -306,6 +311,51 @@
       "module": "app/actions/booking-availability",
       "name": "previewBookingConflicts",
       "id": "booking-availability:previewBookingConflicts"
+    },
+    {
+      "module": "app/actions/booking-money",
+      "name": "recordBookingPayment",
+      "id": "booking-money:recordBookingPayment"
+    },
+    {
+      "module": "app/actions/booking-money",
+      "name": "refundBooking",
+      "id": "booking-money:refundBooking"
+    },
+    {
+      "module": "app/actions/booking-money",
+      "name": "retryBookingRefund",
+      "id": "booking-money:retryBookingRefund"
+    },
+    {
+      "module": "app/actions/booking-money",
+      "name": "recordBookingRefundOffline",
+      "id": "booking-money:recordBookingRefundOffline"
+    },
+    {
+      "module": "app/actions/booking-money",
+      "name": "writeOffBooking",
+      "id": "booking-money:writeOffBooking"
+    },
+    {
+      "module": "app/actions/booking-money",
+      "name": "changePaymentDueDate",
+      "id": "booking-money:changePaymentDueDate"
+    },
+    {
+      "module": "app/actions/booking-payments",
+      "name": "startBookingPayment",
+      "id": "booking-payments:startBookingPayment"
+    },
+    {
+      "module": "app/actions/booking-payments",
+      "name": "confirmBookingRazorpay",
+      "id": "booking-payments:confirmBookingRazorpay"
+    },
+    {
+      "module": "app/actions/booking-payments",
+      "name": "refreshBookingPayment",
+      "id": "booking-payments:refreshBookingPayment"
     },
     {
       "module": "app/actions/booking-settings",

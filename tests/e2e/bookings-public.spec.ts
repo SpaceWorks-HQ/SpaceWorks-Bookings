@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { bookPublicSpace } from "./helpers";
 
 // Runs against `npm run db:seed-demo`, with no credentials needed for this guest journey.

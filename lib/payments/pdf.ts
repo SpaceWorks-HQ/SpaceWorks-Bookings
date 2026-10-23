@@ -16,14 +16,14 @@ import { DOCUMENT_KIND_LABELS } from "./numbering";
  */
 
 const FONT_DIR = path.join(process.cwd(), "public", "brand", "fonts");
-const INK = rgb(0.09, 0.11, 0.1);
-const MUTED = rgb(0.38, 0.4, 0.39);
-const RULE = rgb(0.85, 0.86, 0.85);
-const A4: [number, number] = [595.28, 841.89];
-const MARGIN = 48;
+export const INK = rgb(0.09, 0.11, 0.1);
+export const MUTED = rgb(0.38, 0.4, 0.39);
+export const RULE = rgb(0.85, 0.86, 0.85);
+export const A4: [number, number] = [595.28, 841.89];
+export const MARGIN = 48;
 
 let fonts: Promise<{ regular: Uint8Array; bold: Uint8Array }> | null = null;
-function loadFonts() {
+export function loadFonts() {
   fonts ??= Promise.all([readFile(path.join(FONT_DIR, "Gilroy-Light.woff2")), readFile(path.join(FONT_DIR, "Gilroy-ExtraBold.woff2"))]).then(([regular, bold]) => ({ regular, bold }));
   return fonts;
 }
@@ -41,13 +41,13 @@ export function documentAmount(minor: number, currency: string, locale: string |
   return `${currency} ${value}`;
 }
 
-function date(iso: string | null, timeZone: string) {
+export function date(iso: string | null, timeZone: string) {
   return iso ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone }).format(new Date(iso)) : "—";
 }
 
-type Pen = { page: PDFPage; regular: PDFFont; bold: PDFFont };
+export type Pen = { page: PDFPage; regular: PDFFont; bold: PDFFont };
 
-function text(pen: Pen, value: string, x: number, y: number, options: { size?: number; bold?: boolean; color?: ReturnType<typeof rgb>; align?: "left" | "right"; maxWidth?: number } = {}) {
+export function text(pen: Pen, value: string, x: number, y: number, options: { size?: number; bold?: boolean; color?: ReturnType<typeof rgb>; align?: "left" | "right"; maxWidth?: number } = {}) {
   const font = options.bold ? pen.bold : pen.regular;
   const size = options.size ?? 9.5;
   let line = safe(font, value);

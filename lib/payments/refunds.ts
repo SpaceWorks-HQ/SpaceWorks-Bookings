@@ -3,7 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { recordAuditEvent } from "@/lib/audit";
 import { enqueueOutbox } from "@/lib/outbox";
-import { lockPayment, PaymentError, type MakerspaceForPayments } from "./charges";
+import { lockPayment, lockPaymentBooking, PaymentError, type MakerspaceForPayments } from "./charges";
 import { issueCreditNote } from "./documents";
 
 type Tx = Prisma.TransactionClient;
@@ -40,12 +40,14 @@ async function lockRefund(tx: Tx, makerspaceId: string, refundId: string) {
 }
 
 /** The money went back: mark the refund processed and issue its credit note. Idempotent. */
-export async function processRefund(tx: Tx, args: { makerspace: MakerspaceForPayments; refundId: string; gatewayRefundId?: string | null; now?: Date }) {
+export async function processRefund(tx: Tx, args: { makerspace: MakerspaceForPayments; refundId: string; gatewayRefundId?: string | null; method?: string | null; reference?: string | null; now?: Date }) {
   const now = args.now ?? new Date();
+  const paymentId = (await tx.refund.findFirst({ where: { id: args.refundId, makerspaceId: args.makerspace.id }, select: { paymentId: true } }))?.paymentId;
+  if (paymentId) await lockPaymentBooking(tx, args.makerspace.id, paymentId);
   const refund = await lockRefund(tx, args.makerspace.id, args.refundId);
   if (refund.status === "PROCESSED") return refund;
   if (refund.status === "FAILED") throw new PaymentError("This refund failed and can't be processed.");
-  const updated = await tx.refund.update({ where: { id: refund.id }, data: { status: "PROCESSED", processedAt: now, gatewayRefundId: args.gatewayRefundId ?? refund.gatewayRefundId } });
+  const updated = await tx.refund.update({ where: { id: refund.id }, data: { status: "PROCESSED", processedAt: now, gatewayRefundId: args.gatewayRefundId ?? refund.gatewayRefundId, ...(args.method ? { method: args.method, reference: args.reference ?? null, flaggedAt: null, flagReason: null } : {}) } });
   const settings = await tx.makerspaceTaxSettings.findUnique({ where: { makerspaceId: args.makerspace.id }, select: { receiptPrefix: true } });
   await issueCreditNote(tx, args.makerspace, refund.id, settings?.receiptPrefix ?? "", now);
   await enqueueOutbox(tx, "payment-notice", { makerspaceId: args.makerspace.id, paymentId: refund.paymentId, notice: "refunded" });

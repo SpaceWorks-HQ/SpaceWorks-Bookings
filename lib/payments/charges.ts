@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { Makerspace, Payment, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
-import { chargeLines, placeOfSupply, resolveTaxSnapshot, sumSplits, type ChargeItem } from "./tax";
+import type { Makerspace, Payment, PaymentProvider, PaymentPurpose, PaymentStatus, Prisma } from "@prisma/client";
+import { chargeLines, placeOfSupply, resolveTaxSnapshot, sumSplits, type ChargeItem, type TaxSnapshot } from "./tax";
 
 type Tx = Prisma.TransactionClient;
 export type MakerspaceForPayments = Pick<Makerspace, "id" | "name" | "slug" | "status" | "timezone" | "financialYearStartMonth" | "offlineConfirmationRequired" | "addressLine" | "city" | "stateCode" | "postalCode" | "contactEmail" | "locale" | "logoUrl">;
@@ -32,6 +32,9 @@ export async function createPayment(
     provider: PaymentProvider;
     status: Extract<PaymentStatus, "PENDING" | "AWAITING_CONFIRMATION">;
     bookingId?: string | null;
+    purpose?: PaymentPurpose | null;
+    /** A booking's frozen tax snapshot (inclusive, so the items are what the customer owes); default: current settings. */
+    taxSnapshot?: TaxSnapshot;
     method?: string | null;
     utr?: string | null;
     reference?: string | null;
@@ -39,8 +42,7 @@ export async function createPayment(
     recordedById?: string | null;
   },
 ): Promise<Payment> {
-  const settings = await tx.makerspaceTaxSettings.findUnique({ where: { makerspaceId: args.makerspace.id } });
-  const snapshot = resolveTaxSnapshot(settings, args.currency);
+  const snapshot = args.taxSnapshot ?? resolveTaxSnapshot(await tx.makerspaceTaxSettings.findUnique({ where: { makerspaceId: args.makerspace.id } }), args.currency);
   const lines = chargeLines(args.items, snapshot, placeOfSupply(args.customer.stateCode, snapshot));
   if (lines.length === 0) throw new PaymentError("Nothing is due.");
   const totals = sumSplits(lines);
@@ -48,6 +50,7 @@ export async function createPayment(
     data: {
       makerspaceId: args.makerspace.id,
       bookingId: args.bookingId ?? null,
+      purpose: args.purpose ?? null,
       customerName: args.customer.name,
       customerEmail: args.customer.email.trim().toLowerCase(),
       customerStateCode: args.customer.stateCode ?? null,
@@ -65,6 +68,18 @@ export async function createPayment(
       lines: { create: lines.map((line) => ({ currency: args.currency, ...line })) },
     },
   });
+}
+
+/**
+ * Lock order is Booking → Payments → Refunds → DocumentCounter. A payment or refund of a booking changes the
+ * booking's money caches (triggers), so anything settling one locks the booking first: look its id up unlocked,
+ * lock the Booking, then the Payment.
+ */
+export async function lockPaymentBooking(tx: Tx, makerspaceId: string, paymentId: string): Promise<string | null> {
+  const row = await tx.payment.findFirst({ where: { id: paymentId, makerspaceId }, select: { bookingId: true } });
+  if (!row?.bookingId) return null;
+  await tx.$queryRaw`SELECT "id" FROM "Booking" WHERE "id" = ${row.bookingId} AND "makerspaceId" = ${makerspaceId} FOR UPDATE`;
+  return row.bookingId;
 }
 
 /** Lock one payment of the makerspace for an update. */

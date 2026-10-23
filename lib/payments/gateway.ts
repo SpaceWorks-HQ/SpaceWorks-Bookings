@@ -20,6 +20,8 @@ export type CheckoutRequest = {
   customer: { name: string; email: string };
   successUrl: string;
   cancelUrl: string;
+  /** When the provider should stop accepting this checkout (Stripe needs at least 30 minutes). */
+  expiresAt?: Date;
 };
 
 export type CheckoutResult =
@@ -29,7 +31,7 @@ export type CheckoutResult =
 export type GatewayEvent =
   | { type: "captured"; eventId: string; orderId: string | null; paymentId: string | null; gatewayPaymentId: string | null; amountMinor: number; currency: string; method: string | null }
   | { type: "failed"; eventId: string; orderId: string | null; paymentId: string | null; reason: string }
-  | { type: "refund-processed"; eventId: string; gatewayRefundId: string; refundId: string | null; amountMinor: number }
+  | { type: "refund-processed"; eventId: string; gatewayRefundId: string; refundId: string | null; amountMinor: number; gatewayPaymentId: string | null }
   | { type: "refund-failed"; eventId: string; gatewayRefundId: string; refundId: string | null; reason: string }
   | { type: "ignored"; eventId: string };
 
@@ -49,6 +51,8 @@ export interface PaymentGateway {
   /** Look a refund up by its gateway id, or by our refund id on the payment's refunds; null if it isn't there. */
   fetchRefund(credentials: GatewayCredentials, args: { gatewayPaymentId: string; gatewayRefundId: string | null; refundId: string }): Promise<RefundResult | null>;
   testConnection(credentials: GatewayCredentials): Promise<{ ok: true } | { ok: false; error: string }>;
+  /** Stop an open checkout so it can't be paid any more (Stripe); providers without one rely on late-capture refunds. */
+  expireCheckout?(credentials: GatewayCredentials, orderId: string): Promise<void>;
 }
 
 /** A provider answered with an error. `retryable` separates outages from bad requests. */

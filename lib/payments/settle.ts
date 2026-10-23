@@ -4,7 +4,8 @@ import type { Prisma } from "@prisma/client";
 import { recordAuditEvent } from "@/lib/audit";
 import { enqueueOutbox } from "@/lib/outbox";
 import { queueChatAlerts } from "@/lib/chat/notify";
-import { lockPayment, type MakerspaceForPayments } from "./charges";
+import { lockPayment, lockPaymentBooking, type MakerspaceForPayments } from "./charges";
+import { onBookingPaymentSettled } from "@/lib/bookings/money/settled";
 import { issuePaymentDocument } from "./documents";
 
 type Tx = Prisma.TransactionClient;
@@ -25,8 +26,9 @@ async function documentPrefix(tx: Tx, makerspaceId: string) {
  */
 export async function settlePayment(tx: Tx, args: { makerspace: MakerspaceForPayments; paymentId: string; capture?: Capture; confirmedById?: string | null; now?: Date }) {
   const now = args.now ?? new Date();
+  await lockPaymentBooking(tx, args.makerspace.id, args.paymentId);
   const payment = await lockPayment(tx, args.makerspace.id, args.paymentId);
-  if (payment.status === "PAID" || payment.status === "WAIVED") return { payment, flagged: payment.flagReason, alreadySettled: true };
+  if (payment.status === "PAID" || payment.status === "WAIVED") return { payment, flagged: payment.flagReason, alreadySettled: true, refundIds: [] as string[] };
 
   const flags: string[] = [];
   const capture = args.capture;
@@ -53,7 +55,10 @@ export async function settlePayment(tx: Tx, args: { makerspace: MakerspaceForPay
   await enqueueOutbox(tx, "payment-notice", { makerspaceId: args.makerspace.id, paymentId: payment.id, notice: "paid" });
   await queueChatAlerts(tx, args.makerspace.id, "payment", { paymentId: payment.id });
   await recordAuditEvent({ action: "PAYMENT_PAID", actorUserId: args.confirmedById ?? null, makerspaceId: args.makerspace.id, targetType: "Payment", targetId: payment.id, metadata: { provider: payment.provider, flagged: flags.length > 0 }, client: tx });
-  return { payment: updated, flagged: updated.flagReason, alreadySettled: false };
+  // A booking payment confirms, revives or refunds against its booking in the same transaction.
+  const refundIds = await onBookingPaymentSettled(tx, updated, now);
+  const settled = refundIds.length || updated.bookingId ? await tx.payment.findUniqueOrThrow({ where: { id: payment.id } }) : updated;
+  return { payment: settled, flagged: settled.flagReason, alreadySettled: false, refundIds };
 }
 
 /** After reviewing a mismatched capture, issue the held document on the amount actually received. */

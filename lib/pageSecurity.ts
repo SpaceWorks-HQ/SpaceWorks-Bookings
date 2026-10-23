@@ -8,8 +8,9 @@ export function pageSecurity(request: NextRequest) {
     "default-src 'self'", "base-uri 'self'", "object-src 'none'",
     "frame-ancestors 'none'",
     // Razorpay Checkout opens in its own frame on the member pay page. A CSP belongs to the document that was
-    // loaded, so every /account page allows it (the wallet links to the pay page in-app); nowhere else does.
-    request.nextUrl.pathname.startsWith("/account") ? "frame-src https://api.razorpay.com https://checkout.razorpay.com" : "frame-src 'none'",
+    // loaded, so every /account page allows it (the wallet links to the pay page in-app), and so do booking manage
+    // pages, where customers pay for a booking; nowhere else does.
+    request.nextUrl.pathname.startsWith("/account") || /^\/m\/[^/]+\/bookings\//.test(request.nextUrl.pathname) ? "frame-src https://api.razorpay.com https://checkout.razorpay.com" : "frame-src 'none'",
     "form-action 'self'",
     "img-src 'self' data: blob: https:", "font-src 'self' data: https:", `connect-src 'self' https:${testBackend}`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,

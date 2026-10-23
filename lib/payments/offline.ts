@@ -6,7 +6,8 @@ import { enqueueOutbox } from "@/lib/outbox";
 import { queueChatAlerts } from "@/lib/chat/notify";
 import { createPayment, lockPayment, PaymentError, type MakerspaceForPayments, type PaymentCustomer } from "./charges";
 import { settlePayment } from "./settle";
-import type { ChargeItem } from "./tax";
+import type { ChargeItem, TaxSnapshot } from "./tax";
+import type { PaymentPurpose } from "@prisma/client";
 import type { OfflineMethod } from "./offline-methods";
 
 export { OFFLINE_METHODS, OFFLINE_METHOD_LABELS, type OfflineMethod } from "./offline-methods";
@@ -17,7 +18,7 @@ type Tx = Prisma.TransactionClient;
  * A manager records money received outside the gateway. With maker-checker on, it waits for a different
  * member of the team to confirm; otherwise it is paid and receipted straight away.
  */
-export async function recordOfflinePayment(tx: Tx, args: { makerspace: MakerspaceForPayments; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; method: OfflineMethod; utr?: string | null; reference?: string | null; note?: string; actorUserId: string; now?: Date }) {
+export async function recordOfflinePayment(tx: Tx, args: { makerspace: MakerspaceForPayments; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; purpose?: PaymentPurpose | null; taxSnapshot?: TaxSnapshot; method: OfflineMethod; utr?: string | null; reference?: string | null; note?: string; actorUserId: string; now?: Date }) {
   const now = args.now ?? new Date();
   const payment = await createPayment(tx, {
     makerspace: args.makerspace,
@@ -25,6 +26,8 @@ export async function recordOfflinePayment(tx: Tx, args: { makerspace: Makerspac
     currency: args.currency,
     items: args.items,
     bookingId: args.bookingId ?? null,
+    purpose: args.purpose ?? null,
+    taxSnapshot: args.taxSnapshot,
     provider: "OFFLINE",
     status: "AWAITING_CONFIRMATION",
     method: args.method,

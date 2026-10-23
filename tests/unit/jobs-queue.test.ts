@@ -55,7 +55,15 @@ describe("the bookings job registry", () => {
       ["registry-bookings-reminders", "scheduled"],
       ["registry-bookings-auto-no-show", "scheduled"],
       ["registry-bookings-complete", "scheduled"],
+      ["registry-booking-refunds-send", "scheduled"],
+      ["registry-booking-checkouts-close", "scheduled"],
+      ["registry-booking-payments-overdue", "scheduled"],
+      ["registry-booking-payment-reminders", "scheduled"],
+      ["registry-booking-refunds-external", "scheduled"],
+      ["registry-booking-money-check", "scheduled"],
     ]);
+    // Refunds opened by webhooks reach the gateway within a minute.
+    expect(definitions.find((item) => item.id === "registry-booking-refunds-send")!.schedule).toEqual({ every: 60_000 });
     expect(definitions.find((item) => item.id === "registry-operational-retention")!.schedule).toEqual({ pattern: "0 0 * * *", tz: "UTC" });
     // Holds free their slots within a minute of running out.
     expect(definitions.find((item) => item.id === "registry-bookings-expire-holds")!.schedule).toEqual({ every: 60_000 });

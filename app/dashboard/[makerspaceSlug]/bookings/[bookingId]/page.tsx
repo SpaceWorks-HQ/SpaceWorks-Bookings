@@ -2,6 +2,7 @@ import { loadBooking } from "@/lib/views/app__dashboard__makerspaceSlug__booking
 import { MakerspacePageHeader } from "@/components/dashboard/makerspace/MakerspacePageHeader";
 import { BookingActions } from "@/components/bookings/BookingActions";
 import { OccurrenceCard } from "@/components/bookings/OccurrenceCard";
+import { StaffMoneyPanel } from "@/components/bookings/money/StaffMoneyPanel";
 import { Card, CardHeader, Chip, DetailList } from "@/components/ui/display";
 import { words } from "@/lib/bookings/ui";
 import { money } from "@/lib/money/currencies";
@@ -31,6 +32,7 @@ export default async function Page(props: Parameters<typeof loadBooking>[0]) {
       </div>) : <p className="text-ink-muted">No price lines yet. This booking may still be held.</p>}
       <p className="mt-4 font-semibold text-ink">Snapshot total: {money(booking.totalMinor, booking.currency)}</p>
     </Card>
+    <StaffMoneyPanel slug={makerspace.slug} bookingId={booking.id} reference={booking.reference} currency={booking.currency} timezone={zone} status={booking.status} paymentDueAt={booking.paymentDueAt} view={data.money} />
     <BookingActions slug={makerspace.slug} booking={booking} spaces={data.spaces} canManage={data.canManage} canApprove={data.canApprove} canOverride={data.canOverride} timezone={zone} />
     <Card><CardHeader title="Booking timeline" />
       <ol className="flex flex-col gap-4">{booking.events.map((event) => <li key={event.id} className="border-l-2 border-line pl-4 text-ink">

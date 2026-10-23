@@ -22,7 +22,12 @@ export type BookingEventKind =
   | "no-show"
   | "completed"
   | "payment-due-changed"
-  | "manage-link-sent";
+  | "manage-link-sent"
+  | "payment"
+  | "refund"
+  | "refund-failed"
+  | "written-off"
+  | "revived";
 
 export async function recordBookingEvent(
   tx: Tx,
