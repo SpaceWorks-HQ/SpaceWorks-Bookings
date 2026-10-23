@@ -553,6 +553,8 @@ if [[ "$ACTION" != fresh ]]; then
   update_options="--force"
   [[ "$ACTION" != rollback ]] || update_options="--force --rollback"
   [[ -z "$installed_ref" ]] || update_options="--force --source '$installed_ref'"
+  [[ "$ACTION" != update || -z "$RELEASE" ]] || update_options="--force --version '$RELEASE'"
+  [[ "$ACTION" != update || -z "$SOURCE_REF" ]] || update_options="--force --source '$SOURCE_REF'"
   run_installed "SWB_REPOSITORY='$REPOSITORY' bash scripts/update.sh $update_options"
   exit 0
 fi
