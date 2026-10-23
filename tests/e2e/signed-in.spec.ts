@@ -25,7 +25,7 @@ test("the owner opens the makerspace overview and the team", async ({ page }) =>
   await signIn(page, "owner@demo.test");
   await page.goto("/dashboard/tinkerspace");
   await expect(page.getByRole("heading", { name: "Overview", level: 1 })).toBeVisible();
-  await expect(page.getByText("You're an owner here.")).toBeVisible();
+  await expect(page.locator("#main-content").getByText("You're an owner here.")).toBeVisible();
   await page.goto("/dashboard/tinkerspace/team");
   await expect(page.getByRole("heading", { name: "Team", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "What each role can do" })).toBeVisible();
