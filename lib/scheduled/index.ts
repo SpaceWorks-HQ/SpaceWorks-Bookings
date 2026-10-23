@@ -6,6 +6,7 @@ import { OUTBOX_HEARTBEAT_KEY, recordHeartbeatAlive } from "@/lib/operationalHea
 import { reconcileGatewayPayments } from "@/lib/payments/reconcile";
 import { reconcileGatewayRefunds } from "@/lib/payments/reconcileRefunds";
 import { purgeExpiredOperationalData } from "@/lib/retention";
+import { BOOKING_JOBS } from "./bookings";
 
 /**
  * Every periodic job, one entry per area. Beat (scripts/queue/beat.ts) turns each into a BullMQ job scheduler
@@ -22,6 +23,7 @@ export const SCHEDULED_JOBS: JobDefinition[] = [
   { area: "operational-retention", schedule: { pattern: "0 0 * * *", tz: "UTC" }, run: async (now) => { await purgeExpiredOperationalData(now); } },
   // Proves worker and beat are alive for Super admin, Operations.
   { area: "heartbeat", run: async () => { await recordHeartbeatAlive(OUTBOX_HEARTBEAT_KEY); } },
+  ...BOOKING_JOBS,
 ];
 
 /** The Redis-free fallback (development with JOBS_INPROCESS): every job inline, delivering the outbox directly. */

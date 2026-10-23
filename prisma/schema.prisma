@@ -57,6 +57,8 @@ model User {
   teamInvitesUsed    TeamInvite[] @relation("TeamInviteUsedBy")
   auditEvents       AuditEvent[]
   makerspaceReviews MakerspaceReview[]
+  bookings          Booking[]
+  calendarFeeds     CalendarFeed[]
 }
 
 model VerificationToken {
@@ -150,6 +152,19 @@ model Makerspace {
   documentCounters DocumentCounter[]
   emailSettings  MakerspaceEmailSettings?
   chatChannels   ChatChannel[]
+  bookingSettings MakerspaceBookingSettings?
+  spaces          Space[]
+  spacePhotos     SpacePhoto[]
+  openingHours    OpeningHours[]
+  hoursExceptions HoursException[]
+  blackouts       Blackout[]
+  peakRules       PeakRule[]
+  addOns          AddOn[]
+  refundTiers     RefundTier[]
+  members         MakerspaceMember[]
+  bookings        Booking[]
+  bookingEvents   BookingEvent[]
+  calendarFeeds   CalendarFeed[]
 
   @@index([status, createdAt])
   @@index([visibility, status])
@@ -623,4 +638,517 @@ model KnownDevice {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, lastSeenAt])
+}
+
+// ─── Bookings (Phase 1, docs/BOOKINGS.md) ───────────────────────────────────
+
+enum SpaceKind {
+  ROOM
+  STUDIO
+  DESK
+  HALL
+  OTHER
+}
+
+enum ApprovalMode {
+  INSTANT
+  APPROVAL
+}
+
+enum ChargeMode {
+  FREE
+  PAY_NOW
+  DEPOSIT
+  PAY_LATER
+}
+
+enum DepositKind {
+  PERCENT
+  FIXED
+}
+
+enum PayLaterDueRule {
+  BEFORE_START
+  AFTER_BOOKING
+}
+
+enum OverdueAction {
+  AUTO_CANCEL
+  NOTIFY_STAFF
+}
+
+enum NoShowCharge {
+  FULL
+  NONE
+}
+
+enum AddOnUnit {
+  PER_BOOKING
+  PER_HOUR
+  PER_PERSON
+}
+
+enum RateKind {
+  PUBLIC
+  MEMBER
+}
+
+enum BookingStatus {
+  HELD
+  REQUESTED
+  CONFIRMED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum OccurrenceStatus {
+  SCHEDULED
+  CHECKED_IN
+  NO_SHOW
+  CANCELLED
+  COMPLETED
+}
+
+/// PUBLIC = a signed-in customer, GUEST = no account, STAFF = on behalf of a customer, API = an API key (Phase 3).
+enum BookingSource {
+  PUBLIC
+  GUEST
+  STAFF
+  API
+}
+
+enum CancelKind {
+  CUSTOMER
+  STAFF
+  VENUE
+  SYSTEM
+}
+
+enum CalendarFeedKind {
+  CUSTOMER
+  STAFF
+}
+
+/// Booking rules for the whole makerspace; every field is a rule key of lib/bookingRules/schema.ts and each
+/// space may override any of them in `Space.ruleOverrides`. `effectiveRules` is the only reader.
+model MakerspaceBookingSettings {
+  makerspaceId                  String          @id
+  approvalMode                  ApprovalMode    @default(INSTANT)
+  requestsBlockSlot             Boolean         @default(true)
+  requestExpiryHours            Int             @default(48)
+  approvalPayWithinHours        Int             @default(24)
+  minDurationMinutes            Int             @default(30)
+  maxDurationMinutes            Int             @default(480)
+  slotStepMinutes               Int             @default(30)
+  leadTimeMinutes               Int             @default(60)
+  advanceWindowDays             Int             @default(90)
+  bufferBeforeMinutes           Int             @default(0)
+  bufferAfterMinutes            Int             @default(0)
+  holdMinutes                   Int             @default(15)
+  recurrenceMaxOccurrences      Int             @default(52)
+  guestBookingAllowed           Boolean         @default(false)
+  customerCancelCutoffHours     Int             @default(0)
+  customerRescheduleAllowed     Boolean         @default(true)
+  customerRescheduleCutoffHours Int             @default(24)
+  selfCheckInEnabled            Boolean         @default(false)
+  selfCheckInOpensMinutesBefore Int             @default(15)
+  selfCheckInClosesMinutesAfter Int             @default(30)
+  autoNoShow                    Boolean         @default(false)
+  noShowGraceMinutes            Int             @default(30)
+  noShowReleasesSlot            Boolean         @default(true)
+  noShowCharge                  NoShowCharge    @default(FULL)
+  reminderHoursBefore           Int[]           @default([24])
+  chargeMode                    ChargeMode      @default(FREE)
+  allowPayLater                 Boolean         @default(false)
+  depositKind                   DepositKind     @default(PERCENT)
+  depositPercentBps             Int             @default(5000)
+  depositFixedMinor             Int             @default(0)
+  depositRefundable             Boolean         @default(true)
+  payLaterDueRule               PayLaterDueRule @default(BEFORE_START)
+  payLaterDueHoursBeforeStart   Int             @default(24)
+  payLaterDueDaysAfterBooking   Int             @default(7)
+  payLaterMinWindowHours        Int             @default(2)
+  payLaterMinLeadHours          Int             @default(2)
+  overdueAction                 OverdueAction   @default(NOTIFY_STAFF)
+  paymentReminderHoursBeforeDue Int[]           @default([24])
+  overdueReminderHoursAfterDue  Int[]           @default([24])
+  chargeLateCancelWhenUnpaid    Boolean         @default(false)
+  updatedAt                     DateTime        @updatedAt
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+}
+
+/// Something bookable inside a makerspace. `units` identical copies (8 hot desks) share one listing.
+model Space {
+  id                 String    @id @default(cuid())
+  makerspaceId       String
+  slug               String
+  name               String
+  kind               SpaceKind @default(ROOM)
+  summary            String    @default("")
+  /// Markdown, rendered as React text (never HTML).
+  description        String    @default("")
+  /// People per unit; informational and the attendee limit.
+  capacity           Int       @default(1)
+  units              Int       @default(1)
+  amenities          String[]  @default([])
+  /// A design token name, e.g. "teal"; null uses the default.
+  colour             String?
+  published          Boolean   @default(false)
+  archivedAt         DateTime?
+  sortOrder          Int       @default(0)
+  /// Per-space rule overrides (zod-validated; key present = overridden).
+  ruleOverrides      Json      @default("{}")
+  /// Rates in minor units; null = not offered. Member null = the public rate; never above it.
+  publicHourlyMinor  Int?
+  publicHalfDayMinor Int?
+  publicDayMinor     Int?
+  memberHourlyMinor  Int?
+  memberHalfDayMinor Int?
+  memberDayMinor     Int?
+  halfDayMinutes     Int       @default(240)
+  dayMinutes         Int       @default(480)
+  /// Tax overrides (need payments.settings); null = the makerspace's.
+  taxRateBps         Int?
+  sacCode            String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  makerspace      Makerspace          @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  photos          SpacePhoto[]
+  openingHours    OpeningHours[]
+  hoursExceptions HoursException[]
+  blackouts       Blackout[]
+  peakRules       PeakRule[]
+  addOns          AddOn[]
+  refundTiers     RefundTier[]
+  bookings        Booking[]
+  occurrences     BookingOccurrence[]
+
+  @@unique([makerspaceId, slug])
+  @@unique([makerspaceId, id])
+  @@index([makerspaceId, archivedAt, sortOrder])
+}
+
+model SpacePhoto {
+  id           String   @id @default(cuid())
+  makerspaceId String
+  spaceId      String
+  url          String
+  storageKey   String?
+  alt          String   @default("")
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space      @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([spaceId, sortOrder])
+}
+
+/// Weekly opening hours. spaceId null = the makerspace default; a space with any rows uses only its own.
+/// Weekday 0 = Sunday … 6 = Saturday; minutes from local midnight, close up to 1440 (24:00).
+model OpeningHours {
+  id           String  @id @default(cuid())
+  makerspaceId String
+  spaceId      String?
+  weekday      Int
+  openMinute   Int
+  closeMinute  Int
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space?     @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([makerspaceId, spaceId, weekday])
+}
+
+/// A local date with different hours: closed, or special intervals ([{ openMinute, closeMinute }]).
+model HoursException {
+  id           String   @id @default(cuid())
+  makerspaceId String
+  spaceId      String?
+  date         DateTime @db.Date
+  closed       Boolean  @default(true)
+  intervals    Json     @default("[]")
+  reason       String   @default("")
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space?     @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([makerspaceId, spaceId, date])
+}
+
+/// Closed time. Either whole local days (startDate–endDate, inclusive) or exact instants (startsAt–endsAt).
+/// spaceId null = the whole makerspace.
+model Blackout {
+  id           String    @id @default(cuid())
+  makerspaceId String
+  spaceId      String?
+  startDate    DateTime? @db.Date
+  endDate      DateTime? @db.Date
+  startsAt     DateTime?
+  endsAt       DateTime?
+  reason       String    @default("")
+  createdAt    DateTime  @default(now())
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space?     @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([makerspaceId, spaceId])
+}
+
+/// A surcharge on the minutes a booking spends inside a local-time window on the given weekdays.
+model PeakRule {
+  id           String  @id @default(cuid())
+  makerspaceId String
+  spaceId      String?
+  name         String
+  weekdays     Int[]
+  startMinute  Int
+  endMinute    Int
+  surchargeBps Int
+  active       Boolean @default(true)
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space?     @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([makerspaceId, spaceId])
+}
+
+/// An extra a booker may add. spaceId null = offered on every space.
+model AddOn {
+  id               String    @id @default(cuid())
+  makerspaceId     String
+  spaceId          String?
+  name             String
+  description      String    @default("")
+  unit             AddOnUnit
+  priceMinor       Int
+  memberPriceMinor Int?
+  sacCode          String?
+  active           Boolean   @default(true)
+  sortOrder        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space?     @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@unique([makerspaceId, id])
+  @@index([makerspaceId, spaceId, active])
+}
+
+/// Cancellation policy: the first tier whose minHoursBefore ≤ hours before the start refunds refundBps.
+/// spaceId null = the makerspace default; a space with any tiers uses only its own.
+model RefundTier {
+  id             String  @id @default(cuid())
+  makerspaceId   String
+  spaceId        String?
+  minHoursBefore Int
+  refundBps      Int
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space?     @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([makerspaceId, spaceId])
+}
+
+/// The member-rate list: a booker whose verified email matches an active, valid row pays member rates.
+model MakerspaceMember {
+  id           String    @id @default(cuid())
+  makerspaceId String
+  email        String
+  name         String    @default("")
+  /// Last local date the member rate applies (inclusive); null = no end.
+  validUntil   DateTime? @db.Date
+  active       Boolean   @default(true)
+  note         String    @default("")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([makerspaceId, email])
+}
+
+/// The order: one customer, one space, one or more occurrences. Status changes only via setBookingStatus.
+model Booking {
+  id                String         @id @default(cuid())
+  makerspaceId      String
+  spaceId           String
+  /// BK-XXXXXX, unique per makerspace.
+  reference         String
+  status            BookingStatus  @default(HELD)
+  source            BookingSource
+  customerUserId    String?
+  contactName       String
+  contactEmail      String
+  contactPhone      String?
+  attendees         Int            @default(1)
+  /// Identical units booked per slot (one occurrence row each).
+  quantity          Int            @default(1)
+  purpose           String         @default("")
+  internalNotes     String         @default("")
+  rateKind          RateKind       @default(PUBLIC)
+  chargeMode        ChargeMode     @default(FREE)
+  allowPayLater     Boolean        @default(false)
+  /// The booking is (or became) pay later: CONFIRMED with paymentDueAt.
+  payLater          Boolean        @default(false)
+  /// HELD waiting for an upfront payment (Phase 2 settles it with confirmPaidBooking).
+  awaitingPayment   Boolean        @default(false)
+  currency          String
+  subtotalMinor     Int            @default(0)
+  taxMinor          Int            @default(0)
+  totalMinor        Int            @default(0)
+  depositMinor      Int            @default(0)
+  /// The current obligation (lib/bookings/obligation.ts), written on every change.
+  chargeMinor       Int            @default(0)
+  /// Caches maintained by Phase 2 triggers on Payment and Refund.
+  paidMinor         Int            @default(0)
+  refundedMinor     Int            @default(0)
+  paymentDueAt      DateTime?
+  overdueAction     OverdueAction?
+  /// Frozen price lines, tax snapshot and rates (lib/pricing/quote.ts).
+  priceSnapshot     Json           @default("{}")
+  /// Frozen cancellation terms: refund tiers, deposit, no-show and late-cancel rules.
+  policySnapshot    Json           @default("{}")
+  holdExpiresAt     DateTime?
+  requestExpiresAt  DateTime?
+  submittedAt       DateTime?
+  /// sha256 of the manage token; the token itself is only ever emailed or returned once.
+  manageTokenHash   String         @unique
+  createdById       String?
+  overrideReason    String?
+  confirmedAt       DateTime?
+  approvedAt        DateTime?
+  approvedById      String?
+  declinedAt        DateTime?
+  declinedById      String?
+  declineReason     String?
+  expiredAt         DateTime?
+  cancelledAt       DateTime?
+  cancelledById     String?
+  cancelKind        CancelKind?
+  cancelReason      String?
+  writtenOffAt      DateTime?
+  writtenOffById    String?
+  writtenOffReason  String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  makerspace  Makerspace          @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space       Space               @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: NoAction, onUpdate: Cascade)
+  customer    User?               @relation(fields: [customerUserId], references: [id], onDelete: SetNull)
+  occurrences BookingOccurrence[]
+  events      BookingEvent[]
+
+  @@unique([makerspaceId, reference])
+  @@unique([makerspaceId, id])
+  @@unique([id, spaceId])
+  @@index([makerspaceId, status, createdAt])
+  @@index([status, holdExpiresAt])
+  @@index([status, requestExpiresAt])
+  @@index([customerUserId])
+  @@index([makerspaceId, contactEmail])
+}
+
+/// One slot of one unit. Blocking rows can never overlap per (space, unit): see the exclusion constraint.
+model BookingOccurrence {
+  id             String           @id @default(cuid())
+  makerspaceId   String
+  bookingId      String
+  spaceId        String
+  /// Which slot of the series (0-based); quantity > 1 gives several rows per slot.
+  slotIndex      Int
+  unit           Int
+  startsAt       DateTime         @db.Timestamptz(3)
+  endsAt         DateTime         @db.Timestamptz(3)
+  /// startsAt − buffer before and endsAt + buffer after (timestamptz for the tstzrange exclusion constraint).
+  blockStart     DateTime         @db.Timestamptz(3)
+  blockEnd       DateTime         @db.Timestamptz(3)
+  blocking       Boolean          @default(false)
+  status         OccurrenceStatus @default(SCHEDULED)
+  rateKind       RateKind         @default(PUBLIC)
+  /// This row's share of the booking total (largest remainder, tax included).
+  priceMinor     Int              @default(0)
+  /// What the customer still owes for this row after it was cancelled or shortened.
+  keptFeeMinor   Int              @default(0)
+  /// The earliest start this slot ever had: cancellation tiers count from here.
+  policyAnchorAt DateTime
+  /// ICS SEQUENCE, bumped on every reschedule or cancel.
+  sequence       Int              @default(0)
+  cancelledAt    DateTime?
+  cancelKind     CancelKind?
+  checkedInAt    DateTime?
+  checkedInById  String?
+  noShowAt       DateTime?
+  noShowById     String?
+  completedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  booking   Booking       @relation(fields: [bookingId, spaceId], references: [id, spaceId], onDelete: Cascade, onUpdate: Cascade)
+  space     Space         @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: NoAction)
+  reminders ReminderLog[]
+
+  @@unique([makerspaceId, id])
+  @@index([bookingId, slotIndex])
+  @@index([spaceId, unit, blockStart])
+  @@index([makerspaceId, startsAt])
+  @@index([status, blockEnd])
+  @@index([status, startsAt])
+}
+
+/// The booking timeline. Append-only (a trigger forbids UPDATE and DELETE).
+model BookingEvent {
+  id           String   @id @default(cuid())
+  makerspaceId String
+  bookingId    String
+  occurrenceId String?
+  kind         String
+  /// CUSTOMER, STAFF, SYSTEM or API.
+  actorKind    String
+  actorUserId  String?
+  data         Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  booking    Booking    @relation(fields: [makerspaceId, bookingId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+  @@index([makerspaceId, createdAt])
+}
+
+/// One reminder per occurrence, kind and start: a reschedule (new start) may remind again.
+model ReminderLog {
+  id           String   @id @default(cuid())
+  makerspaceId String
+  occurrenceId String
+  kind         String
+  startsAt     DateTime
+  sentAt       DateTime @default(now())
+
+  occurrence BookingOccurrence @relation(fields: [makerspaceId, occurrenceId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@unique([occurrenceId, kind, startsAt])
+}
+
+/// A private ICS subscription: a customer's own bookings or (staff) the whole makerspace. Token hash only.
+model CalendarFeed {
+  id           String           @id @default(cuid())
+  makerspaceId String
+  kind         CalendarFeedKind
+  userId       String
+  tokenHash    String           @unique
+  /// Last characters of the token, to tell feeds apart in the UI.
+  tokenHint    String
+  createdAt    DateTime         @default(now())
+  rotatedAt    DateTime?
+  revokedAt    DateTime?
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([makerspaceId, userId, kind])
 }

@@ -22,6 +22,7 @@ describe("bookings roles", () => {
     expect(holders("spaces.manage")).toEqual(["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"]);
     expect(holders("bookings.manage")).toEqual(["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK"]);
     expect(holders("bookings.approve")).toEqual(["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"]);
+    expect(holders("bookings.override")).toEqual(["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"]);
     expect(holders("bookings.contact")).toEqual(ROLES.filter((role) => role !== "VIEWER"));
     expect(holders("payments.view")).toEqual(["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "TREASURER"]);
     expect(holders("payments.record")).toEqual(["OWNER", "SPACE_MANAGER", "FRONT_DESK", "TREASURER"]);

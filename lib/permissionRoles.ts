@@ -17,6 +17,8 @@ export const CAPABILITIES = {
   "bookings.view": ALL,
   "bookings.manage": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK"],
   "bookings.approve": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"],
+  /** Venue cancellations (everything refunded) and booking despite the rules, with a reason. */
+  "bookings.override": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"],
   "bookings.contact": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "TREASURER"],
   "payments.view": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "TREASURER", "FRONT_DESK"],
   "payments.record": ["OWNER", "SPACE_MANAGER", "TREASURER", "FRONT_DESK"],

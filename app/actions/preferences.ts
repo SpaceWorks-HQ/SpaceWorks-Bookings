@@ -8,6 +8,7 @@ import { recordAuditEvent } from "@/lib/audit";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { makerspaceActionAccess } from "@/lib/permissions";
 import { isCurrencyCode } from "@/lib/money/currencies";
+import { countFutureBookings } from "@/lib/time/timezoneChange";
 import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
 
@@ -32,7 +33,8 @@ const preferencesSchema = z.object({
 
 /**
  * Money and calendar preferences. The financial year and timezone can change only before the first receipt,
- * because receipt numbering already depends on them. The audit row keeps the values before and after.
+ * because receipt numbering already depends on them, and the timezone also only while no bookings are to come
+ * (lib/time/timezoneChange.ts). The audit row keeps the values before and after.
  */
 export async function updateMakerspacePreferences(input: unknown): Promise<ActionResult> {
   const parsed = preferencesSchema.safeParse(input);
@@ -47,6 +49,7 @@ export async function updateMakerspacePreferences(input: unknown): Promise<Actio
   });
   const calendarChanged = before.timezone !== data.timezone || before.financialYearStartMonth !== data.financialYearStartMonth;
   if (calendarChanged && before._count.taxDocuments > 0) return { ok: false, error: "The financial year and timezone are fixed once receipts exist." };
+  if (before.timezone !== data.timezone && (await countFutureBookings(access.makerspace.id)) > 0) return { ok: false, error: "The timezone can't change while bookings are still to come." };
   await prisma.makerspace.update({ where: { id: access.makerspace.id }, data });
   const previous = { currency: before.currency, locale: before.locale, timezone: before.timezone, financialYearStartMonth: before.financialYearStartMonth, offlineConfirmationRequired: before.offlineConfirmationRequired };
   await recordAuditEvent({ action: "MAKERSPACE_PREFERENCES_UPDATED", actorUserId: access.userId, makerspaceId: access.makerspace.id, targetType: "Makerspace", targetId: access.makerspace.id, metadata: { before: JSON.stringify(previous), after: JSON.stringify(data) } });

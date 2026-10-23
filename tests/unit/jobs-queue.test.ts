@@ -40,7 +40,7 @@ describe("background queue definitions", () => {
 });
 
 describe("the bookings job registry", () => {
-  it("schedules the outbox relay, reconciles, retention and the heartbeat once each", { timeout: 60_000 }, async () => {
+  it("schedules the outbox relay, reconciles, retention, the heartbeat and booking upkeep once each", { timeout: 60_000 }, async () => {
     vi.resetModules();
     const { SCHEDULED_JOBS } = await import("@/lib/scheduled");
     const definitions = scheduleDefinitions(SCHEDULED_JOBS);
@@ -50,7 +50,14 @@ describe("the bookings job registry", () => {
       ["registry-refunds-reconcile", "scheduled"],
       ["registry-operational-retention", "scheduled"],
       ["registry-heartbeat", "scheduled"],
+      ["registry-bookings-expire-holds", "scheduled"],
+      ["registry-bookings-expire-requests", "scheduled"],
+      ["registry-bookings-reminders", "scheduled"],
+      ["registry-bookings-auto-no-show", "scheduled"],
+      ["registry-bookings-complete", "scheduled"],
     ]);
     expect(definitions.find((item) => item.id === "registry-operational-retention")!.schedule).toEqual({ pattern: "0 0 * * *", tz: "UTC" });
+    // Holds free their slots within a minute of running out.
+    expect(definitions.find((item) => item.id === "registry-bookings-expire-holds")!.schedule).toEqual({ every: 60_000 });
   });
 });

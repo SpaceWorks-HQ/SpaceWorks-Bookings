@@ -6,6 +6,7 @@ import { sendEmailVerificationEmail } from "@/lib/email/emailVerification";
 import { sendMagicLinkEmail } from "@/lib/email/magicLink";
 import { asAdminPayload, asInvitePayload, asNoticePayload, deliverAdminApplicationAlert, deliverMakerspaceNotice, deliverOwnerInvite } from "@/lib/email/makerspace";
 import { asPaymentNoticePayload, deliverPaymentNotice } from "@/lib/email/payments";
+import { asBookingNoticePayload, deliverBookingNotice } from "@/lib/email/bookings";
 import { asChatPayload, deliverChatNotice } from "@/lib/chat/notify";
 import { asLoginAlertPayload, asLoginCodePayload, deliverLoginAlert, deliverLoginCode } from "@/lib/email/loginSecurity";
 
@@ -131,6 +132,25 @@ const paymentNotice: OutboxKindHandler = {
   },
 };
 
+const bookingNotice: OutboxKindHandler = {
+  capability: false,
+  async deliver(value, messageId) {
+    const payload = asBookingNoticePayload(value);
+    if (!payload || payload.manageToken) throw new PermanentOutboxError();
+    return deliverBookingNotice(payload, messageId);
+  },
+};
+
+/** A booking email carrying the manage link: a capability, so the row is deleted once sent. */
+const bookingLink: OutboxKindHandler = {
+  capability: true,
+  async deliver(value, messageId) {
+    const payload = asBookingNoticePayload(value);
+    if (!payload || !payload.manageToken) throw new PermanentOutboxError();
+    return deliverBookingNotice(payload, messageId);
+  },
+};
+
 const loginCode: OutboxKindHandler = {
   // The code is a sign-in capability: the row is deleted after sending and retried only while it lasts.
   capability: true,
@@ -169,6 +189,8 @@ export const OUTBOX_KINDS = {
   "makerspace-application-alert": makerspaceApplicationAlert,
   "owner-invite": ownerInvite,
   "payment-notice": paymentNotice,
+  "booking-notice": bookingNotice,
+  "booking-link": bookingLink,
   "chat-notice": chatNotice,
   "login-code": loginCode,
   "login-alert": loginAlert,
