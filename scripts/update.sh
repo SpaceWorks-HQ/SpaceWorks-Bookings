@@ -28,6 +28,7 @@ UPDATE_LOCK_HELD=0
 UPDATE_LOCK_OVERRIDE=0
 REQUESTED_VERSION=""
 ROLLBACK=0
+SOURCE_REF=""
 
 say() { printf '[Space Works updater] %s\n' "$*"; }
 warn() { printf '[Space Works updater] WARNING: %s\n' "$*" >&2; }
@@ -50,11 +51,17 @@ while (($# > 0)); do
       [[ "v$REQUESTED_VERSION" =~ $TAG_PATTERN ]] || die "--version requires X.Y.Z-main.<run>.<12 lowercase hex SHA>."
       ;;
     --rollback) ROLLBACK=1 ;;
+    --source)
+      shift; [[ "${1:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,150}$ && "${1:-}" != *..* ]] || die "--source requires a branch, tag or commit."
+      SOURCE_REF="$1"
+      ;;
     --override-lock) UPDATE_LOCK_OVERRIDE=1 ;;
     -h|--help)
       cat <<'EOF'
-Usage: scripts/update.sh [--force] [--version <version> | --rollback] [--override-lock]
+Usage: scripts/update.sh [--force] [--version <version> | --rollback | --source <ref>] [--override-lock]
   --version <version>  deploy this exact published main release of the configured repository
+  --source <ref>       rebuild from this branch, tag or commit instead of a published release
+                       (an install made with install.sh --ref; images are built on this server)
   --rollback           return to the release that ran before the last update (images and host
                        files; database changes stay - restore backups/pre-update-*.sql.gz for those)
   --override-lock      clear a verified stale/wedged portable update lock
@@ -66,6 +73,7 @@ EOF
   shift
 done
 [[ "$ROLLBACK" == 0 || -z "$REQUESTED_VERSION" ]] || die "Use either --version or --rollback, not both."
+[[ -z "$SOURCE_REF" || ( "$ROLLBACK" == 0 && -z "$REQUESTED_VERSION" ) ]] || die "--source cannot be combined with --version or --rollback."
 
 command -v docker >/dev/null 2>&1 || die "Docker is not installed."
 command -v curl >/dev/null 2>&1 || die "curl is required to check GitHub releases."
@@ -94,10 +102,14 @@ if [[ "$ROLLBACK" == 1 ]]; then
   REQUESTED_VERSION="$(tr -d '[:space:]' < "$PREVIOUS_FILE" 2>/dev/null || true)"
   [[ "v$REQUESTED_VERSION" =~ $TAG_PATTERN ]] || die "No earlier published release is recorded in $PREVIOUS_FILE."
 fi
-github() {
-  curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 --retry 2 --retry-delay 5 \
-    --header 'Accept: application/vnd.github+json' --header 'User-Agent: swbook-self-host-updater' "$@"
-}
+# A private repository needs SWB_GITHUB_TOKEN, GITHUB_TOKEN or GH_TOKEN, or a gh login.
+github() { github_curl --header 'Accept: application/vnd.github+json' "$@"; }
+if [[ -n "$SOURCE_REF" ]]; then
+  # shellcheck source=scripts/update-source.sh
+  source "$UPDATE_SCRIPT_DIR/update-source.sh"
+  update_from_source "$SOURCE_REF"
+  exit 0
+fi
 api="https://api.github.com/repos/$SWB_REPOSITORY/releases"
 if [[ -n "$REQUESTED_VERSION" ]]; then
   release_json="$(github "$api/tags/v$REQUESTED_VERSION")" || die "v$REQUESTED_VERSION is not a release of $SWB_REPOSITORY."
@@ -119,7 +131,7 @@ fi
 if [[ "${SWB_UPDATE_STAGED:-0}" != 1 ]]; then
   stage="$(mktemp -d "${TMPDIR:-/tmp}/.swbook-stage.XXXXXX")"
   say "Downloading $tag into temporary storage."
-  github "https://github.com/$SWB_REPOSITORY/archive/refs/tags/$tag.tar.gz" | tar -xz -C "$stage" --strip-components=1 --no-same-owner \
+  github "https://api.github.com/repos/$SWB_REPOSITORY/tarball/$tag" | tar -xz -C "$stage" --strip-components=1 --no-same-owner \
     || { rm -rf -- "$stage"; die "Could not download $tag."; }
   [[ -f "$stage/scripts/update.sh" ]] || { rm -rf -- "$stage"; die "$tag has no updater."; }
   release_update_lock
@@ -146,7 +158,8 @@ mv "$ROOT/backups/$backup_name.partial" "$ROOT/backups/$backup_name"
 export SWB_IMAGE_TAG="$version"
 
 # Check the new backend image exists before replacing any host file.
-docker pull --quiet "$SWB_BACKEND_IMAGE:$version" >/dev/null || die "Cannot pull $SWB_BACKEND_IMAGE:$version; check that the packages are public."
+ghcr_login || die "Could not sign in to ghcr.io with the GitHub token."
+docker pull --quiet "$SWB_BACKEND_IMAGE:$version" >/dev/null || die "Cannot pull $SWB_BACKEND_IMAGE:$version; make the packages public or set SWB_GITHUB_TOKEN (read:packages)."
 host_configuration_started=1
 install_staged_host_bundle "$(cd "$UPDATE_SCRIPT_DIR/.." && pwd)"
 say "Pulling immutable release images."

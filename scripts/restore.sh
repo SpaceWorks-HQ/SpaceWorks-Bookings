@@ -3,6 +3,7 @@
 # from backups/storage). This replaces live data: the backend, job worker and beat and web
 # edge stop until it finishes, and a fresh database backup is taken first.
 #   bash scripts/restore.sh backups/<name>.sql.gz [--with-storage] [--yes]
+#   bash scripts/restore.sh            choose from the newest dumps (installer menu)
 # Migrations then bring an older dump up to the running release.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,6 +27,23 @@ for argument in "$@"; do
   esac
 done
 backups="${SWB_BACKUP_DIR:-$ROOT/backups}"
+if [[ -z "$dump" && "$assume_yes" == 0 && -r /dev/tty ]]; then
+  # shellcheck source=scripts/host-lib.sh
+  source "$SCRIPT_DIR/host-lib.sh"
+  mapfile -t dumps < <(newest_dumps 10)
+  ((${#dumps[@]} > 0)) || die "There are no database dumps in $backups yet."
+  printf '\nDatabase dumps in %s, newest first:\n' "$backups" > /dev/tty
+  for index in "${!dumps[@]}"; do printf '  %s) %s\n' "$((index + 1))" "${dumps[$index]}" > /dev/tty; done
+  printf '  0) Cancel\n' > /dev/tty
+  choice="$(menu_choice "${#dumps[@]}")"
+  [[ "$choice" != 0 ]] || { say 'Cancelled. Nothing was changed.'; exit 2; }
+  [[ "$choice" != invalid ]] || die 'Invalid choice. Nothing was changed.'
+  dump="${dumps[$((choice - 1))]}"
+  if [[ "$(repository_env_value SWB_STORAGE)" != external && -d "$backups/storage" ]] \
+    && confirm 'Also restore the uploaded files from backups/storage?' N; then
+    with_storage=1
+  fi
+fi
 name="$(basename "${dump:-}")"
 [[ "$name" =~ ^[a-z][a-z0-9-]*-[0-9]{8}T[0-9]{6}Z\.sql\.gz$ && -s "$backups/$name" ]] \
   || die "Choose a dump made by scripts/backup.sh or the backup service, inside $backups."

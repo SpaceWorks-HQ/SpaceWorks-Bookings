@@ -15,21 +15,34 @@ valid_dns_host() {
   [[ ${#host_labels[@]} -gt 0 ]]
 }
 
+# Non-interactive installs (SWB_NONINTERACTIVE=1, for CI) answer each question from
+# SWB_ANSWER_<KEY> (for example SWB_ANSWER_PUBLIC_DOMAIN), else its default, and stop on
+# the first missing or invalid answer instead of asking again.
+noninteractive() { [[ "${SWB_NONINTERACTIVE:-0}" == 1 ]]; }
+
 question() {
-  local key="$1" label="$2" default="$3" rule="${4:-text}" value
+  local key="$1" label="$2" default="$3" rule="${4:-text}" value preset attempts=0
   while true; do
+    if noninteractive; then
+      preset="SWB_ANSWER_$key"
+      ((attempts++ == 0)) || { printf 'Set %s (%s) to a valid value for a non-interactive install.\n' "$preset" "$label" >&2; return 1; }
+    fi
     local hint="${default:-required}"
     case "$rule" in secret|optional) hint="${default:-skip}" ;; esac
     [[ "$key" != SMTP_PASSWORD ]] || hint=required
     if [[ "$rule" == choices:Y,* ]]; then
       [[ "$default" =~ ^[Yy] ]] && hint=Y/n || hint=y/N
     fi
-    printf '%s [%s]: ' "$label" "$hint"
-    if [[ "$rule" == secret || "$rule" == password ]]; then
-      IFS= read -r -s -u 3 value || return 1
-      echo
+    if noninteractive; then
+      value="${!preset:-}"
     else
-      IFS= read -r -u 3 value || return 1
+      printf '%s [%s]: ' "$label" "$hint"
+      if [[ "$rule" == secret || "$rule" == password ]]; then
+        IFS= read -r -s -u 3 value || return 1
+        echo
+      else
+        IFS= read -r -u 3 value || return 1
+      fi
     fi
     value="${value%$'\r'}"
     value="${value:-$default}"

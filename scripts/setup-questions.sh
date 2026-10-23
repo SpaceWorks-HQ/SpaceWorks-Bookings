@@ -5,7 +5,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/setup-question-input.sh"
 
 ask_setup_questions() {
-  exec 3</dev/tty
+  noninteractive || exec 3</dev/tty
   echo 'Space Works Bookings deployment questions. Enter accepts the [default].'
   echo 'Run the website on this server?'
   echo '  1) Yes - serve the website and dashboards here.'
@@ -54,6 +54,7 @@ ask_setup_questions() {
   local repeat=''
   while true; do
     question SUPER_ADMIN_PASSWORD 'Super-admin password (12+ characters)' '' password || return 1
+    if noninteractive; then break; fi
     question repeat 'Repeat the password' '' password || return 1
     [[ "$repeat" == "$SUPER_ADMIN_PASSWORD" ]] && break
     echo 'The two passwords did not match.'
@@ -83,9 +84,11 @@ ask_setup_questions() {
     echo 'GitHub Actions runner installation supports only Linux with running systemd; skipping.'
   fi
   setup_summary
-  local proceed
-  question proceed 'Proceed?' Y choices:Y,y,yes,YES,N,n,no,NO || return 1
-  exec 3<&-
+  local proceed=Y
+  if ! noninteractive; then
+    question proceed 'Proceed?' Y choices:Y,y,yes,YES,N,n,no,NO || return 1
+    exec 3<&-
+  fi
   [[ "$proceed" =~ ^[Yy] ]] || { echo 'Cancelled; nothing was installed or configured.'; return 1; }
   ANSWERS_CONFIRMED=yes
 }
