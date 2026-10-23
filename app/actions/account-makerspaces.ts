@@ -16,7 +16,7 @@ const leaveMakerspaceSchema = z.object({
   makerspaceSlug: z.string().trim().min(1).max(100),
 });
 
-const NOT_A_MEMBER = "You are not a member of this makerspace.";
+const NOT_A_MEMBER = "You are not on this makerspace's team.";
 const SOLE_OWNER_ERROR = "You are the only owner. Transfer ownership or delete the makerspace first.";
 
 /**

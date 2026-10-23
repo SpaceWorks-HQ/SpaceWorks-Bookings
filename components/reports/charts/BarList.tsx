@@ -7,14 +7,14 @@ export type BarListItem = {
   value: number;
   /** Shown instead of the bare number, e.g. "₹12,400" or "42 · 18%". */
   display?: string;
-  /** Drill-down to the members behind this bar. */
+  /** Drill-down to the records behind this bar. */
   href?: string;
   hint?: string;
 };
 
 /**
- * Ranked horizontal bars for one nominal series (plan mix, units, roles, states, sources): every bar
- * takes slot 1, values are direct labels at the tip, and each row links to its members. Plain HTML, so it
+ * Ranked horizontal bars for one nominal series (spaces, roles, states, methods): every bar
+ * takes slot 1, values are direct labels at the tip, and each row links to its records. Plain HTML, so it
  * reads correctly with no script and in a screen reader as a list.
  */
 export function BarList({ items, label, max, ordinal = false, empty = "Nothing to show for this period." }: { items: BarListItem[]; label: string; max?: number; ordinal?: boolean; empty?: string }) {

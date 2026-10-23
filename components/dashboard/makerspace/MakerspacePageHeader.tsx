@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { MakerspaceLogo } from "@/components/ui/display";
 
 /**
- * Compact header for a makerspace's sub-pages (Members, Settings):
+ * Compact header for a makerspace's sub-pages (Team, Settings):
  * logo, "Makerspace / Page" breadcrumb, title, one-line description and actions.
  */
 export function MakerspacePageHeader({

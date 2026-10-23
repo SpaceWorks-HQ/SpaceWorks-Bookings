@@ -58,7 +58,7 @@ export function SiteFooter() {
             <Link href="/" className="inline-flex items-center self-start" aria-label="Space Works Bookings home">
               <SpaceWorksProductLogo height={32} label={null} />
             </Link>
-            <p className="text-body-ui text-ink-secondary">Memberships for the groups that make things happen.</p>
+            <p className="text-body-ui text-ink-secondary">Space booking for the people who make things happen.</p>
           </div>
           <nav aria-label="Footer">
             <ul className="flex flex-wrap gap-x-6 gap-y-2">

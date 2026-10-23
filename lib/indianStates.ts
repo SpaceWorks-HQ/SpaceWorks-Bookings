@@ -1,5 +1,5 @@
 /**
- * Indian states and union territories: ISO 3166-2:IN code (stored on makerspaces and members),
+ * Indian states and union territories: ISO 3166-2:IN code (stored on makerspaces and payments),
  * display name, and the two-digit GST state code used for place of supply on tax documents.
  */
 export const INDIAN_STATES = [

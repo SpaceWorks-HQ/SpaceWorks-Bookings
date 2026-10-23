@@ -17,10 +17,10 @@ export default function AboutPage() {
       <section aria-labelledby="about-title" className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-16">
         <div className="flex max-w-[600px] flex-col gap-5">
           <p className="text-label text-ink-muted">About</p>
-          <h1 id="about-title" className="text-display-m text-ink">Built by people who keep a register too.</h1>
+          <h1 id="about-title" className="text-display-m text-ink">Built by people who share a workshop too.</h1>
           <p className="text-body-l text-ink-secondary">
-            Space Works Bookings is free, open-source membership software from Space Works. It is for the secretaries, treasurers and
-            committees who run clubs, associations and alumni bodies, usually in their spare time.
+            Space Works Bookings is free, open-source booking software from Space Works. It is for the people who run makerspaces
+            and shared workshops, and keep their rooms, studios, desks and halls fairly shared.
           </p>
           <p className="text-body-ui text-ink-muted">We wrote you a note. Open the envelope to read it.</p>
         </div>
@@ -30,7 +30,7 @@ export default function AboutPage() {
       <section aria-labelledby="open-title" className="flex flex-col items-start gap-5 border-t border-line pt-16">
         <h2 id="open-title" className="text-h2 text-ink">Read it, run it, help shape it</h2>
         <p className="max-w-[60ch] text-body-ui text-ink-secondary">
-          The code is open under the AGPL. Run it for one makerspace or a whole federation, and tell us what your committee needs next.
+          The code is open under the AGPL. Run it for one makerspace or a whole network, and tell us what your space needs next.
         </p>
         <div className="flex flex-wrap gap-3">
           <a href={GITHUB_URL} className={buttonClasses({ variant: "primary" })}>

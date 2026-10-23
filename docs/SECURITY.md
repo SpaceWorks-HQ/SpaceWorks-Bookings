@@ -33,13 +33,15 @@ public issue.
   Nothing secret is printed, passed on a command line, or baked into an image.
 - Release images are built with a throwaway Server Actions key and placeholder origins; web roles refuse to
   start without the installation's own key.
-- Authenticator seeds (`MFA_ENCRYPTION_KEY`), payment gateway secrets (`PAYMENT_SECRETS_KEY`) and provider
-  secrets saved in Super admin → Settings are encrypted at rest. Losing those keys makes the saved values
+- Authenticator seeds (`MFA_ENCRYPTION_KEY`), payment gateway secrets (`PAYMENT_SECRETS_KEY`) and SMTP and
+  chat credentials saved in the app are encrypted at rest. Losing those keys makes the saved values
   unreadable: keep an encrypted, off-server copy of `.env` and `tls/` (`bash scripts/backup.sh` archives them).
 - Backups contain personal data and every secret. Copy them off the server encrypted, and restrict who can
   read `backups/`.
-- Scheduler (`CRON_SECRET`) and readiness (`HEALTHCHECK_SECRET`) endpoints answer 404 without their bearer
-  secret.
+- The job triggers (`/api/internal/outbox` and `/api/internal/jobs`, `CRON_SECRET`) and readiness
+  (`/api/health/db`, `HEALTHCHECK_SECRET`) answer 404 without their bearer secret. The job triggers only
+  enqueue work. Queue jobs carry ids only, never email content or links, and failure messages are redacted
+  before BullMQ stores them.
 
 ## Releases and automatic deploys
 
@@ -49,7 +51,7 @@ public issue.
   deploy runner controls Docker, which is root on the server. Before setting `SWB_DEPLOY=true`:
   - require approval for **all external contributors'** workflow runs;
   - protect `main` so only maintainers can merge;
-  - in a makerspace, limit the runner group to this repository (and to `release.yml` on
+  - where your GitHub plan has runner groups, limit the runner group to this repository (and to `release.yml` on
     `refs/heads/main` where your plan allows);
   - never add the `spaceworks-bookings-prod` label to a `pull_request` workflow.
   The deploy job uses no checkout and no third-party actions. Keep runner auto-updates on.
@@ -65,18 +67,33 @@ public issue.
 
 ### Sign-in
 
-- **Staff need an authenticator.** Anyone on a makerspace's team (owner, manager, treasurer, viewer) must
-  turn on an authenticator app before the dashboard, its actions or its exports open (`hasAuthenticator` in
-  `lib/permissions.ts`). Members never need one.
+- **No single sign-on.** Accounts sign in with email and password or with an emailed link; there are no
+  Google, GitHub or Apple providers, no adapter and no `Account` or `Session` tables. Sessions are JWTs bound
+  to `User.sessionVersion`, so "Sign out everywhere", a password change or reset ends every session.
+- **Emailed sign-in links** (`lib/magicLink.ts`, `app/actions/magic-link.ts`, `/login/magic`, the Credentials
+  provider `magic-link`). The token is 32 random bytes; only its SHA-256 is stored, as a `VerificationToken`
+  with the identifier `magic-link:<email>`, for 15 minutes, and asking again replaces it. Requests are rate
+  limited per address and per IP (the `magicLink` bucket), refused quietly from a blocked address, and always
+  answered the same way, so they never reveal whether an account exists. Opening the link signs nobody in
+  (mail scanners open links): the page posts the token, the account's authenticator or recovery code is still
+  required when it has one, and the token is used up only when sign-in succeeds. Every refusal counts towards
+  blocking the address. A successful link sign-in verifies the email address.
+- **Staff need an authenticator.** Anyone on a makerspace's team must turn on an authenticator app before the
+  dashboard, its actions or its documents open (`hasAuthenticator` in `lib/permissions.ts`). Customers never
+  need one.
+- **Roles.** `OWNER`, `SPACE_MANAGER`, `BOOKINGS_MANAGER`, `FRONT_DESK`, `TREASURER` and `VIEWER`, each
+  limited by the capability map in `lib/permissionRoles.ts`; viewers never see customer contact details
+  (`bookings.contact`). Only owners and space managers manage the team, and only for less senior roles.
 - **Super admins** sign in with email and password only. Their accounts and passwords are created and changed
-  only on the server (`scripts/admin.sh`); password-reset emails, in-app password changes and Google, GitHub or
-  Apple sign-in are refused for them.
+  only on the server (`scripts/admin.sh`); password-reset emails, in-app password changes and emailed sign-in
+  links are refused for them.
 - **Unusual sign-ins.** Each browser that signs in is remembered by a long-lived random cookie, stored only as a
   hash (`KnownDevice`). An account without an authenticator signing in from a new browser must enter a six-digit
   code emailed to it (valid 10 minutes, single use), unless it verified its email in the last hour.
 - **New-device alerts.** Every first sign-in from a new device emails the account its browser, address and time.
-- **Automatic address blocking.** Twenty failed sign-ins (wrong password or code) from one address within
-  15 minutes block it from signing in, signing up and requesting password resets for an hour; again within a
+- **Automatic address blocking.** Twenty failed sign-ins (wrong password, code or sign-in link) from one
+  address within 15 minutes block it from signing in, signing up and requesting password resets or sign-in
+  links for an hour; again within a
   week, for a day. Super admin, Security lists blocks and lifts them (`lib/ipBlock.ts`).
 - **Breached passwords.** New passwords (sign-up, change, reset, the server command) found in known breaches are
   refused, via Have I Been Pwned with k-anonymity: only the first five characters of the SHA-1 hash leave the

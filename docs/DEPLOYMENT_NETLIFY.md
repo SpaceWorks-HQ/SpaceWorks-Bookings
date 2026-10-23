@@ -10,7 +10,7 @@ This guide covers the split setup, which is how the public landing page is hoste
   Server Actions to the backend through a fixed allowlist (`frontend/catalog.json`), signed with a shared
   secret. No database URL or payment secret is ever set on Netlify.
 - The landing page (`/`) needs no backend data, so it renders even while the backend is down. Sign-in,
-  `/start`, dashboards and member pages need the backend.
+  `/start`, dashboards and makerspace pages need the backend.
 
 ## 1. Run the backend
 

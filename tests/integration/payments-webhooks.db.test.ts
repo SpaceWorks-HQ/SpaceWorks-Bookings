@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { at, createPaymentsMakerspace, customer, ensurePaymentKey, people, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
+import { createPaymentsMakerspace, customer, ensurePaymentKey, people, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
 
 ensurePaymentKey();
 
@@ -14,7 +14,6 @@ type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
 let makerspace: Ctx["makerspace"];
 let code: string;
 let reviewer: { id: string };
-const now = at("2026-07-01T06:00:00Z");
 
 const sign = (body: string) => crypto.createHmac("sha256", "hook_secret").update(body).digest("hex");
 const captured = (paymentId: string, orderId: string, amount: number) =>

@@ -14,7 +14,7 @@ export function VerifyEmailForm({ token }: { token: string }) {
   return (
     <div className="flex w-full flex-col gap-5">
       <p className="text-body-ui text-ink-secondary">
-        Confirming your email activates your account so you can join makerspaces and manage your memberships.
+        Confirming your email activates your account so you can book spaces and manage your bookings.
       </p>
       {error ? <Callout tone="danger" role="alert" className="text-left">{error}</Callout> : null}
       <Button

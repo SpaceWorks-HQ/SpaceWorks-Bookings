@@ -41,12 +41,13 @@ project name `swbook`, and the overlays the settings select:
 | Service | Image | Role |
 |---|---|---|
 | `db` | `postgres:16-alpine` | TLS only (`hostnossl … reject`), owner role `swbook`, runtime role `swbook_app` with data rights only |
-| `redis` | `redis:7-alpine` | TLS only, password, append-only file |
+| `redis` | `redis:7-alpine` | TLS only, password, append-only file, no eviction (it holds the job queues) |
 | `minio` | `pgsty/silo` | TLS only, private bucket `spaceworks-bookings`, versioning on |
 | `createbuckets` | `pgsty/silo` | Creates the bucket and the `swbook-app` identity limited to it, then exits |
 | `migrate` | backend, `--role migrate` | `prisma migrate deploy` as the owner role, then exits |
-| `backend` | backend, `--role backend` | The app and API (Next.js) as `swbook_app`; `SCHEDULER_MODE=external` |
-| `scheduler` | backend, `--role scheduler` | One scheduler pass a minute: email outbox, membership sweep, retention and every job in `runOutboxScheduler` |
+| `backend` | backend, `--role backend` | The app and API (Next.js) as `swbook_app` |
+| `worker` | backend, `--role worker` | BullMQ worker: email delivery, payment and refund checks, retention (`lib/scheduled/index.ts`); `/health` on 3460, ten minutes to finish on stop |
+| `beat` | backend, `--role beat` | BullMQ beat: keeps the job schedules in Redis; `/health` on 3460 |
 | `backup`, `backup-storage` | `postgres:16-alpine`, `pgsty/silo` | Scheduled database dumps and bucket mirror into `backups/` |
 | `caddy` | `caddy:2-alpine` | The web edge; blocks `/api/internal/*`; overwrites `X-Real-IP` |
 | `ops` (profile `tools`) | backend, `--role ops` | Operator checks, run on demand |
@@ -55,8 +56,8 @@ The data services sit on an internal network with no route to the internet. Only
 
 ```bash
 scripts/spaceworks-compose.sh bundled ps
-scripts/spaceworks-compose.sh bundled logs -f backend scheduler
-scripts/spaceworks-compose.sh bundled run --rm ops      # TLS, roles, migrations, Redis, bucket, readiness
+scripts/spaceworks-compose.sh bundled logs -f backend worker beat
+scripts/spaceworks-compose.sh bundled run --rm ops      # TLS, roles, migrations, Redis, bucket, readiness, worker and beat
 ```
 
 ## Files on the server
@@ -86,7 +87,7 @@ bash scripts/restore.sh backups/scheduled-20261020T020000Z.sql.gz               
 bash scripts/restore.sh backups/manual-20261020T090000Z.sql.gz --with-storage     # and the files
 ```
 
-Restore asks you to type `RESTORE`, takes a fresh `pre-restore` dump, stops the app, scheduler and edge,
+Restore asks you to type `RESTORE`, takes a fresh `pre-restore` dump, stops the app, worker, beat and edge,
 replaces the schema in one transaction, optionally copies the files back, and starts everything again;
 migrations bring an older dump up to the running release.
 
@@ -106,15 +107,15 @@ bash scripts/admin.sh revoke --email you@example.org          # take super-admin
 bash scripts/admin.sh list
 ```
 
-The installer creates the first one from the email and password you give. On an upgrade from 0.6 or earlier,
-the existing `SUPER_ADMIN_EMAIL` account is kept as super admin automatically. Without Docker
+The installer creates the first one from the email and password you give, and every migrate run keeps the
+`SUPER_ADMIN_EMAIL` account as super admin. Super admins cannot sign in with an emailed link. Without Docker
 (`npm run admin -- …`) the same commands run against `DATABASE_URL`.
 
 ## Updates and rollback
 
 ```bash
 bash scripts/update.sh --force                                   # newest main release
-bash scripts/update.sh --force --version 0.7.0-main.42.a1b2c3d4e5f6
+bash scripts/update.sh --force --version 0.1.0-main.42.a1b2c3d4e5f6
 bash scripts/update.sh --rollback                                # the release before the last update
 ```
 
@@ -157,5 +158,6 @@ Caddy renews the public certificates by itself.
 
 - `scripts/spaceworks-compose.sh bundled logs migrate` shows a failed migration; the app never starts on a
   half-migrated database.
-- The scheduler is healthy only after a successful pass; `logs scheduler` shows HTTP errors from the app.
+- The worker and beat report healthy only while their Redis heartbeat is fresh; `logs worker beat` shows why
+  one stopped, and Super admin → Jobs lists failed jobs to retry or remove.
 - `run --rm ops` names the failing check without printing any connection detail.

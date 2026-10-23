@@ -74,7 +74,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 /** Every dropdown in the app uses the custom `Dropdown`, never the browser's own picker. */
 export { Dropdown } from "./select";
 
-/** Muted prefix segment joined to the input, e.g. `members.example.org/`. */
+/** Muted prefix segment joined to the input, e.g. `book.example.org/`. */
 export const PrefixInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { prefix: string }>(function PrefixInput(
   { prefix, className, ...props },
   ref,

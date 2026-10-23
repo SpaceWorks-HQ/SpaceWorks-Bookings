@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description: "The rules for running and joining memberships on this Space Works Bookings site.",
+  description: "The rules for running a makerspace and booking its spaces on this Space Works Bookings site.",
 };
 
 const sections: LegalSection[] = [
@@ -11,15 +11,15 @@ const sections: LegalSection[] = [
     id: "about-these-terms",
     title: "About these terms",
     body: [
-      "These terms apply when you use this Space Works Bookings site, whether you create an account, run a makerspace, join as a member or simply browse. By using it, you agree to them.",
-      "Space Works Bookings is open-source software from Space Works. This site is run by [Operator legal name — to be filled in by the operator], called the “operator”. Memberships are run by clubs, associations, societies and other groups, called “makerspaces”. The operator runs the service. Each makerspace runs its own memberships.",
-      "Makerspaces may add their own rules for their members, such as a constitution or code of conduct. Those rules apply to their members alongside these terms.",
+      "These terms apply when you use this Space Works Bookings site, whether you create an account, run a makerspace, book a space or simply browse. By using it, you agree to them.",
+      "Space Works Bookings is open-source software from Space Works. This site is run by [Operator legal name — to be filled in by the operator], called the “operator”. Spaces are offered by makerspaces, shared workshops and similar groups, called “makerspaces”. The operator runs the service. Each makerspace runs its own spaces and bookings.",
+      "Makerspaces may add their own rules for their spaces, such as house rules or a code of conduct. Those rules apply to people who book with them alongside these terms.",
     ],
   },
   {
     id: "who-can-use-it",
     title: "Who can use Space Works Bookings",
-    body: "You must be able to agree to these terms where you live. If you are under that age, a parent or guardian must agree for you, including when you join a makerspace.",
+    body: "You must be able to agree to these terms where you live. If you are under that age, a parent or guardian must agree for you, including when you book a space.",
   },
   {
     id: "your-account",
@@ -34,18 +34,17 @@ const sections: LegalSection[] = [
     title: "Running a makerspace",
     body: [
       "Makerspaces either apply and are reviewed by the operator, or are added by the operator directly. The operator may approve, ask for changes to, or decline an application, and may suspend or archive a makerspace that breaks these terms or the law.",
-      "You are responsible for your makerspace and everything you publish or send through Space Works Bookings, including plans and prices, join form questions, approvals, member records, cards, receipts and emails. Keep your details accurate and tell members promptly if plans or prices change.",
-      "Owners decide who joins the team and what each person can do, and are responsible for their actions. Remove access promptly when someone leaves. Deleting a makerspace permanently deletes its plans, members, cards and team, except records the law requires to be kept.",
+      "You are responsible for your makerspace and everything you publish or send through Space Works Bookings, including spaces, prices, opening hours, booking rules, approvals, receipts and emails. Keep your details accurate and tell people promptly if a booking or price changes.",
+      "Owners decide who joins the team and what each person can do, and are responsible for their actions. Remove access promptly when someone leaves. Deleting a makerspace permanently deletes its settings and team, except records the law requires to be kept.",
     ],
   },
   {
-    id: "memberships-and-payments",
-    title: "Memberships and payments",
+    id: "bookings-and-payments",
+    title: "Bookings and payments",
     body: [
-      "When you join or renew, you are dealing with the makerspace, not the operator. The makerspace decides who may join, its prices and periods, whether applications need approval, and its refund rules.",
-      "Online payments go straight to the makerspace’s own account with its payment provider, such as Razorpay or Stripe, under that provider’s terms. The operator does not hold or handle members’ money. Offline payments are arranged directly with the makerspace, which records them here.",
+      "When you book a space, you are dealing with the makerspace, not the operator. The makerspace decides who may book, its prices and opening hours, whether bookings need approval, and its cancellation and refund rules.",
+      "Online payments go straight to the makerspace’s own account with its payment provider, such as Razorpay or Stripe, under that provider’s terms. The operator does not hold or handle bookers’ money. Offline payments are arranged directly with the makerspace, which records them here.",
       "Receipts and tax invoices are issued by the makerspace, in its name. Makerspaces are responsible for their own tax registration, the rates they charge and their filings. Space Works Bookings helps produce the documents but is not tax advice.",
-      "Your membership card is personal. Anyone who has its QR code can check whether it is valid, so show it only when you need to.",
     ],
   },
   {
@@ -53,13 +52,13 @@ const sections: LegalSection[] = [
     title: "Acceptable use",
     body: [
       "Do not use Space Works Bookings to break the law, harass or harm others, publish hateful, misleading, sexually explicit or infringing content, or collect money under false pretences.",
-      "Do not send spam or emails unrelated to a membership, collect members’ information for other purposes, try to access another makerspace’s data, get around security or rate limits, upload malware, overload the service, or scrape it.",
+      "Do not send spam or emails unrelated to a booking, collect bookers’ information for other purposes, try to access another makerspace’s data, get around security or rate limits, upload malware, overload the service, or scrape it.",
     ],
   },
   {
     id: "your-content",
     title: "Your content",
-    body: "You keep ownership of what you upload or write. You give the operator permission to store, display and process it only as needed to run the service. Make sure you have the right to share it, including member photos.",
+    body: "You keep ownership of what you upload or write. You give the operator permission to store, display and process it only as needed to run the service. Make sure you have the right to share it, including photos of your spaces.",
   },
   {
     id: "the-service",
@@ -78,7 +77,7 @@ const sections: LegalSection[] = [
     id: "liability",
     title: "Disclaimers and liability",
     body: [
-      "As far as the law allows, the operator gives no warranties about the service, and is not responsible for what makerspaces or members do, for makerspaces’ prices, refunds or tax treatment, or for any indirect loss. The operator’s total liability is limited as far as the law allows.",
+      "As far as the law allows, the operator gives no warranties about the service, and is not responsible for what makerspaces or the people who book with them do, for makerspaces’ prices, refunds or tax treatment, or for any indirect loss. The operator’s total liability is limited as far as the law allows.",
       "Nothing in these terms limits liability that the law does not allow to be limited, or removes rights you have as a consumer.",
     ],
   },
@@ -90,7 +89,7 @@ const sections: LegalSection[] = [
   {
     id: "law-and-contact",
     title: "Governing law and contact",
-    body: "These terms are governed by the laws of [governing law and jurisdiction — to be filled in by the operator], unless the law where you live gives you other rights. For questions about these terms, your account or the privacy policy, contact the operator at [operator contact email — to be filled in by the operator]. For questions about a particular membership, contact its makerspace.",
+    body: "These terms are governed by the laws of [governing law and jurisdiction — to be filled in by the operator], unless the law where you live gives you other rights. For questions about these terms, your account or the privacy policy, contact the operator at [operator contact email — to be filled in by the operator]. For questions about a particular booking, contact its makerspace.",
   },
 ];
 
@@ -99,7 +98,7 @@ export default function TermsPage() {
     <LegalPage
       current="terms"
       title="Terms of use"
-      updated="19 October 2026"
+      updated="23 October 2026"
       notice="These terms are a starting point for any Space Works Bookings site. Each operator must replace the bracketed placeholders with its legal name, contact details and governing law, add how disputes are handled, and should have them reviewed by a lawyer. They are not legal advice."
       sections={sections}
     />

@@ -28,7 +28,7 @@ export default async function PublicMakerspacePage({ params }: { params: Promise
       <section aria-labelledby="spaces" className="flex flex-col gap-6">
         <h2 id="spaces" className="text-h1 text-ink">Spaces</h2>
         {takingBookings ? (
-          <EmptyState patch title="No spaces to book yet">
+          <EmptyState mood="waiting" title="No spaces to book yet">
             {makerspace.name} hasn&apos;t opened any spaces for booking here yet. Contact them to ask.
           </EmptyState>
         ) : (

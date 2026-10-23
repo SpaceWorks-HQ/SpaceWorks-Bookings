@@ -12,7 +12,7 @@ export type MakerspaceEmailValues = { enabled: boolean; fromName: string; fromAd
 
 const PORTS = [{ value: 587, label: "587 · STARTTLS (most relays)" }, { value: 465, label: "465 · TLS from the start" }, { value: 2525, label: "2525 · STARTTLS (alternative)" }, { value: 25, label: "25 · STARTTLS" }];
 
-/** The makerspace's own SMTP relay and sender for member emails, with a test send. */
+/** The makerspace's own SMTP relay and sender for customer emails, with a test send. */
 export function MakerspaceEmailForm({ slug, initial, canEdit, verified }: { slug: string; initial: MakerspaceEmailValues; canEdit: boolean; verified: string | null }) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
@@ -21,7 +21,8 @@ export function MakerspaceEmailForm({ slug, initial, canEdit, verified }: { slug
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof MakerspaceEmailValues>(key: K, value: MakerspaceEmailValues[K]) => setValues((current) => ({ ...current, [key]: value }));
-  const { hasPassword: _, ...fields } = values;
+  // The server never takes hasPassword back; a blank password keeps the saved one.
+  const fields = { ...values, hasPassword: undefined };
 
   return (
     <form

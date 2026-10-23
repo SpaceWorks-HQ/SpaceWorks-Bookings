@@ -1,51 +1,68 @@
 # Payments
 
-How members pay, how money is recorded, and how receipts are issued. Tax rules are in [GST.md](GST.md).
+How money is taken, recorded and receipted. Tax rules are in [GST.md](GST.md).
+
+Phase 0 keeps the payment infrastructure from the platform this product was forked from and decouples it
+from what was being sold. Bookings arrive in Phase 1; Phase 2 connects payments to them (charge modes,
+deposits, pay later, tiered refund policies, the booking ledger). Where this page says **Phase 2**, the code
+does not exist yet.
 
 ## Ways to pay
 
 Each makerspace picks **one** gateway, or none:
 
-| Gateway | How the member pays | Notes |
+| Gateway | How the customer pays | Notes |
 | --- | --- | --- |
-| Razorpay | Checkout.js opens over the pay page (UPI, cards, netbanking) | Orders API. INR, plus the international currencies the Razorpay account has enabled. |
+| Razorpay | Checkout.js on our page (UPI, cards, netbanking) | Orders API. INR, plus the international currencies the Razorpay account has enabled. |
 | Stripe | Redirect to Stripe Checkout and back | Checkout Sessions (`mode: payment`) on the makerspace's **own** Stripe account. No Stripe script runs on our pages. Takes every supported currency; three-decimal currencies must be multiples of 10. New Stripe accounts in India may be invite-only. |
-| Offline | UPI QR, bank transfer, cash, cheque | Always available. A manager records it, or the member submits "I've paid" with a UTR. |
+| Offline | UPI QR, bank transfer, cash, cheque | Always available. The team records it. |
 
-Keys are saved under **Settings → Payments and tax**. Secrets are encrypted with AES-256-GCM using
-`PAYMENT_SECRETS_KEY` (32 random bytes, base64), bound to the makerspace, and never sent back to the browser.
-Without that key the gateway section stays locked. Test mode follows the key (`rzp_test_`, `sk_test_`).
+Keys are saved under **Settings → Payments and tax** (`payments.settings`: owner and space managers).
+Secrets are encrypted with AES-256-GCM using `PAYMENT_SECRETS_KEY` (32 random bytes, base64), bound to the
+makerspace, and never sent back to the browser. Without that key the gateway section stays locked. Test mode
+follows the key (`rzp_test_`, `sk_test_`).
 
 ## The payment record
 
-Every charge starts as a `Payment` with its `PaymentLine`s (term fee, joining or rejoining fee) and a frozen
-`taxSnapshot`, **before** any gateway order exists. So the amount, tax and receipt are identical whichever way
-the member pays.
+Every charge starts as a `Payment` with its `PaymentLine`s and a frozen `taxSnapshot`, **before** any gateway
+order exists, so the amount, tax and receipt are identical whichever way the customer pays.
+
+A payment carries who paid as typed at the time (`customerName`, `customerEmail` lowercased,
+`customerStateCode` for the GST place of supply, `customerGstin`) and a nullable `bookingId`. In Phase 0
+`bookingId` is a plain column with no relation; Phase 2 turns it into a relation to `Booking`. Line kinds are
+`BOOKING`, `ADD_ON` and `OTHER`.
 
 | Status | Meaning |
 | --- | --- |
 | `PENDING` | A gateway attempt was started |
-| `AWAITING_CONFIRMATION` | Offline money waiting for a manager (maker-checker, or a member's UTR claim) |
+| `AWAITING_CONFIRMATION` | Offline money waiting for a second person (maker-checker) |
 | `PAID` | Money received; document issued (or held, see below) |
-| `WAIVED` | The fee was forgiven; no document, the amount forgiven is kept for reports |
-| `FAILED` | The gateway failed or the claim was rejected |
-| `CANCELLED` | Replaced by a newer attempt, or cancelled by a manager |
+| `WAIVED` | Reserved for forgiven charges (Phase 2); no document |
+| `FAILED` | The gateway failed or the team rejected an offline payment |
+| `CANCELLED` | Cancelled by the team, or closed by a newer attempt |
 
-One open payment per term (a partial unique index); a new checkout cancels the previous attempt.
+The entry points (`lib/payments/*`) take a customer and a list of charge items:
+
+- `createPayment(tx, { makerspace, customer, currency, items, provider, status, bookingId? })` in `charges.ts`
+  taxes each item (`chargeLines` in `tax.ts`) and writes the payment and its lines;
+- `startCheckout({ makerspaceId, customer, currency, items, bookingId?, description, returnPath })` in
+  `checkout.ts` creates the payment, then the gateway order;
+- `recordOfflinePayment(tx, { makerspace, customer, currency, items, method, … })` in `offline.ts`.
+
+Phase 2 locks the booking before calling them and adds the per-booking "one open payment" rule.
 
 ## Settling
 
-`settlePayment` runs in one transaction: lock the payment, mark it `PAID`, activate the term
-(`markTermPaid`), allocate the document number and insert the document. Lock order is always
-**payment → term → document counter**.
+`settlePayment` runs in one transaction: lock the payment, mark it `PAID`, allocate the document number and
+insert the document. It confirms nothing else; in Phase 2 the caller confirms the booking in the same
+transaction. Lock order is always **payment → document counter**.
 
 Money received is **never refused**. These still become `PAID` with a document, and are flagged for review:
 
 - paid after the attempt was cancelled or failed (late capture);
-- the membership was already paid (duplicate);
-- the makerspace was suspended or the plan archived.
+- the makerspace was not active.
 
-A **mismatched amount** is also `PAID` and flagged, but its document is **held**. A manager either issues the
+A **mismatched amount** is also `PAID` and flagged, but its document is **held**. The team either issues the
 receipt on the amount received (lines are re-apportioned) or refunds.
 
 ## Webhooks
@@ -65,69 +82,42 @@ per-makerspace value shown in settings.
 
 ## Reconcile
 
-The scheduler polls open gateway attempts older than five minutes, every five minutes, through
-`fetchPayment`, and settles or fails them. A member returning from Stripe, or finishing Razorpay Checkout,
-settles straight away the same way. Attempts still open after a week are closed as `FAILED`; a capture that
-still arrives is receipted and flagged.
+The `payments-reconcile` job (every five minutes, `lib/scheduled/index.ts`) polls open gateway attempts older
+than five minutes through `fetchPayment`, and settles or fails them. A customer returning from Stripe, or
+finishing Razorpay Checkout, settles straight away the same way. Attempts still open after a week are closed as
+`FAILED`; a capture that still arrives is receipted and flagged.
 
 ## Offline payments and maker-checker
 
 With **"A second person confirms offline payments"** on (Settings → Money and year), a payment recorded by one
-owner, manager or treasurer counts only after a different one confirms it. The receipt number is allocated at
-confirmation. With it off, recorded payments are paid and receipted at once.
-
-Members can say "I've paid" with a UPI or bank UTR. A reference can be claimed once per makerspace (a
-partial unique index ignores rejected claims, so a corrected claim can be resubmitted). Claims are rate
-limited per member.
+person on the team counts only after someone else with `payments.record` confirms it. The receipt number is
+allocated at confirmation. With it off, recorded payments are paid and receipted at once. A UPI or bank
+reference is recorded once per makerspace (a partial unique index ignores rejected payments, so a corrected
+one can be entered again).
 
 ## Refunds and credit notes
 
-Refunds are append-only. Offline refunds are recorded as money already handed back and processed at once.
-Gateway refunds go to the provider after the refund row commits and stay `PENDING` until the provider (or its
-webhook) confirms; a timeout keeps them pending rather than guessing. Each processed refund gets a
-**credit note** with tax apportioned pro rata.
+Refunds (`refunds.manage`: owner, space managers, treasurers) are append-only. Offline refunds are recorded as
+money already handed back and processed at once. Gateway refunds go to the provider after the refund row
+commits and stay `PENDING` until the provider (or its webhook) confirms; a timeout keeps them pending rather
+than guessing. Each processed refund gets a **credit note** with tax apportioned pro rata.
 
-A manager may tick **Also end the membership** when refunding: the term the payment bought is cancelled
-(`withdraw`, so it shows as cancelled, not revoked) and its card stops verifying.
-
-### Refund policy and member requests
-
-Settings → Payments and tax → **Refunds** sets the policy (`MakerspacePaymentSettings.refundPolicy`):
-
-- **No refunds** (the default): members can still leave, but nothing is offered.
-- **Full refund within N days** of payment: everything still refundable.
-- **Unused share within N days**: the membership-fee lines (tax included) times the unused share of the term;
-  joining and rejoining fees are never offered. A lifetime term offers its whole membership fee. The maths is
-  `lib/payments/refundPolicy.ts` (pure, tested).
-
-A member with a paid, running membership inside the window sees **Cancel and request a refund** on their
-membership page, with the amount on offer and the policy text. That opens a `RefundRequest` (one open request
-per payment, enforced by a partial unique index) and emails the makerspace-wide finance team. Nothing changes
-until a manager decides on the payment's page (or the **Refund requests** filter on Payments):
-
-- **Approve**: the amount is prefilled from the policy and may be changed up to what is left; the refund runs
-  as above and, unless unticked, the membership ends. The member is emailed.
-- **Decline**: needs a note, which is emailed to the member; the membership carries on.
-- The member may **withdraw** an open request. A refund made straight from the payment page closes any open
-  request on it.
-
-Requests are never deleted and are decided once (trigger in migration 0010). Erasure keeps them as money history
-but replaces the member's reason; the member's data export includes them.
+There are no refund requests or refund policies yet. Phase 2 adds policy tiers per space and makerspace,
+automatic refunds on cancellation, retries and the other scenarios in the build plan.
 
 ### Pending refund follow-up
 
-Each scheduler pass (at most every five minutes) asks Razorpay or Stripe about gateway refunds still `PENDING`
+The `refunds-reconcile` job (every five minutes) asks Razorpay or Stripe about gateway refunds still `PENDING`
 after ten minutes, oldest-checked first, for up to 30 days: by the gateway refund id, or, when the original call
-timed out before answering, by our refund id among the payment's refunds (`notes.refundId` /
-`metadata.refundId`). Only the provider's answer settles or fails a refund. Refunds pending for more than a day
-are flagged on the Payments page.
+timed out before answering, by our refund id among the payment's refunds. Only the provider's answer settles or
+fails a refund. Refunds pending for more than a day are flagged on the Payments page.
 
 ## Immutability
 
-Database triggers enforce, with column allowlists:
+Database triggers in `prisma/migrations/0001_init` enforce, with column allowlists:
 
-- a paid or waived payment may only gain settlement details, review flags or anonymisation; it is never
-  deleted;
+- a paid or waived payment may only gain settlement details and review flags (its amount, customer, booking
+  once set, tax snapshot and references are fixed); it is never deleted;
 - payment lines are written once (lines of an unpaid payment may be deleted with it);
 - a tax document may only gain `cancelledAt`; never deleted;
 - a refund may only move on from `PENDING`.
@@ -138,6 +128,13 @@ A makerspace that has taken payments cannot be deleted; a platform admin archive
 
 Numbers are gapless per makerspace, series and financial year: `PREFIX-2627-00042` for receipts and invoices,
 `PREFIX-2627-C00042` for credit notes (at most 16 characters). PDFs are drawn on demand from the frozen
-snapshot (`/api/documents/{id}`, for the finance team within their unit, or the member it was issued to), so
-a rendering problem never burns a number. Amounts are printed with the ISO code ("INR 1,180.00").
-Receipts are attached to the payment email.
+snapshot (`/api/documents/{id}`, for the team with `payments.view`, or the customer whose verified account
+email matches the payment), so a rendering problem never burns a number. Amounts are printed with the ISO code
+("INR 1,180.00"). Receipts and credit notes are attached to the payment emails.
+
+## Dashboard
+
+**Payments** lists every payment with filters (to confirm, needs review, paid, started, refunds, failed),
+search by customer name, email, UTR or document number, and a page per payment with its lines, documents,
+refunds and the actions the role allows (confirm, reject, cancel, release a held document, clear a flag,
+refund).

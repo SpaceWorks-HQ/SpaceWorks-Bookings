@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Callout, PageHeader } from "@/components/ui/display";
 import { JobsPanel } from "@/components/super-admin/JobsPanel";
 import { loadSuperAdminJobsView } from "@/lib/views/app__super-admin__jobs__page";
+import { requireSuperAdmin } from "@/lib/permissions";
 
 export const metadata: Metadata = { title: "Jobs" };
 
 export default async function SuperAdminJobsPage() {
+  await requireSuperAdmin();
   const { health } = await loadSuperAdminJobsView();
   return (
     <div className="flex flex-col gap-6">

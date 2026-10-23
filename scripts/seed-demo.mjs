@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Demo data for local QA: platform admin, team accounts and makerspaces in every review state.
+// Demo data for local QA and the end-to-end tests: one active makerspace and its owner. No super admin.
 //
-//   DEMO_PASSWORD=<12+ chars> [DEMO_MFA_SECRET=<base32> MFA_ENCRYPTION_KEY=<base64 32 bytes>] npm run db:seed-demo
+//   DEMO_PASSWORD=<12+ chars> DEMO_MFA_SECRET=<base32> MFA_ENCRYPTION_KEY=<base64 32 bytes> npm run db:seed-demo
 //
-// Every account uses DEMO_PASSWORD. With DEMO_MFA_SECRET the platform admin also has two-step
-// verification on (the super-admin panel requires it). Idempotent; never runs in production.
+// The owner signs in as owner@demo.test with DEMO_PASSWORD; staff need an authenticator before the dashboard opens,
+// so DEMO_MFA_SECRET is their TOTP seed. Idempotent; never runs in production. Phase 1 adds spaces and bookings.
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
@@ -12,6 +12,8 @@ import { PrismaClient } from "@prisma/client";
 if (process.env.NODE_ENV === "production") throw new Error("seed-demo never runs in production.");
 const password = process.env.DEMO_PASSWORD ?? "";
 if (password.length < 12) throw new Error("Set DEMO_PASSWORD (at least 12 characters).");
+const mfaSecret = process.env.DEMO_MFA_SECRET ?? "";
+if (!/^[A-Z2-7]{16,}$/.test(mfaSecret)) throw new Error("Set DEMO_MFA_SECRET to a base32 TOTP seed (16+ characters, A-Z and 2-7).");
 
 function encryptMfaSecret(secret) {
   const key = Buffer.from(process.env.MFA_ENCRYPTION_KEY ?? "", "base64");
@@ -23,62 +25,29 @@ function encryptMfaSecret(secret) {
 }
 
 const prisma = new PrismaClient();
-const passwordHash = await bcrypt.hash(password, 12);
 const now = new Date();
+const credentials = { emailVerified: now, passwordHash: await bcrypt.hash(password, 12), mfaSecretEncrypted: encryptMfaSecret(mfaSecret), mfaEnabledAt: now };
+const owner = await prisma.user.upsert({
+  where: { email: "owner@demo.test" },
+  create: { email: "owner@demo.test", name: "Shaan Shoukath", ...credentials },
+  update: { name: "Shaan Shoukath", ...credentials, isSuperAdmin: false },
+});
 
-async function user(email, name, extra = {}) {
-  return prisma.user.upsert({
-    where: { email },
-    create: { email, name, emailVerified: now, passwordHash, ...extra },
-    update: { name, emailVerified: now, passwordHash, ...extra },
-  });
-}
-
-const mfa = process.env.DEMO_MFA_SECRET ? { mfaSecretEncrypted: encryptMfaSecret(process.env.DEMO_MFA_SECRET), mfaEnabledAt: now } : {};
-const admin = await user("admin@demo.test", "Shaan Shoukath", { isSuperAdmin: true, ...mfa });
-// Staff need an authenticator before the dashboard opens; with DEMO_MFA_SECRET the demo staff share one.
-const owner = await user("owner@demo.test", "Abhiram NJ", mfa);
-const treasurer = await user("treasurer@demo.test", "Abdul Samad MJ", mfa);
-const applicant = await user("applicant@demo.test", "Midlaj C");
-
-const base = { country: "IN", timezone: "Asia/Kolkata", currency: "INR", stateCode: "KL" };
-const makerspaces = [
-  {
-    slug: "spaceworks", name: "SpaceWorks", kind: "Community", status: "ACTIVE", city: "Kochi",
-    description: "Open-source tools and a community of makers who build them together, with chapters across Kerala.",
-    contactEmail: "hello@spaceworks.demo.test", team: [[owner, "OWNER"], [treasurer, "TREASURER"]],
-    reviews: [["SUBMITTED", owner, null], ["APPROVED", admin, null]],
-  },
-  {
-    slug: "kunj-company", name: "Kunj-Company", kind: "Company club", status: "PENDING_REVIEW", city: "Kozhikode",
-    description: "A members' club for the Kunj-Company team and friends, with monthly meet-ups and learning sessions.",
-    contactEmail: "office@kunj-company.demo.test", team: [[applicant, "OWNER"]],
-    reviews: [["SUBMITTED", applicant, null]],
-  },
-  {
-    slug: "ideologists", name: "Ideologists", kind: "Society", status: "CHANGES_REQUESTED", city: "Thrissur",
-    description: "A society for people who turn ideas into projects, with talks, mentoring and an annual showcase.",
-    contactEmail: "hello@ideologists.demo.test", team: [[applicant, "OWNER"]],
-    reviews: [["SUBMITTED", applicant, null], ["CHANGES_REQUESTED", admin, "Please add your full address and a contact phone number."]],
-  },
-  {
-    slug: "tinkerspace", name: "Tinkerspace", kind: "Makerspace", status: "SUSPENDED", city: "Alappuzha",
-    description: "A shared workshop with tools, workbenches and weekend build nights for members around Alappuzha.",
-    contactEmail: "hello@tinkerspace.demo.test", team: [[owner, "OWNER"]],
-    reviews: [["SUBMITTED", owner, null], ["APPROVED", admin, null], ["SUSPENDED", admin, "Suspended while we confirm the workshop's insurance cover."]],
-  },
-];
-
-for (const { team, reviews, ...data } of makerspaces) {
-  const existing = await prisma.makerspace.findUnique({ where: { slug: data.slug }, select: { id: true } });
-  if (existing) continue;
-  const makerspace = await prisma.makerspace.create({ data: { ...base, ...data } });
-  for (const [member, role] of team) await prisma.teamMember.create({ data: { makerspaceId: makerspace.id, userId: member.id, role } });
-  let at = Date.now() - reviews.length * 3_600_000;
-  for (const [action, actor, reason] of reviews) {
-    await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action, actorUserId: actor.id, reason, createdAt: new Date((at += 3_600_000)) } });
-  }
+const details = {
+  name: "Tinkerspace", kind: "Makerspace", status: "ACTIVE", source: "SUPERADMIN", visibility: "PUBLIC",
+  description: "A shared workshop in Alappuzha with a laser studio, a meeting room, hot desks and a hall for weekend build nights.",
+  contactEmail: "hello@tinkerspace.demo.test", contactPhone: "+91 98470 12345", city: "Alappuzha", stateCode: "KL",
+  country: "IN", timezone: "Asia/Kolkata", currency: "INR", website: "https://tinkerspace.demo.test",
+};
+const makerspace = await prisma.makerspace.upsert({ where: { slug: "tinkerspace" }, create: { slug: "tinkerspace", ...details }, update: details });
+await prisma.teamMember.upsert({
+  where: { userId_makerspaceId: { userId: owner.id, makerspaceId: makerspace.id } },
+  create: { userId: owner.id, makerspaceId: makerspace.id, role: "OWNER" },
+  update: { role: "OWNER" },
+});
+if (!(await prisma.makerspaceReview.count({ where: { makerspaceId: makerspace.id } }))) {
+  await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action: "CREATED", actorUserId: null } });
 }
 
 await prisma.$disconnect();
-console.log(`seed-demo: ${makerspaces.length} makerspaces and 4 accounts (admin, owner, treasurer, applicant @demo.test) ready.`);
+console.log("Seeded the Tinkerspace demo makerspace (/m/tinkerspace) and its owner, owner@demo.test.");

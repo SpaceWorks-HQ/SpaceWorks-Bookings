@@ -49,7 +49,7 @@ export function LeaveMakerspaceButton({
       <ConfirmationDialog
         open={open}
         title={`Leave ${makerspaceName}?`}
-        message="You will lose access to its dashboard straight away. An owner or admin would need to invite you again. Your own memberships with this makerspace are not affected."
+        message="You will lose access to its dashboard straight away. An owner or space manager would need to invite you again. Your own bookings with this makerspace are not affected."
         confirmLabel="Leave makerspace"
         loading={pending}
         onCancel={() => setOpen(false)}

@@ -61,9 +61,9 @@ function groupBy<T>(rows: T[], key: (row: T) => string) {
 }
 
 const hsn = (rows: HsnRow[]) =>
-  rows.map((row, index) => ({ num: index + 1, hsn_sc: row.sac, desc: "Membership services", uqc: "NA", qty: 0, rt: rate(row.rateBps), txval: rupees(row.taxable), iamt: rupees(row.igst), camt: rupees(row.cgst), samt: rupees(row.sgst), csamt: 0 }));
+  rows.map((row, index) => ({ num: index + 1, hsn_sc: row.sac, desc: "Rental of space", uqc: "NA", qty: 0, rt: rate(row.rateBps), txval: rupees(row.taxable), iamt: rupees(row.igst), camt: rupees(row.cgst), samt: rupees(row.sgst), csamt: 0 }));
 
-/** Table 13 codes fixed by the portal. Membership receipts outside GST are not GST documents, so they stay out. */
+/** Table 13 codes fixed by the portal. Receipts outside GST are not GST documents, so they stay out. */
 const DOC_NUM: Record<string, number> = { "Invoices for outward supply": 1, "Credit note": 5 };
 
 function docIssue(rows: Table13Row[]) {

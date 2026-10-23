@@ -59,77 +59,34 @@ run the tests.
 - **Copy.** Sentence case, en-GB, and buttons named after their action. No "Oops", and no exclamation marks
   on errors.
 
-## Member cards
-
-- **One drawing, three outputs.** `components/cards/CardCanvas.tsx` (browser) and `lib/cards/layout.ts` (PDF and
-  PNG) draw the same boxes, palette and template decor. Cards are CR80 (85.6 × 54 mm), landscape or portrait, with
-  four presets: Community, Corporate, Night and Student.
-- **Type on cards.** Gilroy Light and ExtraBold first, then OFL Noto Sans (extended Latin and ₹), Noto Sans
-  Malayalam and Noto Sans Devanagari. The browser loads the same files under one `"SWB Card"` family with
-  unicode ranges (`components/cards/cardFonts.tsx`). Long names shrink until they fit the room kept for them,
-  measured with real shaping on the server and with canvas metrics in the browser.
-- **Colour.** Card colours are brand keys plus the makerspace's accent; every text colour keeps 4.5:1 against
-  what it sits on, and Workshop Orange is a fill only.
-- **The designer** (Settings → Cards) is three panes from 1280px: settings, the card to scale, and the selected
-  item's inspector. Below that they stack, card first. It autosaves; a sample switch shows Latin, Malayalam and
-  Devanagari names.
-- **Delight moment.** A card issued in the last two minutes rises into place on the member page and one Citron and
-  Sky Blue sweep crosses it, once per tab (`components/cards/cards.module.css`). With reduced motion the card
-  simply appears.
-- **The holographic card** tilts towards the pointer or the phone and flips to its back; with reduced motion it
-  stays flat and the flip is an instant swap.
-- **`/verify/[token]`** leads with the verdict (Current member, Renewal due, Not started yet, Not a current member,
-  Membership revoked), each a colour plus an icon plus words, then the name, plan, valid-until and card number.
-  It never shows contact details and is not indexed.
-
 ## Landing page (`/`)
 
-The marketing home follows one sample member, Shaan Shoukath of SpaceWorks, through a membership year,
-April to March. It shares its vocabulary with the sister Space Works site:
+The marketing home pitches booking a makerspace's spaces. It shares its vocabulary with the sister Space Works
+site:
 
-- **Grounds.** Warm Cream sections with the faint isometric box pattern (authored SVG, masked to the edges),
-  a full-bleed Deep Ink band for money and a Maker Teal band for self-hosting.
-- **Type.** Two-line Gilroy ExtraBold headlines ending in full stops. The page's one Unbounded phrase is
-  "One card." in the year section.
+- **Grounds.** Warm Cream sections with the faint isometric box pattern (`.landing-boxes`, authored SVG masked
+  to the edges) and a Maker Teal band for self-hosting.
+- **Type.** Two-line Gilroy ExtraBold headlines ending in full stops.
 - **Action.** Workshop Orange (`highlight` button) is used only for "Apply for your makerspace".
-- **Objects.** Member card, receipt slip, reminder note, proof chips and terminal are flat brand objects.
-  Every one is labelled as a sample; the page makes no customer or usage claims.
-- **Motion** (all in `components/marketing/landing.css`, all still under reduced motion). Scroll-driven reveals (`.sr-*`) give each section its own entrance: the hero deck fans apart as it leaves, headings rise, timeline rows arrive from the left, panels lift, report bars grow and the terminal slides in. Load and interaction motion:
-  - The hero fills the first screen; its headline lines slide up and the deck is dealt once.
-  - The card flips to its QR side on demand.
-  - A strip of sample cards slides past under the hero and pauses on hover, focus or its button.
-  - The year ruler fills as the section scrolls.
-  - The receipt prints once and the terminal caret blinks.
-- **Design brief:** `.impeccable/surfaces/app-page-tsx.md`.
+- **Objects.** The hero's sample booking (space, time, payment and receipt number) is a flat brand object; the
+  page makes no customer or usage claims.
+- **Motion** (all in `components/marketing/landing.css`, all still under reduced motion): the headline lines
+  slide up on load and the hero fades in; scroll-driven reveals (`.sr-*`) lift the feature cards and slide the
+  deploy terminal in; the terminal caret blinks.
 
-## Member portal (`/account`)
+## Sign-in (`/login`)
 
-- **Wallet first.** `/account` is the membership wallet: one card per makerspace (logo, member number,
-  unit, role chips), one row per plan with a status chip, a single sentence on where it stands ("Valid until
-  31 Mar 2027 · 20 days left") and only the actions that apply now. Pay is the accent button; Renew is
-  primary; Cancel renewal is ghost; Leave is a quiet danger link behind a confirmation.
-- **Tabs.** Memberships, Profile, Data and privacy, Makerspaces (team roles), Security. Each membership's
-  page (history, details, receipts) and the pay page sit under Memberships.
-- **History** reads as a timeline per term: dates and amount, then each change in plain words
-  ("Active · Payment received").
-- **Irreversible steps** (leaving, erasure) always confirm, say what stays (payments) and what doesn't.
-  Approving an erasure asks the manager to type ERASE.
-- **Slots.** `components/portal/Slots.tsx` reserves the card (P6) and receipts (P7) spots, so they plug in
-  without a layout change.
+Two columns from 768px: the form, and a brand panel with the stacked lockup, a sample booking, an activity row
+and the layout's one Unbounded phrase ("Spaces, booked."). Under the password form, **Email me a sign-in link**
+opens a small form whose answer never says whether an account exists. The emailed link lands on `/login/magic`,
+which asks for one press of **Continue signing in** (and the authenticator code when the account has one)
+before anything happens.
 
-## Public page editor (Settings → Public page)
+## Account (`/account`)
 
-- **Two columns** from 1280px: the form on the left, a sticky live preview on the right (inert, rendered by
-  the same `PageSections` component as `/m/[slug]`, inside the page's own accent scope). Below that width
-  the preview follows the form.
-- **Sections** are collapsible rows with a show/hide switch, move up and down buttons and remove; one is
-  open at a time. Errors from the server mark the row "Needs attention".
-- **Draft and publish.** A sticky bar holds Publish, Save draft, Discard changes and Unpublish, with status
-  chips for published, unsaved changes and unpublished draft.
-- **Accent check.** Presets plus the custom picker; the line under it gives the button contrast against the
-  light page and the label contrast, and warns below 3:1.
-- **On the public page** the tagline is the layout's one Unbounded phrase. FAQs use native
-  `<details>`, so they work without script.
+Tabs: Profile, Data and privacy, Makerspaces (team roles), Security. `/account` opens the profile until Phase 1
+adds the customer's bookings. Security lists the sign-in methods (password, emailed link), the authenticator,
+recent security activity and "Sign out everywhere".
 
 ## Patch, the mascot
 
@@ -149,14 +106,13 @@ this). The box symbol stays the logo everywhere; Patch is never put inside or be
   `label`, and rests on its first frame under reduced motion.
 - **Where Patch appears, and why.**
   - **404** (`app/not-found.tsx`): the interactive pet, the page's one bold moment.
-  - **First-time empty lists** (`EmptyState patch`): no makerspaces yet (dashboard), no plans yet, no
-    members yet, no payments yet, and no public makerspaces yet (directory). Filtered or searched empty
+  - **First-time empty lists** (`EmptyState patch`): no makerspaces yet (dashboard), no payments yet, no
+    public makerspaces yet (directory) and no failed jobs (Super admin → Jobs). Filtered or searched empty
     lists keep the Sleepy mood tile, so Patch only greets a list that has never had anything in it.
   - **Loading** (`BrandPageLoader`, dashboard routes): Patch walks in place above the hopping dots. In dark
     mode it sits on a Warm Cream disc, because its dark outline disappears on Deep Ink.
   - **The sneeze vote**, saved for moments when the community decides together: a makerspace's application
-    approved (`/dashboard/[org]/application` once it is active), and a manager approving a member's
-    application (the member page's Memberships panel). Each sneezes once.
+    approved (`/dashboard/[makerspaceSlug]/application` once it is active). It sneezes once.
   - Not on makerspace-branded public pages (`/m/…`), which carry the makerspace's brand, not ours.
 - **Bold moments.** Patch counts as a layout's one bold moment, so a screen with Patch has no Unbounded phrase
   and no Workshop Orange flap. None of the screens above has either.

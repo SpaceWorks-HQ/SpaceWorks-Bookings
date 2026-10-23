@@ -3,24 +3,24 @@ import { SpaceWorksLogo } from "@/components/brand/SpaceWorksLogo";
 /** The team's note on the About page (components/about/BuildingNote.tsx). */
 export const LETTER = {
   overline: "A note from Space Works",
-  title: "Members first. Paperwork last.",
+  title: "Book the room. Get back to making.",
   intro: [
-    "Space Works started as a room with workbenches and a kettle. The people who kept it going were volunteers: a secretary with a spreadsheet, a treasurer with a folder of UPI screenshots, and a committee that met once a month to work out who had paid.",
-    "Every club, association and alumni body we knew ran the same way. Renewals were chased by phone, receipts were typed by hand, and nobody was quite sure who was still a member.",
-    "So we built Space Works Bookings, one calm place for the whole year of a membership, and we run our own makerspace on it first.",
+    "Space Works started as a room with workbenches and a kettle. Soon the room had a waiting list: a class on Saturday, a meet-up on Tuesday, someone who needed the big table for a week. The bookings lived in a chat group, a shared calendar and a folder of UPI screenshots.",
+    "Every makerspace we knew ran the same way. Two groups turned up for the same slot, deposits were tracked by memory, and refunds were worked out on the back of an envelope.",
+    "So we built Space Works Bookings, one calm place for every room, studio, desk and hall, and we run our own makerspace on it first.",
   ],
   list: [
-    "Plans and join forms in your makerspace’s colours",
-    "Approvals, renewals and reminders that send themselves",
+    "Spaces with their own hours, rates and rules",
+    "Free or paid, instant or approved, with deposits and pay later",
     "Online and offline payments with GST-correct receipts",
-    "Member cards anyone can check with a scan",
-    "Reports the committee can read at a glance",
+    "Refunds that follow your policy, with a credit note every time",
+    "A day sheet the front desk can read at a glance",
   ],
   outro: [
-    "It is open source under the AGPL, so any makerspace can read the code, run its own copy and keep its register on its own server.",
-    "If you look after members, for a living or for love, we hope it gives you your evenings back.",
+    "It is open source under the AGPL, so any makerspace can read the code, run its own copy and keep its bookings on its own server.",
+    "If you look after a shared space, for a living or for love, we hope it gives you your evenings back.",
   ],
-  closing: ["Fewer spreadsheets.", "More members.", "See you at the next general meeting."],
+  closing: ["Fewer double bookings.", "More making.", "See you at the workbench."],
   signature: "Shaan Shoukath",
   team: [{ name: "Shaan Shoukath", role: "Systems Engineer, Space Works" }],
 } as const;

@@ -50,7 +50,8 @@ export async function saveMakerspaceEmailSettings(input: unknown): Promise<Actio
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: flattenZodErrors(parsed.error) };
   const ctx = await access(parsed.data.makerspaceSlug);
   if (!ctx.ok) return ctx;
-  const { makerspaceSlug: _, smtpPassword, ...data } = parsed.data;
+  const { smtpPassword, ...rest } = parsed.data;
+  const data = { enabled: rest.enabled, fromName: rest.fromName, fromAddress: rest.fromAddress, replyTo: rest.replyTo, smtpHost: rest.smtpHost, smtpPort: rest.smtpPort, smtpUser: rest.smtpUser };
   try {
     await assertPublicHost(data.smtpHost);
     const passwordUpdate = smtpPassword ? { smtpPasswordEncrypted: encryptMakerspaceSecret(smtpPassword, ctx.makerspace.id, "email") } : {};

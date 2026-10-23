@@ -66,8 +66,8 @@ async function bannerHtml(theme) {
     .panel img { width: ${PATCH}px; height: ${PATCH}px; display: block; }
   </style></head><body>
     <div class="brand"><img src="${lockup}" alt=""><span class="rule"></span><span class="product">Makerspace</span></div>
-    <h1>Your members.<br>In good standing.</h1>
-    <p class="sub">Free, open-source membership software for clubs, associations and alumni bodies.</p>
+    <h1>Your spaces.<br>Booked, paid, sorted.</h1>
+    <p class="sub">Free, open-source space booking for makerspaces.</p>
     <div class="panel"><img src="${patch}" alt=""></div>
   </body></html>`;
 }

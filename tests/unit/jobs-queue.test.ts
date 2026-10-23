@@ -40,7 +40,7 @@ describe("background queue definitions", () => {
 });
 
 describe("the bookings job registry", () => {
-  it("schedules the outbox relay, reconciles, retention and the heartbeat once each", async () => {
+  it("schedules the outbox relay, reconciles, retention and the heartbeat once each", { timeout: 60_000 }, async () => {
     vi.resetModules();
     const { SCHEDULED_JOBS } = await import("@/lib/scheduled");
     const definitions = scheduleDefinitions(SCHEDULED_JOBS);

@@ -33,13 +33,21 @@ test("a wrong password is refused without saying which part was wrong", async ({
   await expect(page).toHaveURL(/\/login/);
 });
 
-test("an unknown member card is not recognised and stays out of search engines", async ({ page }) => {
-  await page.goto(`/verify/${"x".repeat(43)}`);
-  await expect(page.getByRole("heading", { name: "Card not recognised" })).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+test("the login page offers an emailed sign-in link that never reveals an account", async ({ page }) => {
+  await page.goto("/login", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await page.getByLabel("Email for the sign-in link").fill(`nobody-${Date.now()}@example.test`);
+  await page.getByRole("button", { name: "Send the link" }).click();
+  await expect(page.getByRole("status")).toContainText("If there's an account for that address");
 });
 
-test("signed-out visitors are sent to sign in from the dashboard and the member portal", async ({ page }) => {
+test("a sign-in link page signs nobody in by itself", async ({ page }) => {
+  await page.goto(`/login/magic?token=${"x".repeat(43)}`);
+  await expect(page.getByRole("button", { name: "Continue signing in" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login\/magic$/);
+});
+
+test("signed-out visitors are sent to sign in from the dashboard and their account", async ({ page }) => {
   for (const path of ["/dashboard", "/account"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login/);

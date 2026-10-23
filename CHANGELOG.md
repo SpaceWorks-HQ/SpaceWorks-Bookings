@@ -4,79 +4,28 @@ Releases are published from `main` and titled **`Space Works Bookings <version>`
 file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
 to. Pushes to `dev` publish staging images tagged `dev` without a release.
 
-## 0.7.0 (2026-10-21)
+## 0.1.0 (unreleased)
 
-Safer sign-in, makerspaces in their own voice, and the option to keep records without member accounts.
+The platform Space Works Bookings is built on (Phase 0 of `docs/plans/2026-10-23-bookings-build.md`).
 
-- **Super admins on the server only.** The installer creates the super admin with a password; afterwards
-  `bash scripts/admin.sh` creates, revokes and sets passwords. Super admins sign in with email and password only:
-  no emailed resets, no in-app password changes, no Google, GitHub or Apple sign-in, and no separate super-admin
-  authenticator step. Signing up with `SUPER_ADMIN_EMAIL` no longer grants anything (an existing account is
-  kept on upgrade).
-- **Staff need an authenticator app** before the dashboard opens; members never do.
-- **Sign-in protections:** an emailed code for sign-ins from a new browser (accounts without an authenticator),
-  new-device alert emails, automatic blocking of addresses with repeated failed sign-ins (super admins can lift
-  blocks), and refusal of passwords found in known data breaches (`PWNED_PASSWORDS_CHECK`).
-- **Makerspace email:** each makerspace can send member emails through its own SMTP and sender; without
-  it they come from the platform in the makerspace's name with replies to its contact address.
-- **Chat alerts** to Slack, Discord, Mattermost, Telegram and WhatsApp per makerspace, with per-channel alerts,
-  test sends and optional member names.
-- **Member accounts switch:** makerspaces that only keep records can turn member sign-in off; payment emails
-  then carry secure pay links, and card checks keep working.
-
-## 0.6.0 (2026-10-21)
-
-Money in and out, refunds members can ask for, and a release pipeline that tests everything.
-
-- **Accounts.** Managers record other receipts (donations, grants, sponsorship) and expenses, set opening
-  balances, and get a receipts and payments account per financial year, split into cash and bank, built from
-  membership payments, refunds and those entries. Entries are never deleted, only voided with a reason.
-- **Refunds.** A refund policy per makerspace (none, full, or the unused share of the membership fee, within a
-  set number of days). Members can cancel and request a refund from their account; managers approve (refund and
-  end the membership) or decline with a note from a new Refund requests queue, and both sides are emailed.
-  Managers refunding by hand can end the membership too. The scheduler follows up refunds still pending at
-  Razorpay or Stripe. Receipt lines no longer say "membership" twice for plans named "… membership".
-- **GSTR-1 JSON** now carries the offline tool's `version` and `hash`, Table 13 (`doc_issue`), and keeps the
-  B2CL place of supply on the group only.
-- Profile pictures no longer fall back to Gravatar, so no member email hash leaves the server.
-- The installer no longer offers an invalid default sender for `localhost` or IP addresses.
-- **Tests.** CI now runs the PostgreSQL integration suite and a browser end-to-end suite (public pages,
-  sign-in, accounts, roles, member portal) against real PostgreSQL and Redis. Stripe webhooks and the
-  webhook route's size and signature checks gained integration tests. GSTR-1 JSON was checked against
-  GSTN's "Save GSTR1" schemas v4.1 and v5.0.
-- **Images.** amd64 and arm64 images are built on native runners and joined into one multi-platform image, so
-  arm64 builds no longer run under emulation.
-
-## 0.5.0 (2026-10-20)
-
-The first release of the rebuilt platform.
-
-- **Makerspaces as tenants.** Apply-and-review or platform-created makerspaces, several managers each,
-  units (regions, districts, chapters) with unit-scoped managers, makerspace-defined member roles, public
-  listing and a customisable public page.
-- **Memberships.** Plans with fixed, rolling, financial-year and lifetime terms; open, approval, invite-only
-  and free joining; renewals with grace and reminders; CSV and Google Sheets import; member directory and export.
-- **Payments.** Razorpay and Stripe on each makerspace's own account, offline payments with maker-checker,
-  members' "I've paid" UTR claims, refunds, and GST tax invoices, bills of supply, receipts and credit notes
-  with gapless numbering; multiple currencies.
-- **Member cards.** Designed per makerspace or plan, issued on activation, PDF and PNG, with a live
-  `/verify` page; bulk exports.
-- **Member portal.** One wallet across makerspaces, pay, renew and leave, receipts, cards, profile,
-  consent, data export and erasure requests.
-- **Reports.** Membership, renewals, applications, money, tax (GSTR-1 tables and JSON, GSTR-3B), subscription
-  income by financial year, platform reports, a daily rollup and a monthly summary email.
-- **Sign-in.** Email and password, Google, GitHub and Apple; two-step verification for platform admins.
-- **Patch**, the Space Works mascot, and a few easter eggs.
-
-
-- **Deployment parity with SpaceWorks (P10).** One-line `curl … install.sh | bash` installer with `--repo`,
-  `setup.sh`/`setup.ps1`, `scripts/update.sh` (pre-update `pg_dump`, `--version`, `--rollback`, automatic
-  rollback of a failed update), `scripts/spaceworks-compose.sh bundled|cloud`, `docker-compose.prod.yml` with
-  TLS-only PostgreSQL 16 (owner and least-privilege runtime roles), Redis 7 and Silo, a scheduler, scheduled
-  backups and `scripts/restore.sh`, `docker-compose.cloud.yml`, `render.yaml`, and a Continuous Release
-  workflow publishing `spaceworks-bookings-backend` and `-frontend` to GHCR. The backend image runs every
-  role (`--role backend|migrate|scheduler|ops`). New settings: `PAYMENT_SECRETS_KEY`, `SCHEDULER_MODE`,
-  `ALLOW_PLAIN_HTTP`. CI is now `tests.yml` (with shellcheck, Compose validation and a bundled-stack smoke
-  test) plus `security-audit.yml`.
-- Rebuilt as a Next.js 16 membership-management platform for makerspaces. The legacy Express + Vite + Supabase
-  app is kept in git history (commit `1194cb4`). The plan is in `docs/plans/2026-10-19-membership-rebuild.md`.
+- **Forked from the Space Works membership platform** (see `NOTICE`) at `bc71613`, keeping its accounts, multi-tenancy, payments, receipts,
+  outbox, storage and operations, and renamed for bookings: the tenant is a **makerspace** (`/m/<slug>`,
+  `/makerspaces`), the product is `spaceworks-bookings`, and prefixes are `SWB_`, `swb.`/`swb:` and `swbook`.
+- **Membership removed:** plans, members, terms, units, member roles, join forms, invites, renewals, member cards
+  and `/verify`, the public page editor, ledger and accounts, Google Sheets, refund requests and membership
+  reports. The public makerspace page is a minimal profile (name, logo, description, contact) for Phase 1 to extend.
+- **Payments decoupled:** the gateway adapters, settings, tax, numbering, receipts and credit notes stay. A payment
+  carries the customer's name, email, state and GSTIN and a placeholder `bookingId`; settling no longer activates
+  anything. The default SAC is 997212 (renting non-residential space).
+- **No single sign-on.** Google, GitHub and Apple sign-in are gone, with their settings and tables.
+- **Sign in with an emailed link.** A one-time link (15 minutes, stored only as a hash) from the sign-in page; it
+  still asks for the authenticator when the account has one, verifies the email, never reveals whether an
+  account exists and is refused for super admins.
+- **Bookings roles:** owner, space manager, bookings manager, front desk, treasurer and viewer, with the capability
+  map from the build plan. Owners manage everyone; space managers manage less senior roles.
+- **BullMQ worker and beat** replace the scheduler: queued outbox delivery, payment and refund reconciliation,
+  retention and a heartbeat from one job registry (`lib/scheduled`), new Docker roles `worker` and `beat`, compose
+  and Render services, health probes, a super-admin Jobs page, and `JOBS_INPROCESS` for Redis-free development.
+- **One baseline migration** (`0001_init`) with the money immutability triggers, CHECK constraints and partial
+  unique indexes.
+- **Demo seed:** the Tinkerspace makerspace and its owner (`npm run db:seed-demo`).

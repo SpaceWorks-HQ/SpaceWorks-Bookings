@@ -62,7 +62,7 @@ apply_origin() {
   grep -rqF "$placeholder" "$built" 2>/dev/null || return 0
   # Validated before use in sed: no characters that are special to sed or JS strings.
   if ! printf '%s' "$value" | grep -Eq '^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'; then
-    echo "[entrypoint] Set $name to an origin such as https://members.example.org (no path or trailing slash)." >&2
+    echo "[entrypoint] Set $name to an origin such as https://book.example.org (no path or trailing slash)." >&2
     exit 1
   fi
   pattern=$(printf '%s' "$placeholder" | sed 's/\./\\./g')

@@ -1,7 +1,7 @@
 /**
  * Money helpers for reports. Client-safe. Reports never add different currencies together: every money
  * figure is a list of per-currency totals with the makerspace's default currency first (owner rule,
- * plan "Multiple currencies"). Built on lib/money/currencies.ts totalsByCurrency.
+ * design "Multiple currencies"). Built on lib/money/currencies.ts totalsByCurrency.
  */
 import { formatMoney, isCurrencyCode, toInputValue, totalsByCurrency } from "@/lib/money/currencies";
 

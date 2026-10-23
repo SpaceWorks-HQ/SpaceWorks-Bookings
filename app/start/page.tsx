@@ -13,10 +13,10 @@ export default async function StartPage() {
   return (
     <div className="flex w-full max-w-[640px] flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-h1 text-ink">Run your memberships here</h1>
+        <h1 className="text-h1 text-ink">Take bookings for your makerspace</h1>
         <p className="text-body-ui text-ink-secondary">
           Tell us about your makerspace. A platform admin reviews each application and emails you the decision. Once approved,
-          you can create membership plans, take payments and issue member cards.
+          you can add your spaces, take payments and invite your team.
         </p>
       </header>
 

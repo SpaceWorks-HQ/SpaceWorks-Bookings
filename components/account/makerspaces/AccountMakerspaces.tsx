@@ -35,7 +35,7 @@ function TeamsCard({ teams }: { teams: AccountMembershipRow[] }) {
     >
       {teams.length === 0 ? (
         <EmptyState title="You're not on any makerspace's team yet" action={apply}>
-          Apply to run your makerspace&rsquo;s memberships here, or ask a makerspace owner for an invite link.
+          Apply to take bookings for your makerspace&rsquo;s spaces here, or ask a makerspace owner for an invite link.
         </EmptyState>
       ) : (
         <ul className="divide-y divide-line">

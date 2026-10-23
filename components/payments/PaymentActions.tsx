@@ -21,7 +21,6 @@ type Props = {
   refundableMinor: number;
   refundable: string;
   blockedConfirm: string | null;
-  /** The membership this paid for is still running, so a refund may end it. */
 };
 
 type Pending = "reject" | "cancel" | "refund" | "release" | null;

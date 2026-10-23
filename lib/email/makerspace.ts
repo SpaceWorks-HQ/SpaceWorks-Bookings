@@ -54,7 +54,7 @@ export async function deliverMakerspaceNotice(payload: NoticePayload, messageId:
     approved: {
       subject: `${makerspace.name} is approved`,
       heading: "You're approved",
-      paragraphs: [`${makerspace.name} can now run its memberships here. Start by adding your logo, creating a membership plan and sharing your join link.`],
+      paragraphs: [`${makerspace.name} can now take bookings here. Start by adding your logo, setting up payments and inviting your team.`],
       action: { label: "Open your dashboard", url: dashboard },
     },
     "changes-requested": {
@@ -101,7 +101,7 @@ export async function deliverAdminApplicationAlert(payload: AdminPayload, messag
     messageId,
     subject: `${payload.resubmitted ? "Updated application" : "New makerspace application"}: ${makerspace.name}`,
     heading: payload.resubmitted ? "An application was updated" : "A new makerspace applied",
-    paragraphs: [`${makerspace.name} ${payload.resubmitted ? "updated its application after your requested changes" : "wants to run its memberships on this platform"}. Review it to approve, ask for changes or decline.`],
+    paragraphs: [`${makerspace.name} ${payload.resubmitted ? "updated its application after your requested changes" : "wants to take bookings on this platform"}. Review it to approve, ask for changes or decline.`],
     action: { label: "Review the application", url: absoluteUrl(`/super-admin/makerspaces/${payload.makerspaceId}`) },
   });
   return "sent";
@@ -116,7 +116,7 @@ export async function deliverOwnerInvite(payload: InvitePayload, messageId: stri
     messageId,
     subject: `You're invited to run ${makerspace.name}`,
     heading: `Run ${makerspace.name} on Space Works Bookings`,
-    paragraphs: [`A platform admin set up ${makerspace.name} and named you as its owner. Accept the invite with this email address to open its dashboard and start running its memberships.`],
+    paragraphs: [`A platform admin set up ${makerspace.name} and named you as its owner. Accept the invite with this email address to open its dashboard and start setting up its spaces.`],
     action: { label: "Accept the invite", url: absoluteUrl(`/join/makerspace/${payload.token}`) },
     footnote: `This link works once and expires on ${new Date(payload.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Sign in or create an account with ${payload.to} to accept it.`,
   });

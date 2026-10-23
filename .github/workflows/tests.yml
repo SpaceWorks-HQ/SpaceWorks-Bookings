@@ -43,9 +43,11 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run build
+      - name: Bundle the BullMQ worker and beat
+        run: npm run build:jobs
 
   database:
-    name: Integration and end-to-end tests (PostgreSQL, Redis, browser)
+    name: Integration and end-to-end tests (PostgreSQL, Redis and BullMQ, browser)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -67,6 +69,8 @@ jobs:
       DATABASE_URL: postgresql://swbook:swbook@localhost:5432/swbook_e2e
       DIRECT_URL: postgresql://swbook:swbook@localhost:5432/swbook_e2e
       REDIS_URL: redis://localhost:6379
+      # BullMQ suites use their own key prefix in this Redis; the rest keep rate limits in memory.
+      TEST_QUEUE_REDIS_URL: redis://127.0.0.1:6379/0
       AUTH_TRUST_HOST: "true"
       AUTH_URL: http://127.0.0.1:3000
       NEXT_PUBLIC_BASE_URL: http://127.0.0.1:3000
@@ -98,7 +102,6 @@ jobs:
           PGPASSWORD=swbook psql -h localhost -U swbook -d swbook_test -c "CREATE DATABASE swbook_e2e"
           npx prisma migrate deploy
           npm run db:seed-demo
-          npm run db:seed-reports
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4

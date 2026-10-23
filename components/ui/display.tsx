@@ -104,7 +104,7 @@ export function Callout({ tone = "info", title, children, action, className, rol
 /**
  * Empty, success or error message in a card. On Space Works Bookings' own screens pass a dot
  * face `mood` (Sleepy for empty lists, Sad for errors); makerspace-branded public pages
- * leave it out. For a list that has never had anything in it (no members yet, no payments yet), pass
+ * leave it out. For a list that has never had anything in it (no spaces yet, no payments yet), pass
  * `patch` instead to show Patch idling; never on a screen that already has a bold moment.
  */
 export function EmptyState({ title, children, action, className, icon, mood, patch }: { title?: ReactNode; children?: ReactNode; action?: ReactNode; className?: string; icon?: ReactNode; mood?: Mood; patch?: boolean }) {

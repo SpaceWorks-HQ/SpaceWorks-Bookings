@@ -18,7 +18,7 @@ export type BrandedEmail = {
   messageId?: string;
   /** Sent on behalf of this makerspace: its own SMTP if set up, otherwise the platform's in its name. */
   makerspaceId?: string;
-  /** Attachments such as a receipt PDF or a membership card. */
+  /** Attachments such as a receipt PDF or a calendar invite. */
   attachments?: Array<{ filename: string; content: Buffer; contentType: string }>;
 };
 

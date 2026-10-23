@@ -35,7 +35,7 @@ export function AccountSettingsLayout({ account, children }: { account: AccountH
             ) : (
               <Chip size="sm" tone="neutral" icon={<ShieldAlert />}>Two-step off</Chip>
             )}
-            <span className="text-caption text-ink-muted">Member since {account.memberSinceLabel}</span>
+            <span className="text-caption text-ink-muted">Joined {account.memberSinceLabel}</span>
           </div>
         </div>
       </header>

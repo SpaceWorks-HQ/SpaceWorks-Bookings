@@ -20,7 +20,7 @@ export function MakerspaceVisibilityToggle({ makerspaceId, visibility, active }:
         {error ? <Callout tone="danger" role="alert">{error}</Callout> : null}
         <SwitchRow
           label="List in the public directory"
-          description={!active && !listed ? "Only an active makerspace can be listed." : listed ? "Anyone can find it and apply to its open plans." : "Not listed."}
+          description={!active && !listed ? "Only an active makerspace can be listed." : listed ? "Anyone can find it and book its spaces." : "Not listed."}
           checked={listed}
           disabled={pending || (!active && !listed)}
           onCheckedChange={(checked) => {

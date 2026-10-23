@@ -50,7 +50,7 @@ export function resolveTaxSnapshot(settings: TaxSettings | null, currency: strin
   }
   const gst: TaxSnapshot = { ...base, mode: "GST", taxName: "GST", gstin: settings.gstin, sac: settings.sacCode, inclusive: settings.inclusive };
   if (currency !== "INR") {
-    // Plans priced abroad: an export of services under LUT (zero-rated), or outside GST altogether.
+    // Prices in a foreign currency: an export of services under LUT (zero-rated), or outside GST altogether.
     return settings.foreignCurrencyTax === "EXPORT_LUT"
       ? { ...gst, documentKind: "TAX_INVOICE", zeroRatedExport: true, lutNumber: settings.lutNumber }
       : { ...gst, documentKind: "RECEIPT", sac: null };
@@ -67,7 +67,7 @@ export function placeOfSupply(customerState: string | null | undefined, snapshot
 export type TaxSplit = { amountMinor: number; taxableMinor: number; cgstMinor: number; sgstMinor: number; igstMinor: number; otherTaxMinor: number };
 
 /**
- * Split one charge into taxable value and tax. `priceMinor` is the plan price: the total when pricing is
+ * Split one charge into taxable value and tax. `priceMinor` is the listed price: the total when pricing is
  * inclusive, the taxable value when exclusive. CGST and SGST are equal halves; an odd paisa moves into the
  * taxable value so the halves match and the total is unchanged.
  */

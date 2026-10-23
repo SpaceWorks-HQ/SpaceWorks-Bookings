@@ -9,7 +9,7 @@ SpaceWorks' `docker-compose.cloud.yml` and `scripts/spaceworks-compose.sh cloud`
 | Service | Examples | Notes |
 |---|---|---|
 | PostgreSQL 16 | Supabase, Neon, RDS, Cloud SQL | `sslmode=require` (or `verify-full`). Behind a transaction pooler (Supabase `:6543`) add `pgbouncer=true` to `DATABASE_URL` and give the direct or session URL as `DIRECT_URL` for migrations. |
-| Redis 7 | Upstash, ElastiCache, Redis Cloud | Must be `rediss://` (TLS). |
+| Redis 7 | Upstash, ElastiCache, Redis Cloud | Must be `rediss://` (TLS). It holds the job queues, so it needs persistence and `maxmemory-policy noeviction`. |
 | Object storage | Cloudflare R2, Amazon S3, Backblaze B2 | A **private** bucket and a key limited to it. `S3_FORCE_PATH_STYLE=1` works with all of them. |
 | SMTP | Brevo, Amazon SES, Postmark | A verified sending domain. |
 | HTTPS | Your platform's load balancer, Cloudflare, or a reverse proxy | Terminates TLS in front of `APP_PORT` and overwrites the client-IP header named in `TRUSTED_PROXY_IP_HEADER`. |
@@ -19,7 +19,7 @@ SpaceWorks' `docker-compose.cloud.yml` and `scripts/spaceworks-compose.sh cloud`
 `sslmode=require` encrypts the connection but doesn't check who is at the other end. In production:
 
 - **Verify the server.** Use `sslmode=verify-full` with your provider's CA (`sslrootcert=/path/to/ca.pem`, mounted
-  read-only into the app and scheduler containers). Supabase, Neon and RDS all publish their CA bundles.
+  read-only into the app, worker and beat containers). Supabase, Neon and RDS all publish their CA bundles.
 - **Run the app as a data-only role.** Migrations need the schema owner; the running app doesn't. Create a second
   role with `CONNECT`, `USAGE` on the schema and `SELECT, INSERT, UPDATE, DELETE` on its tables (plus
   `USAGE, SELECT` on sequences and `ALTER DEFAULT PRIVILEGES` so new tables follow), put that role in
@@ -34,7 +34,7 @@ git clone https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings.git /opt/spacewor
 cd /opt/spaceworks-bookings
 sudo install -D -m 600 .env.production.example /etc/spaceworks-bookings/cloud.env
 sudoedit /etc/spaceworks-bookings/cloud.env      # fill every value; see docs/CONFIGURATION.md
-export SWB_IMAGE_TAG=0.7.0-main.42.a1b2c3d4e5f6     # a published release, or latest
+export SWB_IMAGE_TAG=0.1.0-main.42.a1b2c3d4e5f6     # a published release, or latest
 scripts/spaceworks-compose.sh cloud pull
 scripts/spaceworks-compose.sh cloud up -d --wait
 scripts/spaceworks-compose.sh cloud run --rm ops     # TLS, migrations, Redis, bucket, readiness
@@ -49,10 +49,11 @@ gateway keys cannot be read. `SWB_STATIC_ENV_FILE` points the wrapper at another
 |---|---|
 | `migrate` | `--role migrate`: `prisma migrate deploy` on `DIRECT_URL` (falls back to `DATABASE_URL`), then exits |
 | `backend` | `--role backend`: the app and API on `${APP_BIND:-127.0.0.1}:${APP_PORT:-8080}` |
-| `scheduler` | `--role scheduler`: one scheduler pass a minute through `POST /api/internal/outbox` |
+| `worker` | `--role worker node dist/worker.js`: runs queued jobs (email delivery, payment and refund checks, retention); `/health` on port 3460 |
+| `beat` | `--role beat node dist/beat.js`: keeps the job schedules in Redis; `/health` on port 3460 |
 | `ops` (profile `tools`) | `--role ops`: operator checks on demand |
 
-Block `/api/internal/*` at your edge; the endpoint also refuses any request without `CRON_SECRET`.
+Block `/api/internal/*` at your edge; those endpoints also refuse any request without `CRON_SECRET`.
 
 **Updating:** back up the database with your provider (point-in-time recovery or a snapshot), then set the new
 `SWB_IMAGE_TAG` and run `pull` and `up -d --wait` again. `scripts/update.sh` is for the bundled topology.
@@ -60,23 +61,23 @@ Block `/api/internal/*` at your edge; the endpoint also refuses any request with
 ## Render
 
 [`render.yaml`](../render.yaml) defines a Docker web service (`swbook-backend`, health check `/api/health`,
-`MIGRATE_ON_START=1`) and a worker (`swbook-scheduler`, `--role scheduler`) sharing the `swbook-prod`
-environment group. Render builds the Dockerfile's last stage with your real `NEXT_PUBLIC_BASE_URL` and
-`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` as build arguments. Set `SWB_SCHEDULER_TARGET` on the worker to
-`https://<web service host>/api/internal/outbox`. Render's own Key Value is plain `redis://`, which production
-refuses, so use a TLS Redis such as Upstash.
+`MIGRATE_ON_START=1`) and two workers, `swbook-worker` (`--role worker node dist/worker.js`) and `swbook-beat`
+(`--role beat node dist/beat.js`), sharing the `swbook-prod` environment group. Render builds the Dockerfile's
+last stage with your real `NEXT_PUBLIC_BASE_URL` and `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` as build arguments.
+Render's own Key Value is plain `redis://`, which production refuses, so use a TLS Redis such as Upstash. Free
+web plans cannot run workers; there, point an external cron at `POST /api/internal/outbox` and
+`POST /api/internal/jobs` with `Authorization: Bearer $CRON_SECRET` every minute instead.
 
 ## Other platforms
 
 Any container platform works with the published image:
 
 - web: `ghcr.io/spaceworks-hq/spaceworks-bookings-backend:<version>` with the default command
-  (`--role backend node server.js`), the variables in [CONFIGURATION.md](CONFIGURATION.md) and
-  `SCHEDULER_MODE=external`;
+  (`--role backend node server.js`) and the variables in [CONFIGURATION.md](CONFIGURATION.md);
 - a release or pre-deploy job: the same image with `--role migrate`;
-- a worker: the same image with `--role scheduler node docker/ops/scheduler.mjs` and `SWB_SCHEDULER_TARGET`
-  set to the web service's internal URL, or leave `SCHEDULER_MODE` unset to run the scheduler inside the web
-  process instead.
+- two background services from the same image and variables: `--role worker node dist/worker.js` and
+  `--role beat node dist/beat.js` (health on `JOBS_HEALTH_PORT`, 3460), or, without them, an external cron on
+  the two `/api/internal/*` triggers above.
 
 ## Website on Netlify
 

@@ -1,6 +1,5 @@
 import type { MakerspaceStatus, TeamMember, TeamRole } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { Session } from "next-auth";

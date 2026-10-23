@@ -127,7 +127,7 @@ const offlineSchema = z.object({
   offlineInstructions: z.string().trim().max(1500),
 });
 
-/** How members pay outside the gateway: a UPI ID (shown as a QR) and free-form bank or cash instructions. */
+/** How customers pay outside the gateway: a UPI ID (shown as a QR) and free-form bank or cash instructions. */
 export async function saveOfflinePaymentSettings(input: unknown): Promise<ActionResult> {
   const parsed = offlineSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };

@@ -48,7 +48,7 @@ export type KpiTileProps = {
   delta?: Delta;
   trend?: number[];
   hint?: string;
-  /** Drill-down to the members behind the number. */
+  /** Drill-down to the records behind the number. */
   href?: string;
   className?: string;
 };

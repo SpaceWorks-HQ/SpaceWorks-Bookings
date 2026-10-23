@@ -58,4 +58,4 @@ if [[ "$with_storage" == 1 ]]; then
 fi
 "${COMPOSE[@]}" up -d --wait --wait-timeout 300
 stopped=0
-say 'Restore finished. Sign in and check recent members, payments and uploads.'
+say 'Restore finished. Sign in and check recent payments and uploads.'

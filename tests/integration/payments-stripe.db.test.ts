@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { at, createPaymentsMakerspace, customer, ensurePaymentKey, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
+import { createPaymentsMakerspace, customer, ensurePaymentKey, removePaymentsMakerspace, ROOM_HIRE } from "./payments-helpers";
 
 ensurePaymentKey();
 
@@ -12,7 +12,6 @@ const { webhookResponse } = await import("@/lib/payments/webhookRoute");
 type Ctx = Awaited<ReturnType<typeof createPaymentsMakerspace>>;
 let makerspace: Ctx["makerspace"];
 let code: string;
-const now = at("2026-07-01T06:00:00Z");
 const SECRET = "whsec_test_secret";
 
 /** A Stripe-style signature: t=<unix seconds>,v1=HMAC-SHA256(secret, "<t>.<body>"). */

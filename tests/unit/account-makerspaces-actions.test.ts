@@ -71,13 +71,13 @@ describe("leaveMakerspace", () => {
 
   it("rejects an unknown makerspace", async () => {
     mocks.makerspaceFindUnique.mockResolvedValue(null);
-    await expect(leaveMakerspace({ makerspaceSlug: "missing" })).resolves.toEqual({ ok: false, error: "You are not a member of this makerspace." });
+    await expect(leaveMakerspace({ makerspaceSlug: "missing" })).resolves.toEqual({ ok: false, error: "You are not on this makerspace's team." });
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
   it("rejects a non-member without deleting anything", async () => {
     mocks.teamMemberFindUnique.mockResolvedValue(null);
-    await expect(leaveMakerspace({ makerspaceSlug: "acme" })).resolves.toEqual({ ok: false, error: "You are not a member of this makerspace." });
+    await expect(leaveMakerspace({ makerspaceSlug: "acme" })).resolves.toEqual({ ok: false, error: "You are not on this makerspace's team." });
     expect(mocks.teamMemberDeleteMany).not.toHaveBeenCalled();
     expect(mocks.audit).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).not.toHaveBeenCalled();

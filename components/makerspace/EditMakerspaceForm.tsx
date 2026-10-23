@@ -107,7 +107,7 @@ export function EditMakerspaceForm(props: {
     >
       <div className="px-5 pt-5 sm:px-6 sm:pt-6">
         <h2 id={titleId} className="text-h4 text-ink">Profile</h2>
-        <p className="mt-0.5 text-body-ui text-ink-muted">Shown on your public page, join forms and membership cards.</p>
+        <p className="mt-0.5 text-body-ui text-ink-muted">Shown on your public page and receipts.</p>
       </div>
 
       <div className="grid gap-6 px-5 pb-6 pt-5 sm:px-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">

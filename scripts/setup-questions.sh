@@ -33,7 +33,7 @@ ask_setup_questions() {
   else
     question WEBHOST 'Web address (host name or IP, no http://)' localhost host || return 1
   fi
-  echo 'File storage (makerspace logos, member photos, ID cards, receipts):'
+  echo 'File storage (makerspace logos, photos of spaces, receipts):'
   echo '  1) Bundled Silo object storage - a private bucket on this server.'
   echo '  2) External S3-compatible bucket (Cloudflare R2, Amazon S3...) - create a private bucket and a key limited to it first.'
   question STORAGE 'File storage' 1 choices:1,2 || return 1

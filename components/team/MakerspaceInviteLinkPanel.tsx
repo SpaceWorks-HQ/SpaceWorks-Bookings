@@ -22,7 +22,7 @@ function lowerFirst(text: string) {
 }
 
 /**
- * Single-use makerspace invite links (OWNER/ADMIN only; the actions
+ * Single-use makerspace invite links (owners and space managers only; the actions
  * re-check the role). Only the newest link's URL is ever rendered.
  */
 export function MakerspaceInviteLinkPanel(props: {

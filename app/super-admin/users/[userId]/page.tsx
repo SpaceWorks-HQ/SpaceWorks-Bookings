@@ -15,7 +15,7 @@ type Props = {
 /** Support lookup for one person: account posture, makerspace teams and their audit trail. */
 export default async function SuperAdminUserDetailPage({ params }: Props) {
   await requireSuperAdmin();
-  const { user, hasPassword, memberships, auditEvents, displayName, viewerId } = await loadSuperAdminUserDetailView({ params });
+  const { user, hasPassword, memberships, auditEvents, displayName } = await loadSuperAdminUserDetailView({ params });
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4">
