@@ -19,6 +19,7 @@ x-app-env: &app-env
   FRONTEND_GATEWAY_SECRET: ${FRONTEND_GATEWAY_SECRET:-}
   DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
   DIRECT_URL: ${DIRECT_URL:-}
+  DATABASE_URL_SSLMODE: ${DATABASE_URL_SSLMODE:-}
   REDIS_URL: ${REDIS_URL:?set REDIS_URL}
   AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
   CRON_SECRET: ${CRON_SECRET:?set CRON_SECRET}
@@ -62,6 +63,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
       DIRECT_URL: ${DIRECT_URL:-}
+      DATABASE_URL_SSLMODE: ${DATABASE_URL_SSLMODE:-}
   backend:
     image: *backend-image
     command: ["--role", "backend", "node", "server.js"]
