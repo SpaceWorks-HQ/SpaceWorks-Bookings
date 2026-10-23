@@ -1,3 +1,5 @@
+import { spaceFieldsSchema, type SpaceFields } from "./schemas";
+export { spaceFieldsSchema, type SpaceFields } from "./schemas";
 import type { Prisma, Space } from "@prisma/client";
 import { z } from "zod";
 import { MONEY_SPACE_FIELDS } from "@/lib/bookingRules/schema";
@@ -13,31 +15,6 @@ import { slugifyTitle, withSlugSuffix } from "@/lib/slug";
  * never deleted, once booked. Every change is audited through saveSetting.
  */
 
-const money = z.number().int().min(0).max(1_000_000_000).nullable();
-export const spaceFieldsSchema = z.object({
-  name: z.string().trim().min(1, "Enter a name").max(120),
-  slug: z.string().trim().max(64).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens"),
-  kind: z.enum(["ROOM", "STUDIO", "DESK", "HALL", "OTHER"]),
-  summary: z.string().trim().max(300),
-  description: z.string().max(10_000),
-  capacity: z.number().int().min(0).max(100_000),
-  units: z.number().int().min(1).max(500),
-  amenities: z.array(z.string().trim().min(1).max(60)).max(30),
-  colour: z.string().regex(/^[a-z-]{1,30}$/).nullable(),
-  published: z.boolean(),
-  sortOrder: z.number().int().min(0).max(10_000),
-  publicHourlyMinor: money,
-  publicHalfDayMinor: money,
-  publicDayMinor: money,
-  memberHourlyMinor: money,
-  memberHalfDayMinor: money,
-  memberDayMinor: money,
-  halfDayMinutes: z.number().int().min(15).max(1440),
-  dayMinutes: z.number().int().min(15).max(1440),
-  taxRateBps: z.number().int().min(0).max(10_000).nullable(),
-  sacCode: z.string().regex(/^[0-9]{4,8}$/, "A SAC is 4 to 8 digits").nullable(),
-});
-export type SpaceFields = z.infer<typeof spaceFieldsSchema>;
 const createSchema = spaceFieldsSchema.partial().required({ name: true });
 const updateSchema = spaceFieldsSchema.partial();
 

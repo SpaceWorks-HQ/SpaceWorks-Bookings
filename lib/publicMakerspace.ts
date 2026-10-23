@@ -13,7 +13,7 @@ export const loadPublicMakerspace = cache(async (slug: string) => {
     where: { slug },
     select: {
       id: true, slug: true, name: true, kind: true, description: true, logoUrl: true, accentColor: true, status: true, visibility: true,
-      city: true, stateCode: true, website: true, contactEmail: true, contactPhone: true, locale: true, timezone: true,
+      city: true, stateCode: true, website: true, contactEmail: true, contactPhone: true, locale: true, timezone: true, currency: true,
     },
   });
   if (!makerspace || (makerspace.status !== "ACTIVE" && makerspace.status !== "SUSPENDED")) notFound();

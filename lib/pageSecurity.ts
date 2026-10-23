@@ -24,5 +24,9 @@ export function pageSecurity(request: NextRequest) {
   response.headers.set("Content-Security-Policy", csp);
   response.headers.set("Cache-Control", "no-transform");
   response.headers.set("X-Frame-Options", "DENY");
+  if (/^\/m\/[^/]+\/bookings\//.test(request.nextUrl.pathname)) {
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("Cache-Control", "private, no-store");
+  }
   return response;
 }

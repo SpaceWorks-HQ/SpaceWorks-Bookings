@@ -1,6 +1,11 @@
 {
   "readers": [
     {
+      "module": "lib/views/app__account__bookings__page",
+      "name": "loadAccountBookingsPage",
+      "id": "app__account__bookings__page:loadAccountBookingsPage"
+    },
+    {
       "module": "lib/views/app__account__layout",
       "name": "loadAccountShell",
       "id": "app__account__layout:loadAccountShell"
@@ -36,9 +41,29 @@
       "id": "app__dashboard__makerspaceSlug__application__page:loadMakerspaceApplicationView"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__bookings__bookingId__page",
+      "name": "loadBooking",
+      "id": "app__dashboard__makerspaceSlug__bookings__bookingId__page:loadBooking"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__bookings__new__page",
+      "name": "loadNewBooking",
+      "id": "app__dashboard__makerspaceSlug__bookings__new__page:loadNewBooking"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__bookings__page",
+      "name": "loadBookings",
+      "id": "app__dashboard__makerspaceSlug__bookings__page:loadBookings"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__layout",
       "name": "loadMakerspaceSlugShell",
       "id": "app__dashboard__makerspaceSlug__layout:loadMakerspaceSlugShell"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__members__page",
+      "name": "loadMembers",
+      "id": "app__dashboard__makerspaceSlug__members__page:loadMembers"
     },
     {
       "module": "lib/views/app__dashboard__makerspaceSlug__page",
@@ -56,9 +81,19 @@
       "id": "app__dashboard__makerspaceSlug__payments__paymentId__page:loadPaymentView"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__bookings__page",
+      "name": "loadBookingSettings",
+      "id": "app__dashboard__makerspaceSlug__settings__bookings__page:loadBookingSettings"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__settings__email__page",
       "name": "loadMakerspaceEmailSettingsView",
       "id": "app__dashboard__makerspaceSlug__settings__email__page:loadMakerspaceEmailSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__hours__page",
+      "name": "loadHoursSettings",
+      "id": "app__dashboard__makerspaceSlug__settings__hours__page:loadHoursSettings"
     },
     {
       "module": "lib/views/app__dashboard__makerspaceSlug__settings__money__page",
@@ -81,9 +116,29 @@
       "id": "app__dashboard__makerspaceSlug__settings__payments__page:loadPaymentSettingsView"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__spaces__new__page",
+      "name": "loadNewSpace",
+      "id": "app__dashboard__makerspaceSlug__spaces__new__page:loadNewSpace"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__spaces__page",
+      "name": "loadSpaces",
+      "id": "app__dashboard__makerspaceSlug__spaces__page:loadSpaces"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__spaces__spaceId__page",
+      "name": "loadSpace",
+      "id": "app__dashboard__makerspaceSlug__spaces__spaceId__page:loadSpace"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__team__page",
       "name": "loadMakerspaceMembersView",
       "id": "app__dashboard__makerspaceSlug__team__page:loadMakerspaceMembersView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__today__page",
+      "name": "loadToday",
+      "id": "app__dashboard__makerspaceSlug__today__page:loadToday"
     },
     {
       "module": "lib/views/app__dashboard__page",
@@ -96,6 +151,16 @@
       "id": "app__join__makerspace__token__page:loadJoinMakerspaceView"
     },
     {
+      "module": "lib/views/app__m__makerspaceSlug__bookings__find__page",
+      "name": "loadFindBookingPage",
+      "id": "app__m__makerspaceSlug__bookings__find__page:loadFindBookingPage"
+    },
+    {
+      "module": "lib/views/app__m__makerspaceSlug__bookings__reference__page",
+      "name": "loadPublicBookingPage",
+      "id": "app__m__makerspaceSlug__bookings__reference__page:loadPublicBookingPage"
+    },
+    {
       "module": "lib/views/app__m__makerspaceSlug__layout",
       "name": "loadPublicMakerspaceLayout",
       "id": "app__m__makerspaceSlug__layout:loadPublicMakerspaceLayout"
@@ -104,6 +169,11 @@
       "module": "lib/views/app__m__makerspaceSlug__page",
       "name": "loadPublicMakerspacePage",
       "id": "app__m__makerspaceSlug__page:loadPublicMakerspacePage"
+    },
+    {
+      "module": "lib/views/app__m__makerspaceSlug__spaces__spaceSlug__page",
+      "name": "loadPublicSpacePage",
+      "id": "app__m__makerspaceSlug__spaces__spaceSlug__page:loadPublicSpacePage"
     },
     {
       "module": "lib/views/app__makerspaces__page",
@@ -228,6 +298,141 @@
       "id": "auth:resendEmailVerification"
     },
     {
+      "module": "app/actions/booking-availability",
+      "name": "loadBookingAvailability",
+      "id": "booking-availability:loadBookingAvailability"
+    },
+    {
+      "module": "app/actions/booking-availability",
+      "name": "previewBookingConflicts",
+      "id": "booking-availability:previewBookingConflicts"
+    },
+    {
+      "module": "app/actions/booking-settings",
+      "name": "updateBookingSettings",
+      "id": "booking-settings:updateBookingSettings"
+    },
+    {
+      "module": "app/actions/booking-settings",
+      "name": "updateSpaceRuleOverrides",
+      "id": "booking-settings:updateSpaceRuleOverrides"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "previewQuote",
+      "id": "bookings-public:previewQuote"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "createHold",
+      "id": "bookings-public:createHold"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "submitBooking",
+      "id": "bookings-public:submitBooking"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "releaseHold",
+      "id": "bookings-public:releaseHold"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "requestManageLink",
+      "id": "bookings-public:requestManageLink"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "cancelByManageToken",
+      "id": "bookings-public:cancelByManageToken"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "rescheduleByManageToken",
+      "id": "bookings-public:rescheduleByManageToken"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "cancelBooking",
+      "id": "bookings-public:cancelBooking"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "rescheduleOccurrence",
+      "id": "bookings-public:rescheduleOccurrence"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "issuePersonalCalendarFeed",
+      "id": "bookings-public:issuePersonalCalendarFeed"
+    },
+    {
+      "module": "app/actions/bookings-public",
+      "name": "revokePersonalCalendarFeed",
+      "id": "bookings-public:revokePersonalCalendarFeed"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "createHold",
+      "id": "bookings-staff:createHold"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "submitBooking",
+      "id": "bookings-staff:submitBooking"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "approveBooking",
+      "id": "bookings-staff:approveBooking"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "declineBooking",
+      "id": "bookings-staff:declineBooking"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "cancelBooking",
+      "id": "bookings-staff:cancelBooking"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "rescheduleOccurrence",
+      "id": "bookings-staff:rescheduleOccurrence"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "moveBooking",
+      "id": "bookings-staff:moveBooking"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "checkIn",
+      "id": "bookings-staff:checkIn"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "checkInByCode",
+      "id": "bookings-staff:checkInByCode"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "markNoShow",
+      "id": "bookings-staff:markNoShow"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "issueStaffCalendarFeed",
+      "id": "bookings-staff:issueStaffCalendarFeed"
+    },
+    {
+      "module": "app/actions/bookings-staff",
+      "name": "revokeStaffCalendarFeed",
+      "id": "bookings-staff:revokeStaffCalendarFeed"
+    },
+    {
       "module": "app/actions/chat-channels",
       "name": "saveChatChannel",
       "id": "chat-channels:saveChatChannel"
@@ -348,6 +553,21 @@
       "id": "media:uploadAccountProfileImage"
     },
     {
+      "module": "app/actions/members",
+      "name": "upsertMember",
+      "id": "members:upsertMember"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "removeMember",
+      "id": "members:removeMember"
+    },
+    {
+      "module": "app/actions/members",
+      "name": "importMembersCsv",
+      "id": "members:importMembersCsv"
+    },
+    {
       "module": "app/actions/password-reset",
       "name": "requestPasswordReset",
       "id": "password-reset:requestPasswordReset"
@@ -431,6 +651,86 @@
       "module": "app/actions/security",
       "name": "revokeAllSessions",
       "id": "security:revokeAllSessions"
+    },
+    {
+      "module": "app/actions/space-calendar",
+      "name": "replaceOpeningHours",
+      "id": "space-calendar:replaceOpeningHours"
+    },
+    {
+      "module": "app/actions/space-calendar",
+      "name": "setHoursException",
+      "id": "space-calendar:setHoursException"
+    },
+    {
+      "module": "app/actions/space-calendar",
+      "name": "removeHoursException",
+      "id": "space-calendar:removeHoursException"
+    },
+    {
+      "module": "app/actions/space-calendar",
+      "name": "createBlackout",
+      "id": "space-calendar:createBlackout"
+    },
+    {
+      "module": "app/actions/space-calendar",
+      "name": "removeBlackout",
+      "id": "space-calendar:removeBlackout"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "createSpace",
+      "id": "spaces:createSpace"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "updateSpace",
+      "id": "spaces:updateSpace"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "setSpaceArchived",
+      "id": "spaces:setSpaceArchived"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "addSpacePhoto",
+      "id": "spaces:addSpacePhoto"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "removeSpacePhoto",
+      "id": "spaces:removeSpacePhoto"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "reorderSpacePhotos",
+      "id": "spaces:reorderSpacePhotos"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "saveAddOn",
+      "id": "spaces:saveAddOn"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "removeAddOn",
+      "id": "spaces:removeAddOn"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "savePeakRule",
+      "id": "spaces:savePeakRule"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "removePeakRule",
+      "id": "spaces:removePeakRule"
+    },
+    {
+      "module": "app/actions/spaces",
+      "name": "replaceRefundTiers",
+      "id": "spaces:replaceRefundTiers"
     },
     {
       "module": "app/actions/super-admin-makerspaces",

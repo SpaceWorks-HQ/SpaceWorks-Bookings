@@ -1,5 +1,5 @@
 import type { AddOn, PeakRule } from "@prisma/client";
-import { z } from "zod";
+import { peakSchema, addOnSchema, tiersSchema } from "./schemas";
 import { requireStaff, type Actor } from "@/lib/bookings/actor";
 import { defaultDb, withTx, type DbOrTx, type Tx } from "@/lib/bookings/db";
 import { invalidInput, notFound, zodInputError } from "@/lib/bookings/errors";
@@ -18,16 +18,6 @@ async function assertSpace(tx: Tx, makerspaceId: string, spaceId: string | null 
 
 // ---------- peak rules ----------
 
-const peakSchema = z
-  .object({
-    name: z.string().trim().min(1, "Name the rule").max(80),
-    weekdays: z.array(z.number().int().min(0).max(6)).min(1, "Choose at least one day").max(7).transform((days) => [...new Set(days)].sort()),
-    startMinute: z.number().int().min(0).max(1439),
-    endMinute: z.number().int().min(1).max(1440),
-    surchargeBps: z.number().int().min(1).max(100_000),
-    active: z.boolean().default(true),
-  })
-  .refine((value) => value.startMinute < value.endMinute, { message: "The end must be after the start", path: ["endMinute"] });
 const peakView = (row: PeakRule | null) => (row ? { name: row.name, weekdays: row.weekdays, startMinute: row.startMinute, endMinute: row.endMinute, surchargeBps: row.surchargeBps, active: row.active, spaceId: row.spaceId } : null);
 
 export async function savePeakRule(input: { makerspaceId: string; actor: Actor; ruleId?: string; spaceId?: string | null; rule: unknown }, db: DbOrTx = defaultDb()): Promise<PeakRule> {
@@ -57,16 +47,6 @@ export async function removePeakRule(input: { makerspaceId: string; actor: Actor
 
 // ---------- add-ons ----------
 
-const addOnSchema = z.object({
-  name: z.string().trim().min(1, "Name the extra").max(120),
-  description: z.string().trim().max(500).default(""),
-  unit: z.enum(["PER_BOOKING", "PER_HOUR", "PER_PERSON"]),
-  priceMinor: z.number().int().min(0).max(1_000_000_000),
-  memberPriceMinor: z.number().int().min(0).max(1_000_000_000).nullable().default(null),
-  sacCode: z.string().regex(/^[0-9]{4,8}$/, "A SAC is 4 to 8 digits").nullable().default(null),
-  active: z.boolean().default(true),
-  sortOrder: z.number().int().min(0).max(10_000).default(0),
-});
 const addOnView = (row: AddOn | null) => (row ? { name: row.name, description: row.description, unit: row.unit, priceMinor: row.priceMinor, memberPriceMinor: row.memberPriceMinor, sacCode: row.sacCode, active: row.active, sortOrder: row.sortOrder, spaceId: row.spaceId } : null);
 
 /** Create or update an add-on. Retire one with `active: false` (bookings keep their frozen lines). */
@@ -75,10 +55,10 @@ export async function saveAddOn(input: { makerspaceId: string; actor: Actor; add
   const parsed = addOnSchema.safeParse(input.addOn);
   if (!parsed.success) throw zodInputError(parsed.error.issues);
   if (parsed.data.memberPriceMinor != null && parsed.data.memberPriceMinor > parsed.data.priceMinor) throw invalidInput("The member price can't be above the public price.", { memberPriceMinor: "At most the public price" });
-  if (parsed.data.sacCode) requireStaff(input.actor, "payments.settings");
   return withTx(db, async (tx) => {
     const before = input.addOnId ? await tx.addOn.findFirst({ where: { id: input.addOnId, makerspaceId: input.makerspaceId } }) : null;
     if (input.addOnId && !before) throw notFound("Add-on");
+    if ((before?.sacCode ?? null) !== parsed.data.sacCode) requireStaff(input.actor, "payments.settings");
     const spaceId = before ? before.spaceId : (input.spaceId ?? null);
     await assertSpace(tx, input.makerspaceId, spaceId);
     const addOn = before ? await tx.addOn.update({ where: { id: before.id }, data: parsed.data }) : await tx.addOn.create({ data: { ...parsed.data, makerspaceId: input.makerspaceId, spaceId } });
@@ -88,11 +68,6 @@ export async function saveAddOn(input: { makerspaceId: string; actor: Actor; add
 }
 
 // ---------- refund tiers ----------
-
-const tiersSchema = z
-  .array(z.object({ minHoursBefore: z.number().int().min(0).max(8760), refundBps: z.number().int().min(0).max(10_000) }))
-  .max(10)
-  .refine((tiers) => new Set(tiers.map((tier) => tier.minHoursBefore)).size === tiers.length, "Each tier needs its own number of hours");
 
 /**
  * Replace the refund tiers of the makerspace (spaceId null) or one space (empty = inherit the makerspace's).

@@ -6,7 +6,7 @@ import { assertCanActOn } from "./access";
 import { isStaff, type Actor } from "./actor";
 import { recomputeCharge } from "./charge";
 import { defaultDb, lockBooking, withTx, type DbOrTx, type Tx } from "./db";
-import { forbidden, invalidInput, invalidState } from "./errors";
+import { forbidden, holdGone, invalidInput } from "./errors";
 import { recordBookingEvent } from "./events";
 import { runBookingConfirmed } from "./hooks";
 import { enqueueBookingNotice } from "./notify";
@@ -80,8 +80,8 @@ export async function submitBooking(input: SubmitInput, db: DbOrTx = defaultDb()
   return withTx(db, async (tx) => {
     const booking = await lockBooking(tx, input.makerspaceId, input.bookingId);
     assertCanActOn(booking, input.actor, "bookings.manage");
-    if (booking.status !== "HELD") throw invalidState("This booking was already submitted.");
-    if (!booking.holdExpiresAt || booking.holdExpiresAt <= now) throw invalidState("Your hold has expired. Choose a time again.");
+    if (booking.status !== "HELD" || booking.submittedAt) throw holdGone("This booking was already submitted.");
+    if (!booking.holdExpiresAt || booking.holdExpiresAt <= now) throw holdGone("Your hold has expired. Choose a time again.");
     const space = await tx.space.findFirstOrThrow({ where: { id: booking.spaceId, makerspaceId: input.makerspaceId } });
     const makerspace = await tx.makerspace.findUniqueOrThrow({ where: { id: input.makerspaceId }, select: { timezone: true } });
     const rules = (await loadRules(tx, input.makerspaceId, space)).values;

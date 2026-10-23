@@ -29,6 +29,11 @@ describe("public derivative storage keys", () => {
     ).toBe(true);
   });
 
+  it("accepts generated space photo derivatives", () => {
+    expect(isPublicDerivativeKey(`makerspaces/tenant_1/space-photos/${uuid}.webp`)).toBe(true);
+    expect(isPublicDerivativeKey(`makerspaces/tenant_1/space-photos/arbitrary.webp`)).toBe(false);
+  });
+
   it("rejects traversal, encoded separators, arbitrary objects, and non-WebP files", () => {
     expect(
       isPublicDerivativeKey(`makerspaces/org_1/../secrets/${uuid}.webp`),

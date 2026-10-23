@@ -74,7 +74,7 @@ export async function createHold(input: HoldInput, db: DbOrTx = defaultDb()): Pr
     withTx(db, async (tx) => {
       await releaseExpiredHoldsForSpace(tx, input.spaceId, now);
       await lockSpaces(tx, [input.spaceId]);
-      const probe = await loadSchedule(tx, { makerspaceId: input.makerspaceId, spaceId: input.spaceId, from: input.start, to: input.end, includeHidden: isStaff(input.actor) });
+      const probe = await loadSchedule(tx, { makerspaceId: input.makerspaceId, spaceId: input.spaceId, from: input.start, to: input.end, now, bookingDurationMinutes: override ? undefined : (input.end.getTime() - input.start.getTime()) / 60_000, includeHidden: isStaff(input.actor) });
       const rules = probe.rules.values;
       const guest = input.actor.kind === "CUSTOMER" && !input.actor.userId;
       if (guest && !rules.guestBookingAllowed) throw forbidden("Sign in to book this space.");

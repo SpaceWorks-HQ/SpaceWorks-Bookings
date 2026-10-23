@@ -4,6 +4,7 @@ export type AccountTab = { href: string; label: string };
 export const ACCOUNT_ROOT_HREF = "/account";
 
 export const ACCOUNT_TABS: ReadonlyArray<AccountTab> = [
+  { href: "/account/bookings", label: "Your bookings" },
   { href: "/account/profile", label: "Profile" },
   { href: "/account/privacy", label: "Data and privacy" },
   { href: "/account/makerspaces", label: "Makerspaces" },

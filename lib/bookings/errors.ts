@@ -7,6 +7,7 @@ import type { Violation } from "@/lib/availability/validate";
  */
 
 export type BookingErrorCode =
+  | "HOLD_GONE"
   | "NOT_FOUND"
   | "FORBIDDEN"
   | "INVALID_STATE"
@@ -38,6 +39,7 @@ export type SlotConflict = { slotIndex: number; start: Date; end: Date; violatio
 export const notFound = (what = "Booking") => new BookingError("NOT_FOUND", `${what} not found.`);
 export const forbidden = (message = "You can't do that.") => new BookingError("FORBIDDEN", message);
 export const invalidState = (message: string) => new BookingError("INVALID_STATE", message);
+export const holdGone = (message = "Your hold is no longer available. Choose a time again.") => new BookingError("HOLD_GONE", message);
 export const invalidInput = (message: string, fields: Record<string, string> = {}) => new BookingError("INVALID_INPUT", message, [], fields);
 
 /** A zod failure as INVALID_INPUT with per-field messages. */

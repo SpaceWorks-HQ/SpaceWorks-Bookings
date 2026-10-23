@@ -40,7 +40,7 @@ export async function rescheduleOccurrence(input: RescheduleInput, db: DbOrTx = 
       const rows = await tx.bookingOccurrence.findMany({ where: { bookingId: booking.id, slotIndex: anchor.slotIndex }, orderBy: { unit: "asc" } });
       if (rows.some((row) => row.status !== "SCHEDULED")) throw invalidState("Only upcoming times can be moved.");
       await lockSpaces(tx, [booking.spaceId]);
-      const loaded = await loadSchedule(tx, { makerspaceId: input.makerspaceId, spaceId: booking.spaceId, from: input.start, to: input.end, excludeOccurrenceIds: rows.map((row) => row.id), includeHidden: true });
+      const loaded = await loadSchedule(tx, { makerspaceId: input.makerspaceId, spaceId: booking.spaceId, from: input.start, to: input.end, now, bookingDurationMinutes: override ? undefined : (input.end.getTime() - input.start.getTime()) / 60_000, excludeOccurrenceIds: rows.map((row) => row.id), includeHidden: true });
       const rules = loaded.rules.values;
       if (!staff) {
         if (!rules.customerRescheduleAllowed) throw forbidden("This booking can't be moved online. Contact the makerspace.");

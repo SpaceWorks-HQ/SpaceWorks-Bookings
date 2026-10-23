@@ -5,13 +5,13 @@ import { hashToken, newManageToken, REFERENCE_PATTERN } from "./tokens";
 import { SYSTEM } from "./actor";
 
 /**
- * Manage links. The page lives at `manageBookingPath` (Phase 1b builds the route); the token is the only key, so
+ * Manage links. The page lives at `manageBookingPath`; the token is the guest's key, so
  * it is never logged or stored in clear. Losing it is fixed by `requestManageLink`, which rotates the token and
  * emails a new link without saying whether the booking exists.
  */
 
-export function manageBookingPath(makerspaceSlug: string, token: string): string {
-  return `/m/${makerspaceSlug}/booking/${encodeURIComponent(token)}`;
+export function manageBookingPath(makerspaceSlug: string, token: string, reference: string): string {
+  return `/m/${makerspaceSlug}/bookings/${encodeURIComponent(reference)}?t=${encodeURIComponent(token)}`;
 }
 
 /** The booking a manage token opens, within one makerspace. */
@@ -23,6 +23,11 @@ export async function findBookingByManageToken(makerspaceId: string, token: stri
 /** Email a fresh manage link when the reference and email match; silently do nothing otherwise. */
 export async function requestManageLink(input: { makerspaceId: string; reference: string; email: string }, db: DbOrTx = defaultDb()): Promise<void> {
   const reference = input.reference.trim().toUpperCase();
+  if (!reference) {
+    const bookings = await db.booking.findMany({ where: { makerspaceId: input.makerspaceId, contactEmail: input.email.trim().toLowerCase(), submittedAt: { not: null } }, orderBy: { createdAt: "desc" }, take: 25, select: { reference: true } });
+    for (const booking of bookings) await requestManageLink({ ...input, reference: booking.reference }, db);
+    return;
+  }
   if (!REFERENCE_PATTERN.test(reference)) return;
   const found = await db.booking.findFirst({ where: { makerspaceId: input.makerspaceId, reference, contactEmail: input.email.trim().toLowerCase() }, select: { id: true } });
   if (!found) return;

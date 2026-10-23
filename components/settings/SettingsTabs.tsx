@@ -10,6 +10,8 @@ export function SettingsTabs({ slug }: { slug: string }) {
   const items = [
     { href: base, label: "Profile" },
     { href: `${base}/money`, label: "Money and year" },
+    { href: `${base}/bookings`, label: "Bookings" },
+    { href: `${base}/hours`, label: "Opening hours" },
     { href: `${base}/payments`, label: "Payments and tax" },
     { href: `${base}/email`, label: "Email" },
     { href: `${base}/notifications`, label: "Notifications" },

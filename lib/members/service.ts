@@ -1,3 +1,5 @@
+import { memberSchema } from "./schema";
+export type { MemberInput } from "./schema";
 import type { MakerspaceMember } from "@prisma/client";
 import { z } from "zod";
 import { requireStaff, type Actor } from "@/lib/bookings/actor";
@@ -15,15 +17,6 @@ import { dateKey, fromDbDate, parseDateKey, toDbDate } from "@/lib/time/zoned";
 
 const PERSONAL = ["email", "name", "note"] as const;
 const actorId = (actor: Actor) => (actor.kind === "STAFF" ? actor.userId : null);
-
-const memberSchema = z.object({
-  email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email").max(320)),
-  name: z.string().trim().max(200).default(""),
-  validUntil: z.string().refine((value) => parseDateKey(value) !== null, "Use a YYYY-MM-DD date").nullable().default(null),
-  active: z.boolean().default(true),
-  note: z.string().trim().max(500).default(""),
-});
-export type MemberInput = z.input<typeof memberSchema>;
 
 const view = (row: MakerspaceMember | null) => (row ? { email: row.email, name: row.name, note: row.note, validUntil: row.validUntil ? dateKey(fromDbDate(row.validUntil)) : null, active: row.active } : null);
 

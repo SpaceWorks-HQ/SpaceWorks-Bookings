@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** The account home is the profile until bookings arrive (Phase 1 adds "Your bookings" here). */
+/** The account home opens the customer's bookings. */
 export default function AccountPage() {
-  redirect("/account/profile");
+  redirect("/account/bookings");
 }

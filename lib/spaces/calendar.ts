@@ -1,9 +1,10 @@
-import { z } from "zod";
+import { weeklySchema, exceptionSchema, blackoutSchema } from "./schemas";
 import { requireStaff, type Actor } from "@/lib/bookings/actor";
 import { defaultDb, withTx, type DbOrTx, type Tx } from "@/lib/bookings/db";
 import { invalidInput, notFound, zodInputError } from "@/lib/bookings/errors";
 import { saveSetting } from "@/lib/settingsAudit";
 import { dateKey, fromDbDate, parseDateKey, toDbDate } from "@/lib/time/zoned";
+import { hoursChoiceError } from "./hoursChoice";
 
 /**
  * Opening hours, dated exceptions and blackouts. Makerspace-wide ones (spaceId null) need `makerspace.settings`;
@@ -19,9 +20,6 @@ async function authorise(tx: Tx, scope: Scope) {
   if (scope.spaceId && !(await tx.space.findFirst({ where: { id: scope.spaceId, makerspaceId: scope.makerspaceId }, select: { id: true } }))) throw notFound("Space");
 }
 
-const interval = z.object({ openMinute: z.number().int().min(0).max(1439), closeMinute: z.number().int().min(1).max(1440) }).refine((value) => value.openMinute < value.closeMinute, "Closing must be after opening");
-const weeklySchema = z.array(interval.and(z.object({ weekday: z.number().int().min(0).max(6) }))).max(7 * 24);
-
 function assertNoOverlap(intervals: Array<{ openMinute: number; closeMinute: number }>, label: string) {
   const sorted = [...intervals].sort((a, b) => a.openMinute - b.openMinute);
   for (let index = 1; index < sorted.length; index += 1) {
@@ -32,9 +30,11 @@ function assertNoOverlap(intervals: Array<{ openMinute: number; closeMinute: num
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 /** Replace the weekly hours of the makerspace (spaceId null) or of one space. An empty list for a space = inherit. */
-export async function replaceOpeningHours(input: Scope & { hours: unknown }, db: DbOrTx = defaultDb()) {
+export async function replaceOpeningHours(input: Scope & { hours: unknown; openAllDay?: boolean }, db: DbOrTx = defaultDb()) {
   const parsed = weeklySchema.safeParse(input.hours);
   if (!parsed.success) throw zodInputError(parsed.error.issues);
+  const choiceError = hoursChoiceError(input.spaceId, parsed.data, input.openAllDay);
+  if (choiceError) throw invalidInput(choiceError);
   for (let weekday = 0; weekday < 7; weekday += 1) assertNoOverlap(parsed.data.filter((row) => row.weekday === weekday), DAY_NAMES[weekday]);
   return withTx(db, async (tx) => {
     await authorise(tx, input);
@@ -48,13 +48,6 @@ export async function replaceOpeningHours(input: Scope & { hours: unknown }, db:
     return after;
   });
 }
-
-const exceptionSchema = z.object({
-  date: z.string().refine((value) => parseDateKey(value) !== null, "Choose a date"),
-  closed: z.boolean(),
-  intervals: z.array(interval).max(24).default([]),
-  reason: z.string().trim().max(200).default(""),
-});
 
 /** Set (create or replace) the exception for one local date. */
 export async function setHoursException(input: Scope & { exception: unknown }, db: DbOrTx = defaultDb()) {
@@ -84,11 +77,6 @@ export async function removeHoursException(input: { makerspaceId: string; except
     await saveSetting(tx, { area: "hours-exception", makerspaceId: input.makerspaceId, targetType: "HoursException", targetId: row.id, before: { date: dateKey(fromDbDate(row.date)), closed: row.closed, intervals: row.intervals, reason: row.reason }, after: null, actorUserId: actorId(input.actor) });
   });
 }
-
-const blackoutSchema = z.union([
-  z.object({ startDate: z.string().refine((value) => parseDateKey(value) !== null, "Choose a date"), endDate: z.string().refine((value) => parseDateKey(value) !== null, "Choose a date"), reason: z.string().trim().max(200).default("") }),
-  z.object({ startsAt: z.coerce.date(), endsAt: z.coerce.date(), reason: z.string().trim().max(200).default("") }),
-]);
 
 /** Close whole local days (startDate–endDate, inclusive) or an exact time range. Existing bookings stay. */
 export async function createBlackout(input: Scope & { blackout: unknown }, db: DbOrTx = defaultDb()) {

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-// Demo data for local QA and the end-to-end tests: one active makerspace and its owner. No super admin.
+// Demo data for local QA and the end-to-end tests. No super admin.
 //
 //   DEMO_PASSWORD=<12+ chars> DEMO_MFA_SECRET=<base32> MFA_ENCRYPTION_KEY=<base64 32 bytes> npm run db:seed-demo
 //
 // The owner signs in as owner@demo.test with DEMO_PASSWORD; staff need an authenticator before the dashboard opens,
-// so DEMO_MFA_SECRET is their TOTP seed. Idempotent; never runs in production. Phase 1 adds spaces and bookings.
+// so DEMO_MFA_SECRET is their shared TOTP seed. Idempotent; never runs in production.
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { seedBookingCatalogue } from "./seed/booking-catalogue.mjs";
+import { seedBookings } from "./seed/bookings.mjs";
 
 if (process.env.NODE_ENV === "production") throw new Error("seed-demo never runs in production.");
 const password = process.env.DEMO_PASSWORD ?? "";
@@ -32,6 +34,17 @@ const owner = await prisma.user.upsert({
   create: { email: "owner@demo.test", name: "Shaan Shoukath", ...credentials },
   update: { name: "Shaan Shoukath", ...credentials, isSuperAdmin: false },
 });
+const front = await prisma.user.upsert({
+  where: { email: "front@demo.test" },
+  create: { email: "front@demo.test", name: "Diya Nair", ...credentials },
+  update: { name: "Diya Nair", ...credentials, isSuperAdmin: false },
+});
+const customer = await prisma.user.upsert({
+  where: { email: "customer@demo.test" },
+  create: { email: "customer@demo.test", name: "Asha Menon", emailVerified: now, passwordHash: credentials.passwordHash },
+  update: { name: "Asha Menon", emailVerified: now, passwordHash: credentials.passwordHash, isSuperAdmin: false,
+    mfaSecretEncrypted: null, mfaEnabledAt: null },
+});
 
 const details = {
   name: "Tinkerspace", kind: "Makerspace", status: "ACTIVE", source: "SUPERADMIN", visibility: "PUBLIC",
@@ -45,9 +58,19 @@ await prisma.teamMember.upsert({
   create: { userId: owner.id, makerspaceId: makerspace.id, role: "OWNER" },
   update: { role: "OWNER" },
 });
+await prisma.teamMember.upsert({
+  where: { userId_makerspaceId: { userId: front.id, makerspaceId: makerspace.id } },
+  create: { userId: front.id, makerspaceId: makerspace.id, role: "FRONT_DESK" },
+  update: { role: "FRONT_DESK" },
+});
 if (!(await prisma.makerspaceReview.count({ where: { makerspaceId: makerspace.id } }))) {
   await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action: "CREATED", actorUserId: null } });
 }
 
-await prisma.$disconnect();
-console.log("Seeded the Tinkerspace demo makerspace (/m/tinkerspace) and its owner, owner@demo.test.");
+try {
+  const spaces = await seedBookingCatalogue(prisma, makerspace.id);
+  await seedBookings(prisma, { makerspaceId: makerspace.id, spaces, owner, front, customer, now });
+} finally {
+  await prisma.$disconnect();
+}
+console.log("Seeded Tinkerspace (/m/tinkerspace), spaces and bookings; owner@demo.test, front@demo.test and customer@demo.test.");

@@ -174,7 +174,7 @@ describe.sequential("booking flows", () => {
       await expect(submitBooking({ makerspaceId: open.makerspaceId, bookingId: guest.bookingId, actor: { kind: "CUSTOMER", userId: null }, contact, attendees: 1, now: NOW })).rejects.toMatchObject({ code: "FORBIDDEN" });
       const done = await submitBooking({ makerspaceId: open.makerspaceId, bookingId: guest.bookingId, actor: { kind: "CUSTOMER", userId: null, manageToken: guest.manageToken }, contact, attendees: 1, now: NOW });
       expect(done.status).toBe("CONFIRMED");
-      await expect(submitBooking({ makerspaceId: open.makerspaceId, bookingId: guest.bookingId, actor: { kind: "CUSTOMER", userId: null, manageToken: done.manageToken }, contact, attendees: 1, now: NOW })).rejects.toMatchObject({ code: "INVALID_STATE" });
+      await expect(submitBooking({ makerspaceId: open.makerspaceId, bookingId: guest.bookingId, actor: { kind: "CUSTOMER", userId: null, manageToken: done.manageToken }, contact, attendees: 1, now: NOW })).rejects.toMatchObject({ code: "HOLD_GONE" });
     } finally {
       await open.cleanup();
     }

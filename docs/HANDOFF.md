@@ -70,11 +70,16 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
 worker and beat, baseline migration). Also the ops track merged from `phase/ops`: installer menu,
 private-repo access, Render Blueprint, DigitalOcean spec, compose smoke checks and deployment docs.
 
-**Last commit, work in progress (`wip:`):** Phase 1 domain layer. It covers `lib/{availability,
-bookingRules,bookings,pricing,ics,members,spaces,time}`, settings audit, the `0002_bookings` migration,
-booking emails and scheduled jobs, plus unit and integration tests. Typecheck is clean and all 526 unit
-tests pass. Integration tests (they need Postgres) were not re-run on it. The UI for Phase 1 is not
-started.
+**Phase 1 (done, 2026-10-24):** the domain layer (`lib/{availability,bookingRules,bookings,pricing,ics,members,
+spaces,time}`, settings audit, `0002_bookings`), the Server Actions (`app/actions/{booking-settings,spaces,
+space-calendar,members,bookings-staff,bookings-public,booking-availability}.ts`, shared inputs in `lib/actions/`),
+the staff dashboard (booking rules, hours, spaces with pricing/availability/rules/refund tiers, members, bookings
+list and detail, new staff booking, Today day sheet, staff ICS feed), the customer side (spaces on `/m/[slug]`,
+space page with availability and live quote, manage page with cancel/reschedule/ICS/check-in code, find my
+booking, `/account/bookings` with a personal feed), branded booking emails with ICS, and a demo seed with four
+spaces, front desk (`front@demo.test`) and a customer (`customer@demo.test`). Paid bookings stop at the Phase 1
+boundary: HELD awaiting payment, REQUESTED, or pay-later CONFIRMED with a due date; taking money is Phase 2.
+Gates on that commit: lint, typecheck, 834 unit, 118 integration, 15 e2e (no skips), builds, catalog, no drift.
 
 ## What is left
 

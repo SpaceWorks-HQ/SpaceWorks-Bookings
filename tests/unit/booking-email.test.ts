@@ -11,7 +11,7 @@ function data(over: Partial<BookingEmailData> = {}, booking: Partial<BookingEmai
     spaceName: "Studio A",
     booking: { reference: "BK-7Q2M9X", status: "CONFIRMED", contactName: "Asha Menon", currency: "INR", totalMinor: 118_000, depositMinor: 0, chargeMinor: 118_000, paidMinor: 0, refundedMinor: 0, paymentDueAt: new Date("2026-11-09T04:30:00Z"), payLater: true, awaitingPayment: false, chargeMode: "PAY_LATER", ...booking },
     slots: [{ startsAt: new Date("2026-11-10T04:30:00Z"), endsAt: new Date("2026-11-10T06:30:00Z") }],
-    manageUrl: "https://bookings.demo.test/m/tinkerspace/booking/token",
+    manageUrl: "https://bookings.demo.test/m/tinkerspace/bookings/BK-7Q2M9X?t=token",
     pageUrl: "https://bookings.demo.test/m/tinkerspace",
     checkInCode: "BK-7Q2M9X-ABCDEFGH",
     ...over,
@@ -42,7 +42,7 @@ describe("booking emails", () => {
   it("say nothing is due before approval and nothing to pay when free", () => {
     expect(bookingEmailContent(data({ notice: "requested" }, { status: "REQUESTED" })).paragraphs.join(" ")).toContain("You pay nothing until the request is approved.");
     expect(bookingEmailContent(data({}, { totalMinor: 0, chargeMinor: 0, chargeMode: "FREE" })).paragraphs.join(" ")).toContain("There's nothing to pay.");
-    expect(bookingEmailContent(data({ notice: "received" }, { status: "HELD", awaitingPayment: true, depositMinor: 59_000, chargeMode: "DEPOSIT" })).paragraphs.join(" ")).toContain("pay ₹590.00 before your hold runs out");
+    expect(bookingEmailContent(data({ notice: "received" }, { status: "HELD", awaitingPayment: true, depositMinor: 59_000, chargeMode: "DEPOSIT" })).paragraphs.join(" ")).toContain("Payment pending: ₹590.00. Contact Tinkerspace to arrange payment before your hold expires.");
   });
 
   it("show kept fees and refunds on cancellation", () => {

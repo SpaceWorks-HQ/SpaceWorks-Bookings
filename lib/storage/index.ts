@@ -17,7 +17,7 @@ export type UploadInput = {
 };
 
 const MAKERSPACE_DERIVATIVE_KEY =
-  /^makerspaces\/([A-Za-z0-9_-]{1,128})\/(certificate-backgrounds|certificate-assets|event-covers|event-speakers|event-sponsors|makerspace-logos|event-page-logos|member-id-photos|member-id-watermarks|page-images)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/i;
+  /^makerspaces\/([A-Za-z0-9_-]{1,128})\/(space-photos|certificate-backgrounds|certificate-assets|event-covers|event-speakers|event-sponsors|makerspace-logos|event-page-logos|member-id-photos|member-id-watermarks|page-images)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/i;
 const USER_DERIVATIVE_KEY =
   /^users\/([A-Za-z0-9_-]{1,128})\/profile-images\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/i;
 

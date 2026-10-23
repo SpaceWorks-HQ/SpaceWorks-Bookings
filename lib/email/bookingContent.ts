@@ -10,7 +10,7 @@ import { money } from "@/lib/money/currencies";
 
 export type BookingEmailData = {
   notice: BookingNotice;
-  makerspace: { name: string; timezone: string; locale: string | null };
+  makerspace: { name: string; timezone: string; locale: string | null; contactEmail?: string | null; contactPhone?: string | null };
   spaceName: string;
   booking: {
     reference: string;
@@ -53,7 +53,7 @@ function paymentLines(data: BookingEmailData): string[] {
   if (booking.totalMinor === 0 || booking.chargeMode === "FREE") return ["There's nothing to pay."];
   const balance = Math.max(0, booking.chargeMinor - (booking.paidMinor - booking.refundedMinor));
   if (booking.status === "REQUESTED") return [`Price: ${amount(booking.totalMinor)}. You pay nothing until the request is approved.`];
-  if (booking.awaitingPayment) return [`To confirm it, pay ${amount(booking.depositMinor || booking.totalMinor)} before your hold runs out.`];
+  if (booking.awaitingPayment) return [`Payment pending: ${amount(booking.depositMinor || booking.totalMinor)}. Contact ${makerspace.name}${makerspace.contactEmail ? ` at ${makerspace.contactEmail}` : makerspace.contactPhone ? ` on ${makerspace.contactPhone}` : ""} to arrange payment before your hold expires.`];
   if (balance === 0) return [`Total: ${amount(booking.totalMinor)}, paid.`];
   const due = booking.paymentDueAt ? ` by ${formatDate(booking.paymentDueAt, makerspace.timezone)}` : "";
   return [`Payment pending: ${amount(balance)} to pay${due}.`];
@@ -68,7 +68,7 @@ export function bookingEmailContent(data: BookingEmailData): BookingEmailContent
   const manage = data.manageUrl ? { label: "Manage your booking", url: data.manageUrl } : { label: `Visit ${makerspace.name}`, url: data.pageUrl };
   const amount = (minor: number) => money(minor, booking.currency, makerspace.locale);
   const checkIn = data.checkInCode ? `Your check-in code is ${data.checkInCode}.` : null;
-  const footnote = data.manageUrl ? "Keep this email: the button opens your booking and is the only way in without signing in." : undefined;
+  const footnote = data.manageUrl ? "Keep your original private booking link. You can also sign in to the account that booked, or request a fresh link from the booking page." : undefined;
   switch (data.notice) {
     case "received":
       return { subject: `Booking held at ${makerspace.name}`, heading: "We're holding your booking", paragraphs: [`Hi ${first}, we're holding this for you while you pay.`, ...whereWhen, ...paymentLines(data), ref], action: manage, footnote };
@@ -84,9 +84,9 @@ export function bookingEmailContent(data: BookingEmailData): BookingEmailContent
         footnote,
       };
     case "declined":
-      return { subject: `${makerspace.name} couldn't accept your request`, heading: "Request declined", paragraphs: [`Hi ${first}, ${makerspace.name} declined your request for ${spaceName}.`, ...(data.reason ? [`Their note: ${data.reason}`] : []), ...when, "You haven't been charged.", ref], action: { label: `Visit ${makerspace.name}`, url: data.pageUrl } };
+      return { subject: `${makerspace.name} couldn't accept your request`, heading: "Request declined", paragraphs: [`Hi ${first}, ${makerspace.name} declined your request for ${spaceName}.`, ...(data.reason ? [`Their note: ${data.reason}`] : []), ...when, "You haven't been charged.", ref], action: manage };
     case "request-expired":
-      return { subject: `Your request to ${makerspace.name} expired`, heading: "Request expired", paragraphs: [`Hi ${first}, ${makerspace.name} didn't answer your request for ${spaceName} in time, so it has expired.`, ...when, "You haven't been charged. You're welcome to book again.", ref], action: { label: `Book again`, url: data.pageUrl } };
+      return { subject: `Your request to ${makerspace.name} expired`, heading: "Request expired", paragraphs: [`Hi ${first}, ${makerspace.name} didn't answer your request for ${spaceName} in time, so it has expired.`, ...when, "You haven't been charged. You're welcome to book again.", ref], action: manage };
     case "reminder":
       return { subject: `Reminder: ${spaceName} at ${makerspace.name}`, heading: "See you soon", paragraphs: [`Hi ${first}, a reminder of your booking.`, ...whereWhen, ...paymentLines(data).filter((line) => line.startsWith("Payment pending")), ...(checkIn ? [checkIn] : []), ref], action: manage };
     case "cancelled": {
@@ -104,7 +104,7 @@ export function bookingEmailContent(data: BookingEmailData): BookingEmailContent
     case "payment-due":
       return { subject: `Payment due for your booking at ${makerspace.name}`, heading: "Payment due soon", paragraphs: [`Hi ${first}, a payment for your booking is due soon.`, ...whereWhen, ...paymentLines(data), ref], action: manage };
     case "payment-overdue":
-      return { subject: `Payment overdue for your booking at ${makerspace.name}`, heading: "Payment overdue", paragraphs: [`Hi ${first}, the payment for your booking is overdue.`, ...whereWhen, ...paymentLines(data), `Pay now or contact ${makerspace.name} to keep your booking.`, ref], action: manage };
+      return { subject: `Payment overdue for your booking at ${makerspace.name}`, heading: "Payment overdue", paragraphs: [`Hi ${first}, the payment for your booking is overdue.`, ...whereWhen, ...paymentLines(data), `Contact ${makerspace.name} to arrange payment and keep your booking.`, ref], action: manage };
     case "manage-link":
       return { subject: `Your booking at ${makerspace.name}`, heading: "Your booking link", paragraphs: [`Hi ${first}, here is a fresh link to your booking. Older links no longer work.`, ...whereWhen, ref], action: manage, footnote };
   }

@@ -5,6 +5,7 @@ import { openIntervals, blackoutRanges, type BlackoutInput, type HoursExceptionI
 import { addLocalDays, dateKey, fromDbDate, localParts } from "@/lib/time/zoned";
 import { notFound } from "@/lib/bookings/errors";
 import type { SpaceSchedule } from "./validate";
+import { assertBookingBounds, assertScheduleWindow } from "@/lib/bookings/inputBounds";
 
 /**
  * Loads a space's schedule for a window from the database: effective rules, opening hours (the space's own rows if
@@ -64,15 +65,20 @@ export type ScheduleQuery = {
   excludeOccurrenceIds?: string[];
   /** Include archived or unpublished spaces (staff). */
   includeHidden?: boolean;
+  /** Validate a booking's duration and advance window before expanding opening hours. */
+  bookingDurationMinutes?: number;
+  now?: Date;
 };
 
 export type LoadedSchedule = { space: Space; timeZone: string; currency: string; rules: EffectiveRules; schedule: SpaceSchedule };
 
 export async function loadSchedule(db: Db, query: ScheduleQuery): Promise<LoadedSchedule> {
+  assertScheduleWindow(query.from, query.to);
   const space = await db.space.findFirst({ where: { id: query.spaceId, makerspaceId: query.makerspaceId } });
   if (!space || (!query.includeHidden && (space.archivedAt || !space.published))) throw notFound("Space");
   const makerspace = await db.makerspace.findUniqueOrThrow({ where: { id: query.makerspaceId }, select: { timezone: true, currency: true } });
   const rules = await loadRules(db, query.makerspaceId, space);
+  if (query.bookingDurationMinutes !== undefined) assertBookingBounds(query.from, query.bookingDurationMinutes, rules.values, query.now);
   const calendar = await loadCalendar(db, query.makerspaceId, space.id);
   const values = rules.values;
   const margin = (values.bufferBeforeMinutes + values.bufferAfterMinutes) * 60_000 + DAY;

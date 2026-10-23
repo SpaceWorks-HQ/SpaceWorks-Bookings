@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
-import { SYSTEM } from "./actor";
-import { defaultDb, withTx, type DbOrTx, type Tx } from "./db";
+import { SYSTEM, type CustomerActor } from "./actor";
+import { assertCanActOn } from "./access";
+import { defaultDb, lockBooking, withTx, type DbOrTx, type Tx } from "./db";
 import { recordBookingEvent } from "./events";
 import { enqueueBookingNotice } from "./notify";
 import { recomputeCharge } from "./charge";
@@ -12,6 +13,20 @@ import { setBookingStatus } from "./status";
  */
 
 const BATCH = 200;
+
+/** Abandon checkout, without touching a submitted booking (including one awaiting payment). */
+export async function releaseHold(input: { makerspaceId: string; bookingId: string; actor: CustomerActor }, db: DbOrTx = defaultDb()) {
+  return withTx(db, async (tx) => {
+    const booking = await lockBooking(tx, input.makerspaceId, input.bookingId);
+    assertCanActOn(booking, input.actor, "bookings.manage");
+    if (booking.status !== "HELD" || booking.submittedAt) return { released: false };
+    const now = new Date();
+    await setBookingStatus(tx, booking, "EXPIRED", { requestsBlockSlot: false, now, data: { expiredAt: now }, cancelKind: "CUSTOMER" });
+    await recomputeCharge(tx, booking.id);
+    await recordBookingEvent(tx, { ...input, kind: "expired", data: { from: "HELD", reason: "released" } });
+    return { released: true };
+  });
+}
 
 async function claim(tx: Tx, status: "HELD" | "REQUESTED", now: Date, spaceId?: string) {
   const column = status === "HELD" ? Prisma.sql`"holdExpiresAt"` : Prisma.sql`"requestExpiresAt"`;

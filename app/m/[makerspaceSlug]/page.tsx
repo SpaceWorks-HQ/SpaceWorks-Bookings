@@ -2,9 +2,11 @@ import { Globe, Mail, MapPin, Phone } from "lucide-react";
 import { loadPublicMakerspacePage } from "@/lib/views/app__m__makerspaceSlug__page";
 import { indianStateName } from "@/lib/indianStates";
 import { Callout, Chip, EmptyState, MakerspaceLogo } from "@/components/ui/display";
+import Link from "next/link";
+import { PublicSpaceCards } from "@/components/bookings/PublicSpaceCards";
 
 export default async function PublicMakerspacePage({ params }: { params: Promise<{ makerspaceSlug: string }> }) {
-  const { makerspace, takingBookings } = await loadPublicMakerspacePage({ params });
+  const { makerspace, spaces, takingBookings } = await loadPublicMakerspacePage({ params });
   const place = [makerspace.city, indianStateName(makerspace.stateCode)].filter(Boolean).join(", ");
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-12 px-4 py-10 sm:px-6 lg:py-16">
@@ -27,13 +29,15 @@ export default async function PublicMakerspacePage({ params }: { params: Promise
 
       <section aria-labelledby="spaces" className="flex flex-col gap-6">
         <h2 id="spaces" className="text-h1 text-ink">Spaces</h2>
-        {takingBookings ? (
+        {spaces.length ? <PublicSpaceCards spaces={spaces} slug={makerspace.slug} currency={makerspace.currency} /> : null}
+        <Link href={`/m/${makerspace.slug}/bookings/find`} className="underline underline-offset-4">Find your booking</Link>
+        {takingBookings && !spaces.length ? (
           <EmptyState mood="waiting" title="No spaces to book yet">
             {makerspace.name} hasn&apos;t opened any spaces for booking here yet. Contact them to ask.
           </EmptyState>
-        ) : (
+        ) : !takingBookings ? (
           <Callout tone="warning" title="Not taking bookings">{makerspace.name} isn&apos;t taking bookings right now.</Callout>
-        )}
+        ) : null}
       </section>
     </div>
   );

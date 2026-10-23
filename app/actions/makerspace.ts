@@ -20,6 +20,7 @@ export type ActionResult<T = void> =
   | {
     ok: false;
     error: string;
+    code?: "HOLD_GONE";
     fieldErrors?: Record<string, string[]>;
     /** The action needs an explicit confirmation to go ahead (for example, overriding a warning). */
     needsForce?: boolean;
