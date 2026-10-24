@@ -23,6 +23,7 @@ import {
 import { makerspaceSlugSchema } from "@/lib/validators";
 import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
+import { MANAGER_ROLE } from "@/lib/permissionRoles";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 
@@ -61,8 +62,8 @@ export async function checkMakerspaceSlug(input: unknown): Promise<ActionResult<
 }
 
 /**
- * Apply for a new makerspace. The applicant becomes its owner; nothing opens until a platform admin
- * approves it. Owners and platform admins are emailed through the outbox in the same transaction.
+ * Apply for a new makerspace. The applicant becomes its bookings manager; nothing opens until a platform admin
+ * approves it. Its bookings managers and platform admins are emailed through the outbox in the same transaction.
  */
 export async function submitMakerspaceApplication(input: unknown): Promise<ActionResult<{ slug: string }>> {
   const session = await auth();
@@ -76,7 +77,7 @@ export async function submitMakerspaceApplication(input: unknown): Promise<Actio
   const application = parsed.data;
 
   const open = await prisma.teamMember.count({
-    where: { userId, role: "OWNER", makerspace: { status: { in: ["PENDING_REVIEW", "CHANGES_REQUESTED"] } } },
+    where: { userId, role: MANAGER_ROLE, makerspace: { status: { in: ["PENDING_REVIEW", "CHANGES_REQUESTED"] } } },
   });
   if (open >= MAX_OPEN_APPLICATIONS) return { ok: false, error: "You already have applications waiting for a decision. Wait for those first." };
   // Counted only once the form is valid, so fixing typos never uses up the allowance.
@@ -89,7 +90,7 @@ export async function submitMakerspaceApplication(input: unknown): Promise<Actio
         data: { ...profileColumns(application), slug: application.slug, status: "PENDING_REVIEW", source: "SELF_SIGNUP" },
         select: { id: true, slug: true },
       });
-      await tx.teamMember.create({ data: { userId, makerspaceId: created.id, role: "OWNER" } });
+      await tx.teamMember.create({ data: { userId, makerspaceId: created.id, role: MANAGER_ROLE } });
       await tx.makerspaceReview.create({
         data: { makerspaceId: created.id, action: "SUBMITTED", actorUserId: userId, applicationSnapshot: applicationSnapshot(application) },
       });
@@ -123,7 +124,7 @@ export async function resubmitMakerspaceApplication(input: unknown): Promise<Act
   if (!makerspace) return { ok: false, error: "Makerspace not found." };
   const membership = await getMembership(userId, makerspace.id);
   if (!membership) return { ok: false, error: "Makerspace not found." };
-  if (!can(membership.role, "makerspace.settings")) return { ok: false, error: "Only owners and managers can update the application." };
+  if (!can(membership.role, "makerspace.settings")) return { ok: false, error: "Only bookings managers can update the application." };
   if (!(await hasAuthenticator(userId))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
 
   const outcome = await prisma.$transaction(async (tx) => {

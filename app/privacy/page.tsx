@@ -39,7 +39,7 @@ const sections: LegalSection[] = [
     id: "who-can-see-it",
     title: "Who can see it",
     body: [
-      "Makerspaces. People on a makerspace’s team can see its bookings and payments according to their role: owners and space managers see everything; bookings managers and front desk see bookings and contact details; treasurers see payments, refunds and finance reports; viewers see bookings with contact details hidden. Team members can export records they are allowed to see, and every export is logged.",
+      "Makerspaces. People on a makerspace’s team can see its bookings and payments according to their role: bookings managers see everything; front desk see bookings, contact details and the payments they take; viewers see bookings with contact details hidden. Team members can export records they are allowed to see, and every export is logged.",
       "The public. Public makerspace pages show only what the makerspace publishes about itself and its spaces, never who has booked.",
       "Payment providers. If you pay online, the makerspace’s own payment provider (for example Razorpay or Stripe) processes the payment under its own privacy policy and receives the details it needs to do so.",
       "The operator. The operator’s administrators can see account and makerspace details to review applications, support makerspaces and protect the site. Opening a makerspace’s records is logged.",

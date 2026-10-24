@@ -23,30 +23,21 @@ describe.sequential("calendar and member Server Actions", () => {
   afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); });
   afterAll(async () => { await fixture.cleanup(); await stranger.cleanup(); });
 
-  it("allows a bookings manager to change one space's hours, exceptions and blackouts only", async () => {
+  it("refuses front desk every hours, exception and blackout change, makerspace-wide or per space", async () => {
     const space = await addSpace(fixture.makerspaceId);
-    identity.userId = (await fixture.staff("BOOKINGS_MANAGER")).userId;
+    identity.userId = (await fixture.staff("FRONT_DESK")).userId;
     for (const spaceId of [null, space.id]) {
       const scope = { ...fixture.scope, spaceId };
       const results = [await calendar.replaceOpeningHours({ ...scope, hours }),
         await calendar.setHoursException({ ...scope, exception }), await calendar.createBlackout({ ...scope, blackout })];
-      for (const result of results) expect(result.ok).toBe(spaceId !== null);
+      for (const result of results) expect(result.ok).toBe(false);
     }
-    expect(await prisma.openingHours.findMany({ where: { makerspaceId: fixture.makerspaceId, spaceId: null } })).toEqual([]);
-    expect(await prisma.hoursException.count({ where: { makerspaceId: fixture.makerspaceId, spaceId: null } })).toBe(0);
-    expect(await prisma.blackout.count({ where: { makerspaceId: fixture.makerspaceId, spaceId: null } })).toBe(0);
-    expect(await auditFor(fixture.makerspaceId, space.id, "opening-hours")).toEqual([
-      expect.objectContaining({ metadata: { area: "opening-hours", operation: "updated", changes: { hours: { from: [], to: hours } } } }),
-    ]);
-    const savedException = await prisma.hoursException.findFirstOrThrow({ where: { spaceId: space.id } });
-    const savedBlackout = await prisma.blackout.findFirstOrThrow({ where: { spaceId: space.id } });
-    expect(await calendar.removeHoursException({ ...fixture.scope, spaceId: null, exceptionId: savedException.id })).toMatchObject({ ok: false });
-    expect(await calendar.removeBlackout({ ...fixture.scope, spaceId: null, blackoutId: savedBlackout.id })).toMatchObject({ ok: false });
-    expect(await calendar.removeHoursException({ ...fixture.scope, spaceId: space.id, exceptionId: savedException.id })).toMatchObject({ ok: true });
-    expect(await calendar.removeBlackout({ ...fixture.scope, spaceId: space.id, blackoutId: savedBlackout.id })).toMatchObject({ ok: true });
+    expect(await prisma.openingHours.count({ where: { makerspaceId: fixture.makerspaceId } })).toBe(0);
+    expect(await prisma.hoursException.count({ where: { makerspaceId: fixture.makerspaceId } })).toBe(0);
+    expect(await prisma.blackout.count({ where: { makerspaceId: fixture.makerspaceId } })).toBe(0);
   });
 
-  it("lets the owner save makerspace hours, dated exceptions and blackouts, and prevents scope spoofing", async () => {
+  it("lets a bookings manager save makerspace hours, dated exceptions and blackouts, and prevents scope spoofing", async () => {
     dataOf(await calendar.replaceOpeningHours({ ...fixture.scope, hours }));
     const savedException = dataOf(await calendar.setHoursException({ ...fixture.scope, exception }));
     const savedBlackout = dataOf(await calendar.createBlackout({ ...fixture.scope, blackout }));

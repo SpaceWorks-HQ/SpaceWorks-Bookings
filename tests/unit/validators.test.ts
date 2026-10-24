@@ -30,7 +30,7 @@ describe("team roles", () => {
   it("never hands out ownership through the role form", () => {
     expect(assignableTeamRoleSchema.safeParse("OWNER").success).toBe(false);
     expect(updateTeamRoleSchema.safeParse({ makerspaceSlug: "acme", targetUserId: "u", role: "OWNER" }).success).toBe(false);
-    expect(updateTeamRoleSchema.safeParse({ makerspaceSlug: "acme", targetUserId: "u", role: "TREASURER" }).success).toBe(true);
+    expect(updateTeamRoleSchema.safeParse({ makerspaceSlug: "acme", targetUserId: "u", role: "FRONT_DESK" }).success).toBe(true);
   });
 
   it("defaults invites to the least-privileged role", () => {

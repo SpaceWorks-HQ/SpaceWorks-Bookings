@@ -6,10 +6,10 @@ Two kinds of email go out, through two routes.
 
 | Kind | Examples | Sent through |
 |---|---|---|
-| Account emails | password reset, email verification, sign-in links, sign-in codes, new-device alerts, owner invites, makerspace review notices | the platform's SMTP (Super admin → Settings, or `SMTP_*`) |
+| Account emails | password reset, email verification, sign-in links, sign-in codes, new-device alerts, first-manager invites, makerspace review notices | the platform's SMTP (Super admin → Settings, or `SMTP_*`) |
 | Customer emails | payment received (with the receipt), offline payment not confirmed, refund processed (with the credit note); Phase 1 adds the booking emails | the makerspace's own SMTP when set up and on; otherwise the platform's |
 
-**A makerspace's own email** lives in Settings → Email (owner and space managers): sender name and address,
+**A makerspace's own email** lives in Settings → Email (bookings managers): sender name and address,
 reply-to, SMTP host, port (587 or 2525 STARTTLS, 465 TLS, 25), login and password. The password is stored
 encrypted (`PAYMENT_SECRETS_KEY`, a key derived for email). **Send test email** sends to the person testing and
 records when it last went through. In production TLS is required and the host must resolve to public addresses.
@@ -30,7 +30,7 @@ Super admin → Operations and failed queue jobs in Super admin → Jobs.
 
 ## Chat alerts
 
-Settings → Notifications (owner and space managers) holds up to ten chat channels per makerspace. Each picks
+Settings → Notifications (bookings managers) holds up to ten chat channels per makerspace. Each picks
 its alerts:
 
 | Alert | When |

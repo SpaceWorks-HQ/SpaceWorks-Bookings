@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { recordAuditEvent } from "@/lib/audit";
+import { LAST_MANAGER_MESSAGE, lockTeamMember } from "@/lib/teamManagers";
 import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
 
@@ -17,14 +18,13 @@ const leaveMakerspaceSchema = z.object({
 });
 
 const NOT_A_MEMBER = "You are not on this makerspace's team.";
-const SOLE_OWNER_ERROR = "You are the only owner. Transfer ownership or delete the makerspace first.";
 
 /**
  * The signed-in person leaves a makerspace's team. Only their own team row is removed.
  *
- * The last-owner check and the delete run in one transaction holding a row
- * lock on the makerspace, so two co-owners leaving at the same time cannot
- * both pass the check and leave the makerspace ownerless.
+ * The last-manager check and the delete run in one transaction holding a row
+ * lock on the makerspace, so two bookings managers leaving at the same time
+ * cannot both pass the check and leave the makerspace without one.
  */
 export async function leaveMakerspace(input: unknown): Promise<ActionResult> {
   const session = await auth();
@@ -48,16 +48,9 @@ export async function leaveMakerspace(input: unknown): Promise<ActionResult> {
   if (!makerspace) return { ok: false, error: NOT_A_MEMBER };
 
   const outcome = await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "Makerspace" WHERE "id" = ${makerspace.id} FOR UPDATE`;
-    const membership = await tx.teamMember.findUnique({
-      where: { userId_makerspaceId: { userId, makerspaceId: makerspace.id } },
-      select: { id: true, role: true },
-    });
+    const membership = await lockTeamMember(tx, makerspace.id, userId);
     if (!membership) return "not-member" as const;
-    if (membership.role === "OWNER") {
-      const owners = await tx.teamMember.count({ where: { makerspaceId: makerspace.id, role: "OWNER" } });
-      if (owners <= 1) return "sole-owner" as const;
-    }
+    if (membership.last) return "last-manager" as const;
     // Scoped to the caller's own user id as well as the row id.
     const removed = await tx.teamMember.deleteMany({ where: { id: membership.id, userId, makerspaceId: makerspace.id } });
     if (removed.count !== 1) return "not-member" as const;
@@ -74,7 +67,7 @@ export async function leaveMakerspace(input: unknown): Promise<ActionResult> {
   });
 
   if (outcome === "not-member") return { ok: false, error: NOT_A_MEMBER };
-  if (outcome === "sole-owner") return { ok: false, error: SOLE_OWNER_ERROR };
+  if (outcome === "last-manager") return { ok: false, error: LAST_MANAGER_MESSAGE };
 
   revalidatePath("/account/makerspaces");
   revalidatePath("/dashboard");

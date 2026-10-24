@@ -77,8 +77,8 @@ and branding, and your customers' data stays in your own database.
 
 - Email and password or a one-time sign-in link, authenticator codes for every member of staff, known devices,
   IP blocking and breached-password checks. No third-party sign-in and no trackers.
-- Six roles (owner, space manager, bookings manager, front desk, treasurer, viewer); settings that touch money need
-  the payments capability, and every settings change is audited.
+- Three roles: the bookings manager runs everything (and a makerspace always keeps one), front desk takes bookings
+  and desk payments, viewers read. Every settings change is audited.
 
 ## A look around
 
@@ -194,7 +194,7 @@ npm run dev                     # http://localhost:3000
 ```
 
 The demo makerspace is Tinkerspace (`/m/tinkerspace`) with four spaces, bookings and payments. Sign in as
-`owner@demo.test` or `front@demo.test` with `DEMO_PASSWORD` and an authenticator code from `DEMO_MFA_SECRET`.
+`manager@demo.test` or `front@demo.test` with `DEMO_PASSWORD` and an authenticator code from `DEMO_MFA_SECRET`.
 Without Redis, set `JOBS_INPROCESS=true` and leave `REDIS_URL` unset to run the background jobs inside `npm run dev`.
 
 ## Design system
@@ -217,7 +217,7 @@ wolf, on a few staff screens and the 404 page ([docs/DESIGN.md](docs/DESIGN.md),
 
 | Read this | When you want to |
 | --- | --- |
-| [Handoff](docs/HANDOFF.md) | Know what is done, what is decided and what is open |
+| [Decisions](docs/DECISIONS.md) | Know what is decided, by whom, and what only the owner can check |
 | [Architecture](docs/ARCHITECTURE.md) | Understand request flows, data and background work |
 | [Payments](docs/PAYMENTS.md) and [GST](docs/GST.md) | Follow money, refunds, receipts and tax |
 | [REST API and webhooks](docs/API.md) | Connect another system |

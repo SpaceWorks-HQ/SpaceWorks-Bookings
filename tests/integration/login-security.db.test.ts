@@ -99,7 +99,7 @@ describe.sequential("staff need an authenticator", () => {
   it("refuses dashboard actions to a team member without one, and allows them once it's on", async () => {
     const owner = await prisma.user.create({ data: { email: `owner-${tag}@example.test`, emailVerified: new Date() } });
     const makerspace = await prisma.makerspace.create({ data: { name: "MFA Test", slug: `mfa-${tag}`, status: "ACTIVE" } });
-    await prisma.teamMember.create({ data: { userId: owner.id, makerspaceId: makerspace.id, role: "OWNER" } });
+    await prisma.teamMember.create({ data: { userId: owner.id, makerspaceId: makerspace.id, role: "BOOKINGS_MANAGER" } });
     identity.current = { id: owner.id };
     expect(await hasAuthenticator(owner.id)).toBe(false);
     expect(await makerspaceActionAccess(makerspace.slug, "makerspace.settings")).toMatchObject({ ok: false, error: expect.stringContaining("authenticator") });

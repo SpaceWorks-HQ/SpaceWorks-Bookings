@@ -33,7 +33,7 @@ describe.sequential("production database invariants", () => {
   });
 
   it("allows one team row per person per makerspace", async () => {
-    await prisma.teamMember.create({ data: { userId, makerspaceId, role: "OWNER" } });
+    await prisma.teamMember.create({ data: { userId, makerspaceId, role: "BOOKINGS_MANAGER" } });
     await expect(prisma.teamMember.create({ data: { userId, makerspaceId, role: "VIEWER" } })).rejects.toThrow();
   });
 
@@ -57,7 +57,7 @@ describe.sequential("production database invariants", () => {
 
   it("removes a makerspace's team, invites and review history with it", async () => {
     const makerspace = await prisma.makerspace.create({ data: { name: "Cascade", slug: `cascade-${suffix}` } });
-    await prisma.teamMember.create({ data: { userId, makerspaceId: makerspace.id, role: "OWNER" } });
+    await prisma.teamMember.create({ data: { userId, makerspaceId: makerspace.id, role: "BOOKINGS_MANAGER" } });
     await prisma.teamInvite.create({ data: { makerspaceId: makerspace.id, token: `cascade-${suffix}` } });
     await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action: "SUBMITTED" } });
     await prisma.makerspace.delete({ where: { id: makerspace.id } });

@@ -19,7 +19,7 @@ const out = path.resolve(import.meta.dirname, "../docs/screenshots");
 await mkdir(out, { recursive: true });
 const staff = "/dashboard/tinkerspace";
 
-/** [file name, signed in as the owner?, route or resolver, viewport] */
+/** [file name, signed in as the bookings manager?, route or resolver, viewport] */
 const SCREENS = [
   ["makerspace", false, "/m/tinkerspace"],
   ["space-booking", false, "/m/tinkerspace/spaces/meeting-room"],
@@ -45,7 +45,7 @@ async function firstLink(page, listRoute, prefix, suffix = "") {
 
 async function signIn(page) {
   await page.goto(new URL("/login", base).href, { waitUntil: "networkidle" });
-  await page.fill('input[autocomplete="email"]', "owner@demo.test");
+  await page.fill('input[autocomplete="email"]', "manager@demo.test");
   await page.fill('input[autocomplete="current-password"]', password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   const code = page.getByLabel("Authenticator or recovery code");

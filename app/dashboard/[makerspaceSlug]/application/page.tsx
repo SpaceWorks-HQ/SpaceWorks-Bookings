@@ -79,7 +79,7 @@ export default async function MakerspaceApplicationPage({ params }: { params: Pr
             <>
               <CardHeader
                 title="What you told us"
-                description={makerspace.status === "CHANGES_REQUESTED" && !isManager ? "An owner or manager can update the application." : undefined}
+                description={makerspace.status === "CHANGES_REQUESTED" && !isManager ? "A bookings manager can update the application." : undefined}
               />
               <DetailList
                 items={[

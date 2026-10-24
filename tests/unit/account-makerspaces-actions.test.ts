@@ -83,27 +83,27 @@ describe("leaveMakerspace", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("blocks the sole owner, checking ownership under the makerspace lock", async () => {
-    mocks.teamMemberFindUnique.mockResolvedValue({ id: "membership_1", role: "OWNER" });
+  it("blocks the last bookings manager, counting managers under the makerspace lock", async () => {
+    mocks.teamMemberFindUnique.mockResolvedValue({ id: "membership_1", role: "BOOKINGS_MANAGER" });
     mocks.teamMemberCount.mockResolvedValue(1);
     const result = await leaveMakerspace({ makerspaceSlug: "acme" });
-    expect(result).toMatchObject({ ok: false, error: expect.stringContaining("Transfer ownership or delete the makerspace first") });
+    expect(result).toMatchObject({ ok: false, error: expect.stringContaining("needs at least one bookings manager") });
     expect(mocks.queryRaw).toHaveBeenCalledTimes(1);
     expect(mocks.queryRaw.mock.invocationCallOrder[0]).toBeLessThan(mocks.teamMemberCount.mock.invocationCallOrder[0]!);
-    expect(mocks.teamMemberCount).toHaveBeenCalledWith({ where: { makerspaceId: "org_1", role: "OWNER" } });
+    expect(mocks.teamMemberCount).toHaveBeenCalledWith({ where: { makerspaceId: "org_1", role: "BOOKINGS_MANAGER" } });
     expect(mocks.teamMemberDeleteMany).not.toHaveBeenCalled();
     expect(mocks.audit).not.toHaveBeenCalled();
   });
 
-  it.each(["VIEWER", "TREASURER", "FRONT_DESK", "BOOKINGS_MANAGER", "SPACE_MANAGER"] as const)("lets a %s leave without counting owners", async (role) => {
+  it.each(["VIEWER", "FRONT_DESK"] as const)("lets a %s leave without counting managers", async (role) => {
     mocks.teamMemberFindUnique.mockResolvedValue({ id: "membership_1", role });
     await expect(leaveMakerspace({ makerspaceSlug: "acme" })).resolves.toEqual({ ok: true });
     expect(mocks.teamMemberCount).not.toHaveBeenCalled();
     expect(mocks.teamMemberDeleteMany).toHaveBeenCalledTimes(1);
   });
 
-  it("lets a co-owner leave when another owner remains", async () => {
-    mocks.teamMemberFindUnique.mockResolvedValue({ id: "membership_1", role: "OWNER" });
+  it("lets a bookings manager leave when another one remains", async () => {
+    mocks.teamMemberFindUnique.mockResolvedValue({ id: "membership_1", role: "BOOKINGS_MANAGER" });
     mocks.teamMemberCount.mockResolvedValue(2);
     await expect(leaveMakerspace({ makerspaceSlug: "acme" })).resolves.toEqual({ ok: true });
     expect(mocks.teamMemberDeleteMany).toHaveBeenCalledTimes(1);

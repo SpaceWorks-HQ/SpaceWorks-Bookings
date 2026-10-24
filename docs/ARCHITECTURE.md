@@ -24,12 +24,13 @@ page with the makerspace's name, logo, description and contact details. Phase 1 
 
 ### Roles
 
-`TeamRole` is `OWNER`, `SPACE_MANAGER`, `BOOKINGS_MANAGER`, `FRONT_DESK`, `TREASURER` or `VIEWER`.
+`TeamRole` is `BOOKINGS_MANAGER` (the top role), `FRONT_DESK` or `VIEWER` (`docs/DECISIONS.md`).
 `CAPABILITIES` in `lib/permissionRoles.ts` maps each capability (`makerspace.settings`, `team.manage`,
 `payments.settings`, `spaces.manage`, `bookings.manage`, `payments.record`, `refunds.manage`,
 `reports.finance` and the rest) to the roles that hold it. Pages use `requireMakerspaceCapability`, actions
 `makerspaceActionAccess`. A suspended or archived makerspace keeps only viewing and finishing money already
-received. Owners manage everyone; space managers manage less senior roles.
+received. Bookings managers manage everyone, other bookings managers included, and every makerspace keeps at
+least one (`lib/teamManagers.ts`).
 
 ## Background jobs
 

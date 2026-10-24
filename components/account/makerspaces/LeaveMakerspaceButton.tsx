@@ -8,16 +8,16 @@ import { ConfirmationDialog } from "@/components/feedback/ConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/menu";
 
-const SOLE_OWNER_HINT = "Transfer ownership or delete the makerspace first.";
+const LAST_MANAGER_HINT = "Make someone else a bookings manager, or delete the makerspace, first.";
 
 export function LeaveMakerspaceButton({
   makerspaceSlug,
   makerspaceName,
-  soleOwner,
+  lastManager,
 }: {
   makerspaceSlug: string;
   makerspaceName: string;
-  soleOwner: boolean;
+  lastManager: boolean;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -25,16 +25,16 @@ export function LeaveMakerspaceButton({
   const [open, setOpen] = useState(false);
   const hintId = useId();
 
-  if (soleOwner) {
+  if (lastManager) {
     // A disabled button gets no pointer events, so the focusable wrapper carries the tooltip.
     return (
-      <Tooltip content={`You're the only owner. ${SOLE_OWNER_HINT}`}>
+      <Tooltip content={`You're the only bookings manager. ${LAST_MANAGER_HINT}`}>
         <span tabIndex={0} aria-describedby={hintId} className="inline-flex rounded-full">
           <Button size="sm" variant="secondary" disabled>
             Leave
             <span className="sr-only"> {makerspaceName}</span>
           </Button>
-          <span id={hintId} className="sr-only">You are the only owner. {SOLE_OWNER_HINT}</span>
+          <span id={hintId} className="sr-only">You are the only bookings manager. {LAST_MANAGER_HINT}</span>
         </span>
       </Tooltip>
     );
@@ -49,7 +49,7 @@ export function LeaveMakerspaceButton({
       <ConfirmationDialog
         open={open}
         title={`Leave ${makerspaceName}?`}
-        message="You will lose access to its dashboard straight away. An owner or space manager would need to invite you again. Your own bookings with this makerspace are not affected."
+        message="You will lose access to its dashboard straight away. A bookings manager would need to invite you again. Your own bookings with this makerspace are not affected."
         confirmLabel="Leave makerspace"
         loading={pending}
         onCancel={() => setOpen(false)}

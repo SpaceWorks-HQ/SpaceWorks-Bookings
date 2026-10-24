@@ -24,7 +24,7 @@ export async function setupMakerspace(rules: Partial<BookingRules> = {}, options
   if (options.gateway) await prisma.makerspacePaymentSettings.create({ data: { makerspaceId: makerspace.id, provider: "RAZORPAY", webhookPublicCode: `wh-${suffix}` } });
   const users: string[] = [];
   const person = async (label: string, verified = true) => {
-    const user = await prisma.user.create({ data: { email: `${label}-${suffix}@example.test`, name: `${label[0].toUpperCase()}${label.slice(1)} Test`, emailVerified: verified ? NOW : null } });
+    const user = await prisma.user.create({ data: { email: `${label}-${users.length}-${suffix}@example.test`, name: `${label[0].toUpperCase()}${label.slice(1)} Test`, emailVerified: verified ? NOW : null } });
     users.push(user.id);
     return user;
   };
@@ -33,7 +33,7 @@ export async function setupMakerspace(rules: Partial<BookingRules> = {}, options
     await prisma.teamMember.create({ data: { userId: user.id, makerspaceId: makerspace.id, role } });
     return { kind: "STAFF", userId: user.id, role };
   };
-  const owner = await staff("OWNER");
+  const owner = await staff("BOOKINGS_MANAGER");
   const customerUser = await person("customer");
   const customer: CustomerActor = { kind: "CUSTOMER", userId: customerUser.id };
   return {

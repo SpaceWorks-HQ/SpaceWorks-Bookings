@@ -9,7 +9,7 @@ import { Chip, EmptyState, MakerspaceLogo } from "@/components/ui/display";
 import { LeaveMakerspaceButton } from "./LeaveMakerspaceButton";
 import type { AccountMembershipRow, AccountMakerspacesData } from "./data";
 
-const ROLE_TONES = { OWNER: "ink", SPACE_MANAGER: "warning", BOOKINGS_MANAGER: "success", FRONT_DESK: "neutral", TREASURER: "info", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
+const ROLE_TONES = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
 
 const rowClasses = "flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between";
 
@@ -35,7 +35,7 @@ function TeamsCard({ teams }: { teams: AccountMembershipRow[] }) {
     >
       {teams.length === 0 ? (
         <EmptyState title="You're not on any makerspace's team yet" action={apply}>
-          Apply to take bookings for your makerspace&rsquo;s spaces here, or ask a makerspace owner for an invite link.
+          Apply to take bookings for your makerspace&rsquo;s spaces here, or ask a makerspace&rsquo;s bookings manager for an invite link.
         </EmptyState>
       ) : (
         <ul className="divide-y divide-line">
@@ -50,8 +50,8 @@ function TeamsCard({ teams }: { teams: AccountMembershipRow[] }) {
                     <Chip size="sm" tone={ROLE_TONES[team.role]}>{ROLE_LABELS[team.role]}</Chip>
                     {team.makerspace.status === "ACTIVE" ? null : <MakerspaceStatusChip status={team.makerspace.status} />}
                   </div>
-                  {team.soleOwner ? (
-                    <p className="mt-1.5 text-caption text-ink-muted">You&rsquo;re the only owner, so you can&rsquo;t leave yet.</p>
+                  {team.lastManager ? (
+                    <p className="mt-1.5 text-caption text-ink-muted">You&rsquo;re the only bookings manager, so you can&rsquo;t leave yet.</p>
                   ) : null}
                 </div>
               </div>
@@ -65,7 +65,7 @@ function TeamsCard({ teams }: { teams: AccountMembershipRow[] }) {
                 <LeaveMakerspaceButton
                   makerspaceSlug={team.makerspace.slug}
                   makerspaceName={team.makerspace.name}
-                  soleOwner={team.soleOwner}
+                  lastManager={team.lastManager}
                 />
               </div>
             </li>

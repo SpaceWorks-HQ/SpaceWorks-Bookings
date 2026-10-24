@@ -6,6 +6,7 @@ import { isIndianStateCode } from "@/lib/indianStates";
 import { makerspaceSlugSchema } from "@/lib/validators";
 import { enqueueOutbox, type OutboxClient } from "@/lib/outbox";
 import type { MakerspaceNotice } from "@/lib/makerspaceLifecycle";
+import { MANAGER_ROLE } from "@/lib/permissionRoles";
 
 const optionalText = (max: number) => z.string().trim().max(max).optional().transform((value) => value || null);
 
@@ -42,10 +43,10 @@ export async function platformAdminEmails(client: OutboxClient): Promise<string[
   return [...new Set(flagged.map((user) => user.email!.toLowerCase()))];
 }
 
-/** Queue a lifecycle email to every owner of a makerspace (within the caller's transaction). */
+/** Queue a lifecycle email to every bookings manager of a makerspace (within the caller's transaction). */
 export async function notifyOwners(client: OutboxClient, makerspaceId: string, notice: MakerspaceNotice, reason?: string | null) {
   const owners = await client.teamMember.findMany({
-    where: { makerspaceId, role: "OWNER", user: { email: { not: null } } },
+    where: { makerspaceId, role: MANAGER_ROLE, user: { email: { not: null } } },
     select: { user: { select: { email: true } } },
     take: 20,
   });

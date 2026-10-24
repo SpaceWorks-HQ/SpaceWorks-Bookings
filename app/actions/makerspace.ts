@@ -68,7 +68,7 @@ export async function updateMakerspace(
     !membership ||
     !isMakerspaceAdmin(membership.role)
   ) {
-    return { ok: false, error: "Only makerspace owners and managers can edit settings." };
+    return { ok: false, error: "Only bookings managers can edit makerspace settings." };
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   if (

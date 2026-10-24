@@ -81,9 +81,9 @@ public issue.
 - **Staff need an authenticator.** Anyone on a makerspace's team must turn on an authenticator app before the
   dashboard, its actions or its documents open (`hasAuthenticator` in `lib/permissions.ts`). Customers never
   need one.
-- **Roles.** `OWNER`, `SPACE_MANAGER`, `BOOKINGS_MANAGER`, `FRONT_DESK`, `TREASURER` and `VIEWER`, each
+- **Roles.** `BOOKINGS_MANAGER`, `FRONT_DESK` and `VIEWER`, each
   limited by the capability map in `lib/permissionRoles.ts`; viewers never see customer contact details
-  (`bookings.contact`). Only owners and space managers manage the team, and only for less senior roles.
+  (`bookings.contact`). Only bookings managers manage the team; the last one cannot be removed, demoted or leave.
 - **Super admins** sign in with email and password only. Their accounts and passwords are created and changed
   only on the server (`scripts/admin.sh`); password-reset emails, in-app password changes and emailed sign-in
   links are refused for them.

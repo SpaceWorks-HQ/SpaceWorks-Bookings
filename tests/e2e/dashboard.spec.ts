@@ -4,8 +4,8 @@ import { signIn } from "./helpers";
 // Staff pages over the seeded demo: the overview figures, calendar, reports, audit log and integrations.
 test.skip(!process.env.DEMO_PASSWORD || !process.env.DEMO_MFA_SECRET, "DEMO_PASSWORD and DEMO_MFA_SECRET must be set; seed the demo data to run signed-in journeys.");
 
-test("the owner reads the calendar, reports and audit log, and creates an API key", async ({ page }) => {
-  await signIn(page, "owner@demo.test");
+test("the bookings manager reads the calendar, reports and audit log, and creates an API key", async ({ page }) => {
+  await signIn(page, "manager@demo.test");
   await page.goto("/dashboard/tinkerspace");
   await expect(page.getByText("Arriving today", { exact: true }).filter({ visible: true })).toBeVisible();
 

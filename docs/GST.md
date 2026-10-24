@@ -79,5 +79,5 @@ space's rate; the place of supply is where the space is (the supplier's state), 
 Document kinds stay as above: a GST-registered makerspace issues a **tax invoice** for each booking payment, a bill
 of supply under composition or exemption, otherwise a receipt; each processed refund gets a **credit note**. Strictly,
 an advance taken before the booked time is a *receipt voucher* (Rule 50) and its refund a *refund voucher* (Rule 51),
-with the tax invoice due when the space is used. That split is not built: it is listed under "Open questions" in
-`docs/HANDOFF.md` for the owner to decide with their accountant.
+with the tax invoice due when the space is used. That split is not built: it is listed under "Defaults chosen
+conservatively" in `docs/DECISIONS.md` for the owner to decide with their accountant.

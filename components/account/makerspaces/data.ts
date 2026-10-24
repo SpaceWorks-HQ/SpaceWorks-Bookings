@@ -3,6 +3,7 @@ import "server-only";
 import type { MakerspaceStatus, TeamRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format/datetime";
+import { MANAGER_ROLE } from "@/lib/permissionRoles";
 
 export type AccountMembershipRow = {
   id: string;
@@ -10,7 +11,7 @@ export type AccountMembershipRow = {
   role: TeamRole;
   joinedLabel: string;
   /** The only OWNER left; leaving would orphan the makerspace. */
-  soleOwner: boolean;
+  lastManager: boolean;
 };
 
 export type AccountMakerspacesData = {
@@ -24,11 +25,11 @@ export async function loadAccountMakerspaces(userId: string): Promise<AccountMak
     orderBy: { makerspace: { name: "asc" } },
     select: { id: true, role: true, createdAt: true, makerspace: { select: { id: true, slug: true, name: true, logoUrl: true, status: true } } },
   });
-  const ownedMakerspaceIds = teams.filter((team) => team.role === "OWNER").map((team) => team.makerspace.id);
-  const ownersByMakerspace = ownedMakerspaceIds.length
-    ? await prisma.teamMember.groupBy({ by: ["makerspaceId"], where: { makerspaceId: { in: ownedMakerspaceIds }, role: "OWNER" }, _count: { _all: true } })
+  const managedMakerspaceIds = teams.filter((team) => team.role === MANAGER_ROLE).map((team) => team.makerspace.id);
+  const managersByMakerspace = managedMakerspaceIds.length
+    ? await prisma.teamMember.groupBy({ by: ["makerspaceId"], where: { makerspaceId: { in: managedMakerspaceIds }, role: MANAGER_ROLE }, _count: { _all: true } })
     : [];
-  const owners = new Map(ownersByMakerspace.map((group) => [group.makerspaceId, group._count._all]));
+  const managers = new Map(managersByMakerspace.map((group) => [group.makerspaceId, group._count._all]));
 
   return {
     teamMembers: teams.map(({ id, role, createdAt, makerspace: { id: makerspaceId, ...makerspace } }) => ({
@@ -36,7 +37,7 @@ export async function loadAccountMakerspaces(userId: string): Promise<AccountMak
       role,
       makerspace,
       joinedLabel: formatDate(createdAt, "UTC"),
-      soleOwner: role === "OWNER" && (owners.get(makerspaceId) ?? 0) <= 1,
+      lastManager: role === MANAGER_ROLE && (managers.get(makerspaceId) ?? 0) <= 1,
     })),
   };
 }

@@ -9,7 +9,7 @@ import { NOW, setupMakerspace } from "./bookings-helpers";
 /** Database-backed permissions still run: these staff really have team membership and MFA. */
 export async function setupActionMakerspace(...args: Parameters<typeof setupMakerspace>) {
   const fixture = await setupMakerspace(...args);
-  const staffByRole = new Map<TeamRole, StaffActor>([["OWNER", fixture.owner]]);
+  const staffByRole = new Map<TeamRole, StaffActor>([["BOOKINGS_MANAGER", fixture.owner]]);
   await prisma.user.update({ where: { id: fixture.owner.userId }, data: { mfaEnabledAt: NOW } });
   return { ...fixture, scope: { makerspaceSlug: fixture.makerspace.slug },
     async staff(role: TeamRole) {

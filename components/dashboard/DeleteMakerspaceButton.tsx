@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 
 /**
- * Owner-only delete. The confirmation stays locked until the makerspace's
+ * Bookings-manager-only delete. The confirmation stays locked until the makerspace's
  * exact name is typed; the server action still enforces ownership.
  */
 export function DeleteMakerspaceButton(props: {

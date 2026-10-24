@@ -58,7 +58,7 @@ const cases = [
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.access.mockResolvedValue({ ok: true, makerspace: { id: "tenant", slug: "tinkerspace", status: "ACTIVE" }, userId: "staff", membership: { role: "OWNER" } });
+  mocks.access.mockResolvedValue({ ok: true, makerspace: { id: "tenant", slug: "tinkerspace", status: "ACTIVE" }, userId: "staff", membership: { role: "BOOKINGS_MANAGER" } });
   mocks.db.$transaction.mockImplementation(async (callback) => callback(mocks.db));
   for (const [name, model] of Object.entries(mocks.db)) {
     if (name === "$transaction") continue;
@@ -107,7 +107,7 @@ describe("every settings write is audited", () => {
   it("requires payments.settings for money rules and tax resets", async () => {
     await rules.updateBookingSettings({ ...slug, patch: { chargeMode: "FREE" } });
     expect(mocks.access).toHaveBeenCalledWith("tinkerspace", "payments.settings");
-    mocks.access.mockResolvedValue({ ok: true, makerspace: { id: "tenant" }, userId: "staff", membership: { role: "BOOKINGS_MANAGER" } });
+    mocks.access.mockResolvedValue({ ok: true, makerspace: { id: "tenant" }, userId: "staff", membership: { role: "FRONT_DESK" } });
     mocks.save.mockClear();
     expect(await rules.updateSpaceRuleOverrides({ ...scope, patch: { chargeMode: null } })).toMatchObject({ ok: false });
     expect(await spaces.updateSpace({ ...scope, fields: { sacCode: null } })).toMatchObject({ ok: false });
@@ -119,13 +119,14 @@ describe("every settings write is audited", () => {
     await spaces.replaceRefundTiers({ ...slug, tiers: [] });
     expect(mocks.access).toHaveBeenLastCalledWith("tinkerspace", "payments.settings");
   });
-  it("lets bookings managers edit an add-on while keeping its SAC, but refuses changing or clearing it", async () => {
+  it("lets bookings managers change an add-on's SAC (they hold payments.settings) and refuses roles without spaces.manage", async () => {
     mocks.access.mockResolvedValue({ ok: true, makerspace: { id: "tenant" }, userId: "staff", membership: { role: "BOOKINGS_MANAGER" } });
     mocks.db.addOn.findFirst.mockResolvedValue({ ...addOn, sacCode: "998399" });
-    const fields = { name: "Updated tea", unit: "PER_PERSON", priceMinor: 100, sacCode: "998399" };
+    const fields = { name: "Updated tea", unit: "PER_PERSON", priceMinor: 100, sacCode: "998398" };
     expect(await spaces.saveAddOn({ ...scope, addOnId: "a", addOn: fields })).toMatchObject({ ok: true });
     mocks.save.mockClear();
-    for (const sacCode of [null, "998398"]) expect(await spaces.saveAddOn({ ...scope, addOnId: "a", addOn: { ...fields, sacCode } })).toMatchObject({ ok: false });
+    mocks.access.mockResolvedValue({ ok: true, makerspace: { id: "tenant" }, userId: "staff", membership: { role: "FRONT_DESK" } });
+    expect(await spaces.saveAddOn({ ...scope, addOnId: "a", addOn: fields })).toMatchObject({ ok: false });
     expect(mocks.save).not.toHaveBeenCalled();
   });
   it("does not let a claimed space scope delete a makerspace-wide blackout", async () => {

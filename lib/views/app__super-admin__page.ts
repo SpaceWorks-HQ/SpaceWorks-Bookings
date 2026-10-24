@@ -47,7 +47,7 @@ export async function loadSuperAdminOverviewView() {
     { label: "Suspended makerspaces", value: statusCount(MakerspaceStatus.SUSPENDED), href: "/super-admin/makerspaces?status=SUSPENDED" },
     { label: "Failed emails", value: failedEmails, href: "/super-admin/email" },
     { label: "Emails queued over 15 minutes", value: stuckEmails, href: "/super-admin/email" },
-    { label: "Owners and admins without MFA", value: managersWithoutMfa, href: "/super-admin/security" },
+    { label: "Bookings managers and admins without MFA", value: managersWithoutMfa, href: "/super-admin/security" },
     { label: "Users with unverified email", value: unverifiedUsers, href: "/super-admin/users?filter=unverified" },
   ];
   return { stats, attention, activity7d, recentOrgs, makerspaces };

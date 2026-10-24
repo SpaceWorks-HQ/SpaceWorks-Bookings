@@ -7,7 +7,7 @@
 web
 
 ## Users
-- **Makerspace staff:** owners, space managers, bookings managers, front desk and treasurers of Indian makerspaces
+- **Makerspace staff:** bookings managers and front desk of Indian makerspaces
   and shared workshops. They take bookings for rooms, studios, desks and halls by hand today (WhatsApp, shared
   calendars, UPI screenshots, paper receipts) and want one calm place to publish spaces, approve requests, take
   payments, check people in and handle refunds.
@@ -31,8 +31,8 @@ Works apps can be linked later.
 
 ## Operating Context
 - Makerspaces apply at `/start`; a platform admin approves, asks for changes or declines. Platform admins can also set
-  a makerspace up directly and invite its owner.
-- Team roles: owner, space manager, bookings manager, front desk, treasurer, viewer (`lib/permissionRoles.ts`).
+  a makerspace up directly and invite its first bookings manager.
+- Team roles: bookings manager (top role), front desk, viewer (`lib/permissionRoles.ts`, `docs/DECISIONS.md`).
 - People sign in with a password or an emailed one-time link; staff also need an authenticator app. No single sign-on.
 - Runs on a VPS (bundled Postgres, Redis, Silo storage) or a cloud stack, with a BullMQ worker and beat for
   background jobs.

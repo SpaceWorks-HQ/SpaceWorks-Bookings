@@ -14,7 +14,7 @@ export default async function SuperAdminNewMakerspacePage() {
         <ArrowLeft aria-hidden className="size-4" />
         Makerspaces
       </Link>
-      <PageHeader title="Add a makerspace" description="Skip the application: set it up as active and invite its owner." />
+      <PageHeader title="Add a makerspace" description="Skip the application: set it up as active and invite its first bookings manager." />
       <CreateMakerspaceForm />
     </div>
   );

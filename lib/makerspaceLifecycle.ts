@@ -1,6 +1,6 @@
 import type { MakerspaceReviewAction, MakerspaceStatus } from "@prisma/client";
 
-/** Lifecycle decisions a makerspace's owners are told about by email. */
+/** Lifecycle decisions a makerspace's bookings managers are told about by email. */
 export type MakerspaceNotice = "received" | "approved" | "changes-requested" | "rejected" | "suspended" | "reactivated" | "created";
 
 export const MAKERSPACE_NOTICES: readonly MakerspaceNotice[] = ["received", "approved", "changes-requested", "rejected", "suspended", "reactivated", "created"];
@@ -116,7 +116,7 @@ export const REVIEW_ACTION_LABELS: Record<MakerspaceReviewAction, string> = {
 export const STATUS_EXPLANATIONS: Record<MakerspaceStatus, { title: string; body: string }> = {
   PENDING_REVIEW: {
     title: "Your application is being reviewed",
-    body: "A platform admin will look at it. We'll email the owners when there is a decision.",
+    body: "A platform admin will look at it. We'll email its bookings managers when there is a decision.",
   },
   CHANGES_REQUESTED: {
     title: "A few changes are needed",

@@ -30,7 +30,7 @@ export default async function DashboardPage() {
       {teams.length === 0 ? (
         <EmptyState patch title="No makerspaces yet" action={apply}>
           Apply to take bookings for your makerspace&rsquo;s spaces here. A platform admin reviews every application, or ask an
-          makerspace owner to invite you to their team.
+          makerspace&rsquo;s bookings manager to invite you to their team.
         </EmptyState>
       ) : (
         <section aria-label="Your makerspaces" className="grid grid-cols-1 gap-4 sm:grid-cols-2">

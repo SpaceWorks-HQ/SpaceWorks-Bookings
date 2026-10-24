@@ -14,10 +14,11 @@ import { applicationSnapshot, notifyOwners, makerspaceApplicationSchema, release
 import { enqueueOutbox } from "@/lib/outbox";
 import type { ActionResult } from "./makerspace";
 import { flattenZodErrors } from "./utils";
+import { MANAGER_ROLE } from "@/lib/permissionRoles";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 
-/** Owner invites from a platform admin last two weeks: long enough for someone to notice the email. */
+/** First-manager invites from a platform admin last two weeks: long enough for someone to notice the email. */
 const OWNER_INVITE_DAYS = 14;
 
 const reviewSchema = z.object({
@@ -33,7 +34,7 @@ const limitsSchema = z.object({
 });
 
 const createSchema = makerspaceApplicationSchema.extend({
-  ownerEmail: z.string().trim().toLowerCase().email("Enter the owner's email address").max(320),
+  ownerEmail: z.string().trim().toLowerCase().email("Enter the bookings manager's email address").max(320),
 });
 
 
@@ -104,8 +105,8 @@ export async function setMakerspaceLimits(input: unknown): Promise<ActionResult>
 }
 
 /**
- * Set up an approved makerspace for someone. They become its owner by accepting an invite bound to
- * their email address, so a makerspace never has an owner who did not agree to it.
+ * Set up an approved makerspace for someone. They become its bookings manager by accepting an invite bound
+ * to their email address, so a makerspace never has a manager who did not agree to it.
  */
 export async function createMakerspaceForOwner(input: unknown): Promise<ActionResult<{ makerspaceId: string }>> {
   const session = await superAdmin();
@@ -127,12 +128,12 @@ export async function createMakerspaceForOwner(input: unknown): Promise<ActionRe
       });
       const expiresAt = new Date(Date.now() + OWNER_INVITE_DAYS * 24 * 60 * 60_000);
       const invite = await tx.teamInvite.create({
-        data: { makerspaceId: created.id, token: crypto.randomBytes(24).toString("base64url"), role: "OWNER", email: ownerEmail, createdByUserId: session.user.id, expiresAt },
+        data: { makerspaceId: created.id, token: crypto.randomBytes(24).toString("base64url"), role: MANAGER_ROLE, email: ownerEmail, createdByUserId: session.user.id, expiresAt },
         select: { id: true, token: true },
       });
       await enqueueOutbox(tx, "owner-invite", { to: ownerEmail, makerspaceId: created.id, token: invite.token, expiresAt: expiresAt.toISOString() });
       await recordAuditEvent({ action: "MAKERSPACE_CREATED", actorUserId: session.user.id, makerspaceId: created.id, targetType: "Makerspace", targetId: created.id, client: tx });
-      await recordAuditEvent({ action: "MAKERSPACE_INVITE_CREATED", actorUserId: session.user.id, makerspaceId: created.id, targetType: "TeamInvite", targetId: invite.id, metadata: { role: "OWNER" }, client: tx });
+      await recordAuditEvent({ action: "MAKERSPACE_INVITE_CREATED", actorUserId: session.user.id, makerspaceId: created.id, targetType: "TeamInvite", targetId: invite.id, metadata: { role: MANAGER_ROLE }, client: tx });
       return created.id;
     });
     revalidatePath("/super-admin/makerspaces");
@@ -145,27 +146,27 @@ export async function createMakerspaceForOwner(input: unknown): Promise<ActionRe
   }
 }
 
-/** Send a fresh owner invite when the first expired or went to the wrong inbox. */
+/** Send a fresh first bookings manager invite when the first expired or went to the wrong inbox. */
 export async function resendOwnerInvite(input: unknown): Promise<ActionResult> {
   const session = await superAdmin();
   if (!session) return TOO_MANY;
-  const parsed = z.object({ makerspaceId: z.string().trim().min(1).max(64), ownerEmail: z.string().trim().toLowerCase().email("Enter the owner's email address").max(320) }).safeParse(input);
+  const parsed = z.object({ makerspaceId: z.string().trim().min(1).max(64), ownerEmail: z.string().trim().toLowerCase().email("Enter the bookings manager's email address").max(320) }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: flattenZodErrors(parsed.error) };
   const { makerspaceId, ownerEmail } = parsed.data;
-  const makerspace = await prisma.makerspace.findUnique({ where: { id: makerspaceId }, select: { id: true, _count: { select: { teamMembers: { where: { role: "OWNER" } } } } } });
+  const makerspace = await prisma.makerspace.findUnique({ where: { id: makerspaceId }, select: { id: true, _count: { select: { teamMembers: { where: { role: MANAGER_ROLE } } } } } });
   if (!makerspace) return { ok: false, error: "Makerspace not found." };
-  if (makerspace._count.teamMembers > 0) return { ok: false, error: "This makerspace already has an owner. They can invite others from the Team page." };
+  if (makerspace._count.teamMembers > 0) return { ok: false, error: "This makerspace already has a bookings manager. They can invite others from the Team page." };
 
   const expiresAt = new Date(Date.now() + OWNER_INVITE_DAYS * 24 * 60 * 60_000);
   await prisma.$transaction(async (tx) => {
-    // Only one owner invite stays usable.
-    await tx.teamInvite.deleteMany({ where: { makerspaceId, role: "OWNER", usedAt: null } });
+    // Only one first-manager invite stays usable.
+    await tx.teamInvite.deleteMany({ where: { makerspaceId, role: MANAGER_ROLE, usedAt: null } });
     const invite = await tx.teamInvite.create({
-      data: { makerspaceId, token: crypto.randomBytes(24).toString("base64url"), role: "OWNER", email: ownerEmail, createdByUserId: session.user.id, expiresAt },
+      data: { makerspaceId, token: crypto.randomBytes(24).toString("base64url"), role: MANAGER_ROLE, email: ownerEmail, createdByUserId: session.user.id, expiresAt },
       select: { id: true, token: true },
     });
     await enqueueOutbox(tx, "owner-invite", { to: ownerEmail, makerspaceId, token: invite.token, expiresAt: expiresAt.toISOString() });
-    await recordAuditEvent({ action: "MAKERSPACE_INVITE_CREATED", actorUserId: session.user.id, makerspaceId, targetType: "TeamInvite", targetId: invite.id, metadata: { role: "OWNER" }, client: tx });
+    await recordAuditEvent({ action: "MAKERSPACE_INVITE_CREATED", actorUserId: session.user.id, makerspaceId, targetType: "TeamInvite", targetId: invite.id, metadata: { role: MANAGER_ROLE }, client: tx });
   });
   revalidatePath(`/super-admin/makerspaces/${makerspaceId}`);
   return { ok: true };

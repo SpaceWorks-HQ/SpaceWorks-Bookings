@@ -41,7 +41,7 @@ describe("staff route boundaries", () => {
     for (const input of [undefined, "invalid", "-2", "0"]) expect(pageNumber(input)).toBe(1);
     expect(pageNumber("100000")).toBe(10000);
     expect(pageNumber("3")).toBe(3);
-    const access = { makerspace: { status: "SUSPENDED" }, membership: { role: "OWNER" } } as MakerspaceAccessContext;
+    const access = { makerspace: { status: "SUSPENDED" }, membership: { role: "BOOKINGS_MANAGER" } } as MakerspaceAccessContext;
     expect(allowed(access, "bookings.view")).toBe(true);
     expect(allowed(access, "bookings.manage")).toBe(false);
   });

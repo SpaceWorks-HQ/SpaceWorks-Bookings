@@ -24,6 +24,9 @@ Bookings, money, integrations and the ship work (Phases 1 to 4 of `docs/plans/20
   money and refunds with audited CSV exports, and the makerspace audit log.
 - **Integrations.** A REST API (`/api/v1`) with read and write keys and an OpenAPI document, and signed webhooks
   relayed from the booking timeline with retries and a delivery log (`0004_integrations`, `docs/API.md`).
+- **Roles.** The bookings manager is the top role with every capability, deleting the makerspace included; front
+  desk and viewer remain. Owners and space managers became bookings managers and treasurers viewers
+  (`0005_manager_roles`); a makerspace always keeps one bookings manager. Decisions moved to `docs/DECISIONS.md`.
 - **Ship.** README in the Space Works layout with light and dark screenshots, a demo with payments, three booking
   easter eggs, the colour-mode reveal from the control that changed it, a phone layout fix on public pages, and the
   operations checks recorded in `docs/plans/ops-notes.md`.

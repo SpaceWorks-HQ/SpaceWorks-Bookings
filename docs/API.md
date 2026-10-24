@@ -6,7 +6,7 @@ Bookings only through this API and outbound webhooks. The machine-readable refer
 
 ## Keys
 
-Owners and space managers create keys under **Settings → Integrations** (`integrations.manage`). A key belongs to one
+Bookings managers create keys under **Settings → Integrations** (`integrations.manage`). A key belongs to one
 makerspace and looks like `swb_<12-character prefix>_<secret>`; it is shown once. Only a SHA-256 of the secret is
 stored. Revoke a key there at any time; a key also stops working while the makerspace isn't active.
 

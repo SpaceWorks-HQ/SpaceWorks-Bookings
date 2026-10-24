@@ -44,7 +44,7 @@ function pollutedSource(): AccountExportSource {
       sessionVersion: SECRETS.sessionVersion,
     },
     sessions: [{ access_token: SECRETS.access_token, refresh_token: SECRETS.refresh_token, id_token: SECRETS.id_token }],
-    teamMembers: [{ role: "OWNER", createdAt: new Date("2030-01-03T00:00:00Z"), makerspace: { name: "Analytical Society", slug: "analytical" } }],
+    teamMembers: [{ role: "BOOKINGS_MANAGER", createdAt: new Date("2030-01-03T00:00:00Z"), makerspace: { name: "Analytical Society", slug: "analytical" } }],
   };
   return source as unknown as AccountExportSource;
 }
@@ -60,7 +60,7 @@ describe("account data export shaping", () => {
       accountCreatedAt: "2029-12-01T00:00:00.000Z",
       twoFactorAuthenticationEnabled: true,
     });
-    expect(data.makerspaceTeams).toEqual([{ makerspace: "Analytical Society", makerspaceSlug: "analytical", role: "OWNER", joinedAt: "2030-01-03T00:00:00.000Z" }]);
+    expect(data.makerspaceTeams).toEqual([{ makerspace: "Analytical Society", makerspaceSlug: "analytical", role: "BOOKINGS_MANAGER", joinedAt: "2030-01-03T00:00:00.000Z" }]);
     expect(data.truncated.makerspaceTeams).toBe(false);
   });
 

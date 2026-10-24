@@ -1,26 +1,26 @@
 import { expect, test } from "./fixtures";
 import { bookPublicSpace, chooseFirstFreeTime, signIn } from "./helpers";
 
-// Signed-in journeys over the demo data from `npm run db:seed-demo` (the Tinkerspace makerspace and its owner).
-// The demo password comes from DEMO_PASSWORD and the owner's authenticator from DEMO_MFA_SECRET; without them
+// Signed-in journeys over the demo data from `npm run db:seed-demo` (the Tinkerspace makerspace and its bookings manager).
+// The demo password comes from DEMO_PASSWORD and the manager's authenticator from DEMO_MFA_SECRET; without them
 // these tests are skipped.
 const password = process.env.DEMO_PASSWORD;
 const mfaSecret = process.env.DEMO_MFA_SECRET;
 test.skip(!password || !mfaSecret, "DEMO_PASSWORD and DEMO_MFA_SECRET must be set; seed the demo data to run signed-in journeys.");
 
-test("the owner opens the makerspace overview and the team", async ({ page }) => {
-  await signIn(page, "owner@demo.test");
+test("the bookings manager opens the makerspace overview and the team", async ({ page }) => {
+  await signIn(page, "manager@demo.test");
   await page.goto("/dashboard/tinkerspace");
   await expect(page.getByRole("heading", { name: "Overview", level: 1 })).toBeVisible();
-  await expect(page.locator("#main-content").getByText("You're an owner here.")).toBeVisible();
+  await expect(page.locator("#main-content").getByText("You're a bookings manager here.")).toBeVisible();
   await page.goto("/dashboard/tinkerspace/team");
   await expect(page.getByRole("heading", { name: "Team", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "What each role can do" })).toBeVisible();
   await expect(page.getByText("Bookings manager").first()).toBeVisible();
 });
 
-test("the owner reaches payments and the payment settings", async ({ page }) => {
-  await signIn(page, "owner@demo.test");
+test("the bookings manager reaches payments and the payment settings", async ({ page }) => {
+  await signIn(page, "manager@demo.test");
   await page.goto("/dashboard/tinkerspace/payments");
   await expect(page.getByRole("heading", { name: "Payments", level: 1 })).toBeVisible();
   await page.goto("/dashboard/tinkerspace/settings/payments");
@@ -28,8 +28,8 @@ test("the owner reaches payments and the payment settings", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Tax and receipts" })).toBeVisible();
 });
 
-test("the owner reaches the email and chat notification settings", async ({ page }) => {
-  await signIn(page, "owner@demo.test");
+test("the bookings manager reaches the email and chat notification settings", async ({ page }) => {
+  await signIn(page, "manager@demo.test");
   await page.goto("/dashboard/tinkerspace/settings/email");
   await expect(page.getByRole("heading", { name: "Your own email" })).toBeVisible();
   await page.goto("/dashboard/tinkerspace/settings/notifications");
@@ -44,11 +44,11 @@ test("the public makerspace page shows who to contact", async ({ page }) => {
   await expect(page.getByRole("link", { name: "hello@tinkerspace.demo.test" })).toBeVisible();
 });
 
-test("the owner approves a Laser studio request from the bookings list", async ({ page }) => {
+test("the bookings manager approves a Laser studio request from the bookings list", async ({ page }) => {
   // Make our own request so other tests and retries can change seeded bookings independently.
   const reference = await bookPublicSpace(page, "Laser studio");
   await expect(page.getByText("Waiting for approval", { exact: true })).toBeVisible();
-  await signIn(page, "owner@demo.test");
+  await signIn(page, "manager@demo.test");
   await page.goto(`/dashboard/tinkerspace/bookings?q=${reference}&status=REQUESTED`);
   await page.getByRole("link", { name: reference, exact: true }).click();
   await page.getByRole("button", { name: "Approve booking", exact: true }).click();
@@ -75,8 +75,8 @@ test("front desk checks in an arrival from Today", async ({ page }) => {
   await expect(row.getByText("Checked in", { exact: true })).toBeVisible();
 });
 
-test("the owner changes a booking rule default and sees it saved", async ({ page }) => {
-  await signIn(page, "owner@demo.test");
+test("the bookings manager changes a booking rule default and sees it saved", async ({ page }) => {
+  await signIn(page, "manager@demo.test");
   await page.goto("/dashboard/tinkerspace/settings/bookings", { waitUntil: "networkidle" });
   const hold = page.getByLabel("Checkout hold (minutes)", { exact: true }).filter({ visible: true });
   const original = await hold.inputValue();
@@ -94,10 +94,10 @@ test("the owner changes a booking rule default and sees it saved", async ({ page
   }
 });
 
-test("the owner makes a booking on behalf of a customer", async ({ page }) => {
+test("the bookings manager makes a booking on behalf of a customer", async ({ page }) => {
   await page.goto("/m/tinkerspace/spaces/meeting-room", { waitUntil: "networkidle" });
   const slot = await chooseFirstFreeTime(page);
-  await signIn(page, "owner@demo.test");
+  await signIn(page, "manager@demo.test");
   await page.goto("/dashboard/tinkerspace/bookings/new", { waitUntil: "networkidle" });
   await page.getByRole("combobox", { name: "Space", exact: true }).click();
   await page.getByRole("option", { name: "Meeting room", exact: true }).click();

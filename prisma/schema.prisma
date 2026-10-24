@@ -14,13 +14,11 @@ datasource db {
 
 // ─── Platform ────────────────────────────────────────────────────────────────
 
-/// Makerspace staff roles (lib/permissionRoles.ts maps them to capabilities). Customers are not staff.
+/// Makerspace staff roles (lib/permissionRoles.ts maps them to capabilities). Customers are not staff. BOOKINGS_MANAGER
+/// is the top role; there is no owner, space manager or treasurer role (docs/DECISIONS.md, 2026-10-24).
 enum TeamRole {
-  OWNER
-  SPACE_MANAGER
   BOOKINGS_MANAGER
   FRONT_DESK
-  TREASURER
   VIEWER
 }
 

@@ -41,16 +41,18 @@ describe.sequential("booking settings Server Actions", () => {
     expect(await auditFor(fixture.makerspaceId, fixture.makerspaceId, "booking-rules")).toHaveLength(1);
   });
 
-  it("refuses money rules to a bookings manager, without changing the space or the audit trail", async () => {
+  it("lets a bookings manager change money rules and refuses front desk without touching the space or the audit trail", async () => {
     const manager = await fixture.staff("BOOKINGS_MANAGER");
+    const front = await fixture.staff("FRONT_DESK");
     const space = await addSpace(fixture.makerspaceId);
     identity.userId = manager.userId;
-    dataOf(await updateSpaceRuleOverrides({ ...fixture.scope, spaceId: space.id, patch: { leadTimeMinutes: 15 } }));
+    dataOf(await updateSpaceRuleOverrides({ ...fixture.scope, spaceId: space.id, patch: { leadTimeMinutes: 15, chargeMode: "PAY_LATER" } }));
+    identity.userId = front.userId;
     const auditCount = await prisma.auditEvent.count({ where: { makerspaceId: fixture.makerspaceId } });
     expect(await updateBookingSettings({ ...fixture.scope, patch: { chargeMode: "PAY_LATER" } })).toMatchObject({ ok: false });
-    expect(await updateSpaceRuleOverrides({ ...fixture.scope, spaceId: space.id, patch: { chargeMode: "PAY_LATER" } })).toMatchObject({ ok: false });
+    expect(await updateSpaceRuleOverrides({ ...fixture.scope, spaceId: space.id, patch: { chargeMode: "FREE" } })).toMatchObject({ ok: false });
     expect(await updateSpace({ ...fixture.scope, spaceId: space.id, fields: { taxRateBps: 1800 } })).toMatchObject({ ok: false });
-    expect((await prisma.space.findUniqueOrThrow({ where: { id: space.id } })).ruleOverrides).toEqual({ leadTimeMinutes: 15 });
+    expect((await prisma.space.findUniqueOrThrow({ where: { id: space.id } })).ruleOverrides).toEqual({ leadTimeMinutes: 15, chargeMode: "PAY_LATER" });
     expect((await prisma.makerspaceBookingSettings.findUniqueOrThrow({ where: { makerspaceId: fixture.makerspaceId } })).chargeMode).toBe("FREE");
     expect(await prisma.auditEvent.count({ where: { makerspaceId: fixture.makerspaceId } })).toBe(auditCount);
   });

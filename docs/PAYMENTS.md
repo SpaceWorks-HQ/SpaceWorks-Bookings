@@ -16,7 +16,7 @@ Each makerspace picks **one** gateway, or none:
 | Stripe | Redirect to Stripe Checkout and back | Checkout Sessions (`mode: payment`) on the makerspace's **own** Stripe account. No Stripe script runs on our pages. Takes every supported currency; three-decimal currencies must be multiples of 10. New Stripe accounts in India may be invite-only. |
 | Offline | UPI QR, bank transfer, cash, cheque | Always available. The team records it. |
 
-Keys are saved under **Settings → Payments and tax** (`payments.settings`: owner and space managers).
+Keys are saved under **Settings → Payments and tax** (`payments.settings`: bookings managers).
 Secrets are encrypted with AES-256-GCM using `PAYMENT_SECRETS_KEY` (32 random bytes, base64), bound to the
 makerspace, and never sent back to the browser. Without that key the gateway section stays locked. Test mode
 follows the key (`rzp_test_`, `sk_test_`).
@@ -98,7 +98,7 @@ one can be entered again).
 
 ## Refunds and credit notes
 
-Refunds (`refunds.manage`: owner, space managers, treasurers) are append-only. Offline refunds are recorded as
+Refunds (`refunds.manage`: bookings managers) are append-only. Offline refunds are recorded as
 money already handed back and processed at once. Gateway refunds go to the provider after the refund row
 commits and stay `PENDING` until the provider (or its webhook) confirms; a timeout keeps them pending rather
 than guessing. Each processed refund gets a **credit note** with tax apportioned pro rata.

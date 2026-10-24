@@ -85,7 +85,7 @@ describe.sequential("makerspace application lifecycle", () => {
     expect(makerspace.status).toBe("PENDING_REVIEW");
     expect(makerspace.source).toBe("SELF_SIGNUP");
     expect(makerspace.stateCode).toBe("KL");
-    expect(makerspace.teamMembers).toEqual([expect.objectContaining({ userId: users.applicant.id, role: "OWNER" })]);
+    expect(makerspace.teamMembers).toEqual([expect.objectContaining({ userId: users.applicant.id, role: "BOOKINGS_MANAGER" })]);
     expect(makerspace.reviews).toEqual([expect.objectContaining({ action: "SUBMITTED", actorUserId: users.applicant.id, applicationSnapshot: expect.objectContaining({ name: "Kochi Runners Club", slug }) })]);
     const messages = await outboxFor(makerspace.id);
     expect(messages).toEqual(expect.arrayContaining([
@@ -137,11 +137,11 @@ describe.sequential("makerspace application lifecycle", () => {
 
   it("opens team management once approved, and closes it again when suspended", async () => {
     signIn(users.applicant);
-    expect((await createMakerspaceInvite({ makerspaceSlug: slug, role: "TREASURER" })).ok).toBe(true);
+    expect((await createMakerspaceInvite({ makerspaceSlug: slug, role: "FRONT_DESK" })).ok).toBe(true);
     signIn(users.admin);
     expect(await reviewMakerspace({ makerspaceId: makerspaceId, decision: "suspend", reason: "Unpaid hosting invoice." })).toEqual({ ok: true });
     signIn(users.applicant);
-    expect((await createMakerspaceInvite({ makerspaceSlug: slug, role: "TREASURER" })).ok).toBe(false);
+    expect((await createMakerspaceInvite({ makerspaceSlug: slug, role: "FRONT_DESK" })).ok).toBe(false);
     signIn(users.admin);
     expect(await reviewMakerspace({ makerspaceId: makerspaceId, decision: "reactivate" })).toEqual({ ok: true });
   });
@@ -179,12 +179,12 @@ describe.sequential("platform admin tools", () => {
     expect(makerspace.reviews).toEqual([expect.objectContaining({ action: "CREATED" })]);
     expect(makerspace.teamMembers).toEqual([]);
     const [invite] = makerspace.teamInvites;
-    expect(invite).toMatchObject({ role: "OWNER", email: users.owner.email });
+    expect(invite).toMatchObject({ role: "BOOKINGS_MANAGER", email: users.owner.email });
     expect((await outboxFor(makerspaceId)).map((message) => message.kind)).toEqual(["owner-invite"]);
 
     expect(await acceptMakerspaceInviteToken(invite.token, { id: users.applicant.id, email: users.applicant.email, emailVerified: true })).toEqual({ ok: false, reason: "wrong-account" });
     expect(await acceptMakerspaceInviteToken(invite.token, { id: users.owner.id, email: users.owner.email, emailVerified: true })).toEqual({ ok: true, href: `/dashboard/direct-${suffix}` });
-    expect(await prisma.teamMember.findFirst({ where: { makerspaceId, userId: users.owner.id } })).toMatchObject({ role: "OWNER" });
+    expect(await prisma.teamMember.findFirst({ where: { makerspaceId, userId: users.owner.id } })).toMatchObject({ role: "BOOKINGS_MANAGER" });
   });
 
 });

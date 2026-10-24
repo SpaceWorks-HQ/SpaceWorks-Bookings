@@ -24,7 +24,7 @@ describe.sequential("instance queue authorisation", () => {
     vi.stubEnv("JOBS_QUEUE_PREFIX", `swb:test:admin:${suffix}`);
     adminId = (await prisma.user.create({ data: { email: `admin${domain}`, emailVerified: new Date(), isSuperAdmin: true, mfaEnabledAt: new Date() } })).id;
     ownerId = (await prisma.user.create({ data: { email: `owner${domain}`, emailVerified: new Date(), mfaEnabledAt: new Date() } })).id;
-    makerspaceId = (await prisma.makerspace.create({ data: { name: "Queue Lab", slug: `queue-lab-${suffix}`, status: "ACTIVE", teamMembers: { create: { userId: ownerId, role: "OWNER" } } } })).id;
+    makerspaceId = (await prisma.makerspace.create({ data: { name: "Queue Lab", slug: `queue-lab-${suffix}`, status: "ACTIVE", teamMembers: { create: { userId: ownerId, role: "BOOKINGS_MANAGER" } } } })).id;
   });
   afterAll(async () => {
     const queues = getQueues();

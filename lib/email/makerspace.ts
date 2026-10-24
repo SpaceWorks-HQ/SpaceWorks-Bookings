@@ -37,7 +37,7 @@ async function findMakerspace(id: string) {
   return prisma.makerspace.findUnique({ where: { id }, select: { name: true, slug: true } });
 }
 
-/** Tell an owner about their application or makerspace. Returns "dropped" if the makerspace is gone. */
+/** Tell a bookings manager about their application or makerspace. Returns "dropped" if the makerspace is gone. */
 export async function deliverMakerspaceNotice(payload: NoticePayload, messageId: string): Promise<"sent" | "dropped"> {
   const makerspace = await findMakerspace(payload.makerspaceId);
   if (!makerspace) return "dropped";
@@ -107,7 +107,7 @@ export async function deliverAdminApplicationAlert(payload: AdminPayload, messag
   return "sent";
 }
 
-/** Invite the person a platform admin named as owner of a new makerspace. */
+/** Invite the person a platform admin named as bookings manager of a new makerspace. */
 export async function deliverOwnerInvite(payload: InvitePayload, messageId: string): Promise<"sent" | "dropped"> {
   const makerspace = await findMakerspace(payload.makerspaceId);
   if (!makerspace || new Date(payload.expiresAt) <= new Date()) return "dropped";
@@ -116,7 +116,7 @@ export async function deliverOwnerInvite(payload: InvitePayload, messageId: stri
     messageId,
     subject: `You're invited to run ${makerspace.name}`,
     heading: `Run ${makerspace.name} on Space Works Bookings`,
-    paragraphs: [`A platform admin set up ${makerspace.name} and named you as its owner. Accept the invite with this email address to open its dashboard and start setting up its spaces.`],
+    paragraphs: [`A platform admin set up ${makerspace.name} and named you as its bookings manager. Accept the invite with this email address to open its dashboard and start setting up its spaces.`],
     action: { label: "Accept the invite", url: absoluteUrl(`/join/makerspace/${payload.token}`) },
     footnote: `This link works once and expires on ${new Date(payload.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Sign in or create an account with ${payload.to} to accept it.`,
   });

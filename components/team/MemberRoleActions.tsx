@@ -12,7 +12,7 @@ import { Dropdown } from "@/components/ui/field";
 import { ROLE_LABELS } from "@/components/team/memberSummary";
 import { assignableRoles, canManageTeamMember } from "@/lib/permissionRoles";
 
-const ROLE_TONES = { OWNER: "ink", SPACE_MANAGER: "warning", BOOKINGS_MANAGER: "success", FRONT_DESK: "neutral", TREASURER: "info", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
+const ROLE_TONES = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
 
 export function MemberRoleActions(props: {
   makerspaceSlug: string;
@@ -28,9 +28,9 @@ export function MemberRoleActions(props: {
   const [pending, startTransition] = useTransition();
   const [confirmRemove, setConfirmRemove] = useState(false);
 
-  const canEditRoles = role !== "OWNER" && canManageTeamMember(actorRole, role);
-  const canRemove = role !== "OWNER" && canManageTeamMember(actorRole, role);
-  // Roles below the actor's own; owners hand out any role but owner.
+  const canEditRoles = canManageTeamMember(actorRole, role);
+  const canRemove = canManageTeamMember(actorRole, role);
+  // Roles the actor may hand out: bookings managers hand out every role.
   const options = assignableRoles(actorRole);
 
   if (!canEditRoles && !canRemove) {

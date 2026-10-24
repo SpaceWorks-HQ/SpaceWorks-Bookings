@@ -35,7 +35,7 @@ const sections: LegalSection[] = [
     body: [
       "Makerspaces either apply and are reviewed by the operator, or are added by the operator directly. The operator may approve, ask for changes to, or decline an application, and may suspend or archive a makerspace that breaks these terms or the law.",
       "You are responsible for your makerspace and everything you publish or send through Space Works Bookings, including spaces, prices, opening hours, booking rules, approvals, receipts and emails. Keep your details accurate and tell people promptly if a booking or price changes.",
-      "Owners decide who joins the team and what each person can do, and are responsible for their actions. Remove access promptly when someone leaves. Deleting a makerspace permanently deletes its settings and team, except records the law requires to be kept.",
+      "Bookings managers decide who joins the team and what each person can do, and are responsible for their actions. Remove access promptly when someone leaves. Deleting a makerspace permanently deletes its settings and team, except records the law requires to be kept.",
     ],
   },
   {

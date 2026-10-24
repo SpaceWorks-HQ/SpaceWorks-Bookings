@@ -1,6 +1,6 @@
 import type { TeamRole } from "@prisma/client";
 
-/** Client-safe row for the team list. `email` is present only for owner and space manager viewers. */
+/** Client-safe row for the team list. `email` is present only for bookings manager viewers. */
 export type TeamMemberRow = {
   id: string;
   userId: string;
@@ -18,29 +18,26 @@ export type RoleCounts = Record<TeamRole, number>;
 export { ROLE_LABELS } from "@/lib/permissionRoles";
 import { isMakerspaceAdmin } from "@/lib/permissionRoles";
 
-const ROLE_ORDER: TeamRole[] = ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "TREASURER", "VIEWER"];
+const ROLE_ORDER: TeamRole[] = ["BOOKINGS_MANAGER", "FRONT_DESK", "VIEWER"];
 
 function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
 }
 
 const ROLE_NOUNS: Record<TeamRole, [string, string]> = {
-  OWNER: ["owner", "owners"],
-  SPACE_MANAGER: ["space manager", "space managers"],
   BOOKINGS_MANAGER: ["bookings manager", "bookings managers"],
   FRONT_DESK: ["front desk", "front desk"],
-  TREASURER: ["treasurer", "treasurers"],
   VIEWER: ["viewer", "viewers"],
 };
 
-/** "1 owner · 2 space managers · 1 treasurer · 3 viewers", skipping roles nobody holds. */
+/** "2 bookings managers · 1 front desk · 3 viewers", skipping roles nobody holds. */
 export function roleBreakdown(counts: RoleCounts) {
   const parts = ROLE_ORDER.map((role) => (counts[role] ? plural(counts[role], ...ROLE_NOUNS[role]) : null)).filter(Boolean);
   return parts.length ? parts.join(" · ") : "No one yet";
 }
 
 /**
- * One dot per person, ordered by seniority (owner first, viewer last). Above `cap` people the
+ * One dot per person, ordered by seniority (bookings managers first, viewers last). Above `cap` people the
  * dots are shared out proportionally, keeping at least one dot for every role
  * someone holds.
  */

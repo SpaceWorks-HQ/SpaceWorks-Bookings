@@ -7,7 +7,7 @@ test.skip(!process.env.DEMO_PASSWORD || !process.env.DEMO_MFA_SECRET, "DEMO_PASS
 test("an approved request is paid at the desk and the booking shows it with a receipt", async ({ page }) => {
   const reference = await bookPublicSpace(page, "Laser studio");
   const manageUrl = page.url();
-  await signIn(page, "owner@demo.test");
+  await signIn(page, "manager@demo.test");
   await page.goto(`/dashboard/tinkerspace/bookings?q=${reference}&status=REQUESTED`);
   await page.getByRole("link", { name: reference, exact: true }).click();
   await page.waitForURL(/\/dashboard\/tinkerspace\/bookings\/(?!new)[^/?]+$/);
@@ -20,7 +20,7 @@ test("an approved request is paid at the desk and the booking shows it with a re
   await expect(page.getByRole("heading", { name: "Payment", level: 2 })).toBeVisible();
   await expect(page.getByText("How to pay", { exact: true })).toBeVisible();
 
-  await signIn(page, "owner@demo.test");
+  await signIn(page, "manager@demo.test");
   await page.goto(bookingUrl);
   await expect(page.getByRole("heading", { name: "Money", level: 2 })).toBeVisible();
   await page.getByRole("button", { name: "Record payment", exact: true }).click();

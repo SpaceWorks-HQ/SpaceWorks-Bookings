@@ -26,9 +26,9 @@ export function OwnerInviteResend({ makerspaceId, defaultEmail }: { makerspaceId
 
   return (
     <Card as="section" className="rounded-xl">
-      <CardHeader title="No owner yet" description="The owner joins by accepting the invite emailed to them. Send a new one if it expired or went to the wrong address." />
+      <CardHeader title="No bookings manager yet" description="The first bookings manager joins by accepting the invite emailed to them. Send a new one if it expired or went to the wrong address." />
       <form className="flex flex-col gap-4 sm:flex-row sm:items-end" onSubmit={submit}>
-        <Field label="Owner's email" required className="flex-1">
+        <Field label="Bookings manager's email" required className="flex-1">
           <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} disabled={pending} autoComplete="off" />
         </Field>
         <Button type="submit" variant="secondary" loading={pending}>Send new invite</Button>

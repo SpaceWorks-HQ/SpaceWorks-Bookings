@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> **Start here:** `docs/HANDOFF.md` explains what this repo is (a standalone app split out of SpaceWorks, part of the SpaceWorks-HQ family), the decisions already made, what is done, the work in progress and what is left.
+> **Start here:** `docs/DECISIONS.md` explains what this repo is (a standalone app split out of SpaceWorks, part of the SpaceWorks-HQ family) and every decision already made: the original ones, the owner's, the defaults chosen conservatively and the checks only the owner can run.
 
 Guidance for Claude Code (and other agents, via `AGENTS.md`) in this repository. `AGENTS.md` must stay
 byte-identical to this file (CI checks it).
@@ -14,7 +14,11 @@ makerspace is the tenant. The platform super admin creates makerspaces, or revie
 - **Words:** makerspace = tenant (`Makerspace`, `makerspaceId`, `/m/[makerspaceSlug]`, `/makerspaces`). Space = a
   bookable thing inside a makerspace (Phase 1). Never call the tenant a "space" in code.
 - **Build plan:** `docs/plans/2026-10-23-bookings-build.md`, phase by phase; research notes in `docs/plans/research/`.
-  Each phase ends with green gates, a commit and a push to `dev`. Never push or merge to `main`.
+  `docs/DECISIONS.md` wins where they disagree.
+- **Branches and releases (owner decision, 2026-10-24):** only `dev` (integration) and `main` (production) live on.
+  No feature or phase branches are kept: work lands on `dev` with green gates, `dev` merges to `main`, and only
+  @Shaan-Shoukath pushes or merges to `main` (branch protection, CODEOWNERS). Pushes to `dev` publish gated `dev`
+  images; merges to `main` publish the release images and the GitHub Release, and the one-line install uses `main`.
 - **Phase 0 (done):** the platform forked from the Space Works membership platform (see `NOTICE`), renamed, with
   membership stripped, magic link sign-in, the bookings roles and the BullMQ worker and beat.
 
@@ -62,7 +66,7 @@ npm run build:frontend     # the split frontend workspace
 npm run frontend:catalog   # regenerate the frontend view/action catalog
 npm run db:migrate         # create/apply a migration in development
 npm run db:deploy          # apply migrations
-npm run db:seed-demo       # Tinkerspace demo makerspace + owner@demo.test (DEMO_PASSWORD, DEMO_MFA_SECRET, MFA_ENCRYPTION_KEY)
+npm run db:seed-demo       # Tinkerspace demo makerspace + manager@demo.test (DEMO_PASSWORD, DEMO_MFA_SECRET, MFA_ENCRYPTION_KEY)
 ```
 
 Without Redis in development, set `JOBS_INPROCESS=true` and leave `REDIS_URL` unset: `npm run dev` then runs every
@@ -96,12 +100,13 @@ npx vitest run tests/unit/health.test.ts
   - Every tenant row carries `makerspaceId`, with composite FKs to its parent.
   - Every query is scoped through the makerspace resolved for the request.
   - Cross-tenant access returns 404.
-- **Roles and capabilities** (`lib/permissionRoles.ts`): `OWNER`, `SPACE_MANAGER`, `BOOKINGS_MANAGER`, `FRONT_DESK`,
-  `TREASURER`, `VIEWER`, mapped to capabilities (`makerspace.*`, `team.manage`, `spaces.manage`, `bookings.*`,
+- **Roles and capabilities** (`lib/permissionRoles.ts`): `BOOKINGS_MANAGER`, `FRONT_DESK` and `VIEWER` (no owner,
+  space manager or treasurer: owner decisions, 2026-10-24), mapped to capabilities (`makerspace.*`, `team.manage`, `spaces.manage`, `bookings.*`,
   `payments.*`, `refunds.manage`, `members.manage`, `reports.*`, `integrations.manage`, `audit.view`). Gate pages
   with `requireMakerspaceCapability` and actions with `makerspaceActionAccess`; never check role names directly.
-  Rank for who manages whom: owner > space manager > bookings manager > treasurer = front desk > viewer; owners
-  manage everyone, others only less senior roles. A suspended or archived makerspace keeps only
+  The bookings manager is the top role with every capability; whoever creates a makerspace becomes one. Rank:
+  bookings manager > front desk > viewer; bookings managers manage everyone, other bookings managers included,
+  and every makerspace keeps at least one (`lib/teamManagers.ts`, under a makerspace lock). A suspended or archived makerspace keeps only
   `SUSPENDED_CAPABILITIES` (finishing money already received).
 - **Money:**
   - Amounts are integer minor units (paise); never add amounts across currencies.

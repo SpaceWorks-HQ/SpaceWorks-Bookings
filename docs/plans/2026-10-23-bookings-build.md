@@ -1,5 +1,9 @@
 # Space Works Bookings build plan (v1, 2026-10-23)
 
+> **Superseded in part:** the roles below (owner, space manager, treasurer) were replaced on 2026-10-24 by a
+> single top role, the bookings manager, plus front desk and viewer. `docs/DECISIONS.md` records this and every
+> later owner decision, and wins where the two disagree.
+
 Phase 0 and the Phase 1 domain layer were built by Claude Code alone. From 2026-10-23 the owner brought in Codex
 (gpt-6.1-sol) for the Phase 1 actions and UI and for reviews; from 2026-10-24 the rest (Phases 2 to 5) was built and
 reviewed by Claude Code again. Work happens in phases; each phase ends with green lint, typecheck, unit, integration

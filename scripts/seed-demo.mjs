@@ -3,7 +3,7 @@
 //
 //   DEMO_PASSWORD=<12+ chars> DEMO_MFA_SECRET=<base32> MFA_ENCRYPTION_KEY=<base64 32 bytes> npm run db:seed-demo
 //
-// The owner signs in as owner@demo.test with DEMO_PASSWORD; staff need an authenticator before the dashboard opens,
+// The bookings manager signs in as manager@demo.test with DEMO_PASSWORD; staff need an authenticator before the dashboard opens,
 // so DEMO_MFA_SECRET is their shared TOTP seed. Idempotent; never runs in production.
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
@@ -31,8 +31,8 @@ const prisma = new PrismaClient();
 const now = new Date();
 const credentials = { emailVerified: now, passwordHash: await bcrypt.hash(password, 12), mfaSecretEncrypted: encryptMfaSecret(mfaSecret), mfaEnabledAt: now };
 const owner = await prisma.user.upsert({
-  where: { email: "owner@demo.test" },
-  create: { email: "owner@demo.test", name: "Shaan Shoukath", ...credentials },
+  where: { email: "manager@demo.test" },
+  create: { email: "manager@demo.test", name: "Shaan Shoukath", ...credentials },
   update: { name: "Shaan Shoukath", ...credentials, isSuperAdmin: false },
 });
 const front = await prisma.user.upsert({
@@ -56,8 +56,8 @@ const details = {
 const makerspace = await prisma.makerspace.upsert({ where: { slug: "tinkerspace" }, create: { slug: "tinkerspace", ...details }, update: details });
 await prisma.teamMember.upsert({
   where: { userId_makerspaceId: { userId: owner.id, makerspaceId: makerspace.id } },
-  create: { userId: owner.id, makerspaceId: makerspace.id, role: "OWNER" },
-  update: { role: "OWNER" },
+  create: { userId: owner.id, makerspaceId: makerspace.id, role: "BOOKINGS_MANAGER" },
+  update: { role: "BOOKINGS_MANAGER" },
 });
 await prisma.teamMember.upsert({
   where: { userId_makerspaceId: { userId: front.id, makerspaceId: makerspace.id } },
@@ -75,4 +75,4 @@ try {
 } finally {
   await prisma.$disconnect();
 }
-console.log("Seeded Tinkerspace (/m/tinkerspace), spaces and bookings; owner@demo.test, front@demo.test and customer@demo.test.");
+console.log("Seeded Tinkerspace (/m/tinkerspace), spaces and bookings; manager@demo.test, front@demo.test and customer@demo.test.");

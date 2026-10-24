@@ -23,6 +23,7 @@ import { makerspaceAllows } from "@/lib/permissionRoles";
 import { canDeleteInStatus, MAKERSPACE_LOCKED } from "@/lib/makerspaceLifecycle";
 import { recordAuditEvent } from "@/lib/audit";
 import { hasRecentAuthentication } from "@/lib/reauth";
+import { LAST_MANAGER_MESSAGE, lockTeamMember } from "@/lib/teamManagers";
 
 const revalidatePath = trackedRevalidation(nextRevalidatePath);
 
@@ -52,35 +53,33 @@ export async function updateTeamRole(
 
   const actor = await getMembership(session.user.id, makerspace.id);
   if (!actor || !canManageTeam(actor)) {
-    return { ok: false, error: "Only owners and managers can change team roles." };
+    return { ok: false, error: "Only bookings managers can change team roles." };
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   if (!(await hasRecentAuthentication())) {
     return { ok: false, error: "For security, sign in again before changing team roles." };
   }
 
-  const target = await getMembership(targetUserId, makerspace.id);
-  if (!target) return { ok: false, error: "Team member not found." };
-  if (target.role === "OWNER") {
-    return { ok: false, error: "The owner role cannot be changed here." };
-  }
-  // Admins manage treasurers and viewers only, and cannot promote anyone to admin.
-  if (!canManageTeamMember(actor.role, target.role) || !canManageTeamMember(actor.role, role)) {
-    return { ok: false, error: "Admins can only change treasurer and viewer roles." };
-  }
-
-  await prisma.teamMember.update({
-    where: { id: target.id },
-    data: { role },
+  const outcome = await prisma.$transaction(async (tx) => {
+    const target = await lockTeamMember(tx, makerspace.id, targetUserId);
+    if (!target) return "Team member not found.";
+    if (!canManageTeamMember(actor.role, target.role) || !canManageTeamMember(actor.role, role)) {
+      return "You can't change this person's role.";
+    }
+    if (target.last && role !== target.role) return LAST_MANAGER_MESSAGE;
+    await tx.teamMember.update({ where: { id: target.id }, data: { role } });
+    await recordAuditEvent({
+      action: "TEAM_ROLE_CHANGED",
+      actorUserId: actor.userId,
+      makerspaceId: makerspace.id,
+      targetType: "teamMember",
+      targetId: target.id,
+      metadata: { role, from: target.role },
+      client: tx,
+    });
+    return null;
   });
-  await recordAuditEvent({
-    action: "TEAM_ROLE_CHANGED",
-    actorUserId: session.user.id,
-    makerspaceId: makerspace.id,
-    targetType: "teamMember",
-    targetId: target.id,
-    metadata: { role },
-  });
+  if (outcome) return { ok: false, error: outcome };
 
   revalidatePath(`/dashboard/${makerspace.slug}/team`);
   revalidatePath(`/dashboard/${makerspace.slug}`);
@@ -119,23 +118,24 @@ export async function removeTeamMember(input: unknown): Promise<ActionResult> {
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
 
-  const target = await getMembership(targetUserId, makerspace.id);
-  if (!target) return { ok: false, error: "Team member not found." };
-  if (target.role === "OWNER") {
-    return { ok: false, error: "Cannot remove the makerspace owner." };
-  }
-  if (!canManageTeamMember(actor.role, target.role)) {
-    return { ok: false, error: "Admins can only remove treasurers and viewers." };
-  }
-
-  await prisma.teamMember.delete({ where: { id: target.id } });
-  await recordAuditEvent({
-    action: "TEAM_MEMBER_REMOVED",
-    actorUserId: session.user.id,
-    makerspaceId: makerspace.id,
-    targetType: "teamMember",
-    targetId: target.id,
+  const outcome = await prisma.$transaction(async (tx) => {
+    const target = await lockTeamMember(tx, makerspace.id, targetUserId);
+    if (!target) return "Team member not found.";
+    if (!canManageTeamMember(actor.role, target.role)) return "You can't remove this person from the team.";
+    if (target.last) return LAST_MANAGER_MESSAGE;
+    await tx.teamMember.delete({ where: { id: target.id } });
+    await recordAuditEvent({
+      action: "TEAM_MEMBER_REMOVED",
+      actorUserId: actor.userId,
+      makerspaceId: makerspace.id,
+      targetType: "teamMember",
+      targetId: target.id,
+      metadata: { role: target.role },
+      client: tx,
+    });
+    return null;
   });
+  if (outcome) return { ok: false, error: outcome };
 
   revalidatePath(`/dashboard/${makerspace.slug}/team`);
   revalidatePath(`/dashboard/${makerspace.slug}`);
@@ -166,7 +166,7 @@ export async function deleteMakerspace(input: unknown): Promise<ActionResult> {
 
   const membership = await getMembership(session.user.id, makerspace.id);
   if (!canDeleteMakerspace(membership)) {
-    return { ok: false, error: "Only the makerspace owner can delete it." };
+    return { ok: false, error: "Only a bookings manager can delete the makerspace." };
   }
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   if (!(await hasRecentAuthentication())) {

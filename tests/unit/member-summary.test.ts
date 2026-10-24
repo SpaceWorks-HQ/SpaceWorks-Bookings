@@ -11,29 +11,29 @@ const row = (overrides: Partial<TeamMemberRow>): TeamMemberRow => ({
   ...overrides,
 });
 
-const counts = (OWNER: number, SPACE_MANAGER: number, TREASURER: number, VIEWER: number, BOOKINGS_MANAGER = 0, FRONT_DESK = 0) => ({ OWNER, SPACE_MANAGER, BOOKINGS_MANAGER, FRONT_DESK, TREASURER, VIEWER });
+const counts = (BOOKINGS_MANAGER: number, FRONT_DESK: number, VIEWER: number) => ({ BOOKINGS_MANAGER, FRONT_DESK, VIEWER });
 
 describe("team summary helpers", () => {
   it("describes the role mix, skipping empty roles", () => {
-    expect(roleBreakdown(counts(1, 2, 1, 3))).toBe("1 owner · 2 space managers · 1 treasurer · 3 viewers");
-    expect(roleBreakdown(counts(1, 0, 0, 1))).toBe("1 owner · 1 viewer");
-    expect(roleBreakdown(counts(0, 0, 0, 0))).toBe("No one yet");
-    expect(roleBreakdown(counts(0, 0, 0, 0, 2, 1))).toBe("2 bookings managers · 1 front desk");
+    expect(roleBreakdown(counts(2, 1, 3))).toBe("2 bookings managers · 1 front desk · 3 viewers");
+    expect(roleBreakdown(counts(1, 0, 1))).toBe("1 bookings manager · 1 viewer");
+    expect(roleBreakdown(counts(0, 0, 0))).toBe("No one yet");
+    expect(roleBreakdown(counts(2, 1, 0))).toBe("2 bookings managers · 1 front desk");
   });
 
   it("draws one dot per person up to the cap, ordered by role", () => {
-    expect(roleDots(counts(1, 2, 1, 2))).toEqual(["OWNER", "SPACE_MANAGER", "SPACE_MANAGER", "TREASURER", "VIEWER", "VIEWER"]);
-    const capped = roleDots(counts(1, 4, 1, 194), 24);
+    expect(roleDots(counts(2, 1, 2))).toEqual(["BOOKINGS_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "VIEWER", "VIEWER"]);
+    const capped = roleDots(counts(4, 1, 194), 24);
     expect(capped).toHaveLength(24);
-    expect(capped[0]).toBe("OWNER");
-    expect(capped.filter((r) => r === "TREASURER")).toHaveLength(1);
-    expect(roleDots(counts(0, 0, 0, 0))).toEqual([]);
+    expect(capped[0]).toBe("BOOKINGS_MANAGER");
+    expect(capped.filter((r) => r === "FRONT_DESK")).toHaveLength(1);
+    expect(roleDots(counts(0, 0, 0))).toEqual([]);
   });
 
   it("filters by tab and searches email only when it was sent", () => {
     const rows = [
-      row({ id: "1", name: "Anand Nair", role: "OWNER", email: "anand@example.org" }),
-      row({ id: "2", name: "Riya Kapoor", role: "SPACE_MANAGER", email: "riya@example.org" }),
+      row({ id: "1", name: "Anand Nair", role: "BOOKINGS_MANAGER", email: "anand@example.org" }),
+      row({ id: "2", name: "Riya Kapoor", role: "BOOKINGS_MANAGER", email: "riya@example.org" }),
       row({ id: "3", name: "Jo Thomas", role: "FRONT_DESK" }),
       row({ id: "4", name: "Sam Varghese", role: "VIEWER" }),
     ];

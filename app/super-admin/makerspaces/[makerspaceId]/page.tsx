@@ -24,8 +24,8 @@ export default async function SuperAdminMakerspaceDetailPage({ params }: Props) 
   await requireSuperAdmin();
   const { makerspace, reviews, members, invites, assetStats, auditEvents, now } = await loadSuperAdminMakerspaceDetailView({ params });
   const address = [makerspace.addressLine, makerspace.city, indianStateName(makerspace.stateCode), makerspace.postalCode].filter(Boolean).join(", ");
-  const hasOwner = members.some((m) => m.role === "OWNER");
-  const ownerInviteEmail = invites.find((invite) => invite.role === "OWNER" && invite.email)?.email ?? "";
+  const hasOwner = members.some((m) => m.role === "BOOKINGS_MANAGER");
+  const ownerInviteEmail = invites.find((invite) => invite.role === "BOOKINGS_MANAGER" && invite.email)?.email ?? "";
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4">
@@ -101,7 +101,7 @@ export default async function SuperAdminMakerspaceDetailPage({ params }: Props) 
               members.map((m) => (
                 <TR key={m.id}>
                   <TD><NameCell href={`/super-admin/users/${m.user.id}`} name={m.user.name ?? m.user.email ?? "—"} sub={m.user.email ?? undefined} /></TD>
-                  <TD><Chip size="sm" tone={m.role === "OWNER" ? "ink" : "neutral"}>{ROLE_LABELS[m.role]}</Chip></TD>
+                  <TD><Chip size="sm" tone={m.role === "BOOKINGS_MANAGER" ? "ink" : "neutral"}>{ROLE_LABELS[m.role]}</Chip></TD>
                   <TD className="whitespace-nowrap text-ink-secondary">{m.createdAt.toLocaleDateString("en-GB")}</TD>
                 </TR>
               ))

@@ -1,33 +1,37 @@
 import type { MakerspaceStatus, TeamMember, TeamRole } from "@prisma/client";
 
-const ALL: readonly TeamRole[] = ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "TREASURER", "VIEWER"];
+const ALL: readonly TeamRole[] = ["BOOKINGS_MANAGER", "FRONT_DESK", "VIEWER"];
+
+/** The top role: whoever creates a makerspace (or is invited by the platform to run it) gets it. */
+export const MANAGER_ROLE = "BOOKINGS_MANAGER" satisfies TeamRole;
 
 /**
- * What each makerspace role may do. The owner and space managers run the whole makerspace; bookings managers
- * run spaces, pricing, availability and approvals; front desk takes bookings and money at the counter;
- * treasurers run money; viewers read, with customer contact details hidden. Unknown capabilities grant nothing.
+ * What each makerspace role may do. Bookings managers run the whole makerspace: settings, payments, refunds,
+ * finance, the team, spaces and bookings, and deleting it. Front desk takes bookings and records money at the
+ * counter; viewers read, with customer contact details hidden. Unknown capabilities grant nothing. There is no
+ * owner, space manager or treasurer role (owner decisions, 2026-10-24; docs/DECISIONS.md).
  */
 export const CAPABILITIES = {
   "makerspace.view": ALL,
-  "makerspace.settings": ["OWNER", "SPACE_MANAGER"],
-  "makerspace.delete": ["OWNER"],
-  "team.manage": ["OWNER", "SPACE_MANAGER"],
-  "payments.settings": ["OWNER", "SPACE_MANAGER"],
-  "spaces.manage": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"],
+  "makerspace.settings": ["BOOKINGS_MANAGER"],
+  "makerspace.delete": ["BOOKINGS_MANAGER"],
+  "team.manage": ["BOOKINGS_MANAGER"],
+  "payments.settings": ["BOOKINGS_MANAGER"],
+  "spaces.manage": ["BOOKINGS_MANAGER"],
   "bookings.view": ALL,
-  "bookings.manage": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK"],
-  "bookings.approve": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"],
+  "bookings.manage": ["BOOKINGS_MANAGER", "FRONT_DESK"],
+  "bookings.approve": ["BOOKINGS_MANAGER"],
   /** Venue cancellations (everything refunded) and booking despite the rules, with a reason. */
-  "bookings.override": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"],
-  "bookings.contact": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "TREASURER"],
-  "payments.view": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER", "TREASURER", "FRONT_DESK"],
-  "payments.record": ["OWNER", "SPACE_MANAGER", "TREASURER", "FRONT_DESK"],
-  "refunds.manage": ["OWNER", "SPACE_MANAGER", "TREASURER"],
-  "members.manage": ["OWNER", "SPACE_MANAGER", "BOOKINGS_MANAGER"],
+  "bookings.override": ["BOOKINGS_MANAGER"],
+  "bookings.contact": ["BOOKINGS_MANAGER", "FRONT_DESK"],
+  "payments.view": ["BOOKINGS_MANAGER", "FRONT_DESK"],
+  "payments.record": ["BOOKINGS_MANAGER", "FRONT_DESK"],
+  "refunds.manage": ["BOOKINGS_MANAGER"],
+  "members.manage": ["BOOKINGS_MANAGER"],
   "reports.view": ALL,
-  "reports.finance": ["OWNER", "SPACE_MANAGER", "TREASURER"],
-  "integrations.manage": ["OWNER", "SPACE_MANAGER"],
-  "audit.view": ["OWNER", "SPACE_MANAGER"],
+  "reports.finance": ["BOOKINGS_MANAGER"],
+  "integrations.manage": ["BOOKINGS_MANAGER"],
+  "audit.view": ["BOOKINGS_MANAGER"],
 } as const satisfies Record<string, readonly TeamRole[]>;
 
 export type Capability = keyof typeof CAPABILITIES;
@@ -49,27 +53,30 @@ export function makerspaceAllows(status: MakerspaceStatus, capability: Capabilit
   return false;
 }
 
-/** Seniority, only for "at least" gates and for who may change whose role. Front desk and treasurer are peers. */
-const roleRank: Record<TeamRole, number> = { VIEWER: 0, FRONT_DESK: 1, TREASURER: 1, BOOKINGS_MANAGER: 2, SPACE_MANAGER: 3, OWNER: 4 };
+/** Seniority, only for "at least" gates and for who may change whose role. */
+const roleRank: Record<TeamRole, number> = { VIEWER: 0, FRONT_DESK: 1, BOOKINGS_MANAGER: 2 };
 
 export function hasRoleAtLeast(role: TeamRole, min: TeamRole): boolean {
   return roleRank[role] >= roleRank[min];
 }
 
-/** The owner and space managers run the whole makerspace. */
+/** Bookings managers run the whole makerspace. */
 export function isMakerspaceAdmin(role: TeamRole): boolean {
-  return role === "OWNER" || role === "SPACE_MANAGER";
+  return role === MANAGER_ROLE;
 }
 
-/** Owners manage everyone; anyone else who manages the team manages only less senior roles. */
+/**
+ * Bookings managers manage everyone, other bookings managers included; anyone else who manages the team would
+ * manage only less senior roles. The last bookings manager is protected separately (lib/teamManagers.ts).
+ */
 export function canManageTeamMember(actor: TeamRole, target: TeamRole): boolean {
-  if (actor === "OWNER") return true;
+  if (isMakerspaceAdmin(actor)) return true;
   return can(actor, "team.manage") && roleRank[target] < roleRank[actor];
 }
 
-/** Roles a person may hand out: below their own rank, and never owner (owners come from the platform). */
+/** Roles a person may hand out. */
 export function assignableRoles(actor: TeamRole): TeamRole[] {
-  return ALL.filter((role) => role !== "OWNER" && canManageTeamMember(actor, role));
+  return ALL.filter((role) => canManageTeamMember(actor, role));
 }
 
 export function canManageTeam(m: TeamMember | null): boolean {
@@ -81,26 +88,20 @@ export function canDeleteMakerspace(m: TeamMember | null): boolean {
 }
 
 export const ROLE_LABELS: Record<TeamRole, string> = {
-  OWNER: "Owner",
-  SPACE_MANAGER: "Space manager",
   BOOKINGS_MANAGER: "Bookings manager",
   FRONT_DESK: "Front desk",
-  TREASURER: "Treasurer",
   VIEWER: "Viewer",
 };
 
 export const ROLE_DESCRIPTIONS: Record<TeamRole, string> = {
-  OWNER: "Everything, including the team and deleting the makerspace.",
-  SPACE_MANAGER: "The whole makerspace: settings, payments, refunds, the team and everything bookings managers do.",
-  BOOKINGS_MANAGER: "Spaces, pricing, opening hours, blackouts, approvals and bookings.",
+  BOOKINGS_MANAGER: "The whole makerspace: settings, payments, refunds, the team, spaces, pricing, hours, bookings and deleting it.",
   FRONT_DESK: "Takes bookings, checks people in and records payments at the desk.",
-  TREASURER: "Payments, refunds, receipts and finance reports.",
   VIEWER: "Reads bookings and reports. Customer contact details are hidden.",
 };
 
-/** "an owner", "a space manager": the article for a role in a sentence. */
+/** "a bookings manager", "a viewer": the article for a role in a sentence. */
 export function roleWithArticle(role: TeamRole) {
-  return `${role === "OWNER" ? "an" : "a"} ${ROLE_LABELS[role].toLowerCase()}`;
+  return `a ${ROLE_LABELS[role].toLowerCase()}`;
 }
 
 export function roleLabel(role: TeamRole) {

@@ -44,7 +44,7 @@ export async function uploadMakerspaceLogo(
   if (!makerspaceAllows(makerspace.status, "makerspace.settings")) return { ok: false, error: MAKERSPACE_LOCKED };
   const membership = await getMembership(session.user.id, makerspace.id);
   if (!membership || !can(membership.role, "makerspace.settings"))
-    return { ok: false, error: "Only makerspace owners and managers can upload logos." };
+    return { ok: false, error: "Only bookings managers can upload logos." };
   if (!(await hasAuthenticator(session.user.id))) return { ok: false, error: STAFF_AUTHENTICATOR_MESSAGE };
   const derivative = await imageFile(formData);
   if ("error" in derivative) return { ok: false, error: derivative.error };

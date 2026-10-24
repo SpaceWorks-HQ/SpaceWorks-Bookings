@@ -23,7 +23,7 @@ export const updateMakerspaceSchema = z.object({
 });
 
 /** Roles an owner or admin can hand out from the team page. Ownership never moves through this form. */
-export const assignableTeamRoleSchema = z.enum(["SPACE_MANAGER", "BOOKINGS_MANAGER", "FRONT_DESK", "TREASURER", "VIEWER"]);
+export const assignableTeamRoleSchema = z.enum(["BOOKINGS_MANAGER", "FRONT_DESK", "VIEWER"]);
 
 export const updateTeamRoleSchema = z.object({
   makerspaceSlug: z.string().trim().min(1),
