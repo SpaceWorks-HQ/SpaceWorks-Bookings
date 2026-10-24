@@ -8,7 +8,7 @@ import { PaymentSecretsUnavailable } from "@/lib/payments/secrets";
  * same PAYMENT_SECRETS_KEY but a key derived per purpose, and bound to the makerspace, so a ciphertext copied
  * to another tenant or another purpose will not decrypt.
  */
-export type MakerspaceSecretPurpose = "email" | "chat";
+export type MakerspaceSecretPurpose = "email" | "chat" | "webhook";
 
 function key(purpose: MakerspaceSecretPurpose) {
   const raw = process.env.PAYMENT_SECRETS_KEY ?? "";

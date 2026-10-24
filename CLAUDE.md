@@ -140,7 +140,12 @@ npx vitest run tests/unit/health.test.ts
 - **Public pages:** `/m/[makerspaceSlug]` is the makerspace's own page (name, logo, description, contact; spaces
   come in Phase 1). User content is rendered as React text, never as HTML strings.
 - **Reports:** the pure helpers in `lib/reports/*` (periods, money totals, chart scales, masking, finance and GST
-  maths) are unit-tested; report pages arrive in Phase 3.
+  maths, `bookings/stats.ts`) are unit-tested; loaders read rows, pages render them. Every CSV export goes through
+  `auditedCsvResponse` and `exportAccess` (`lib/reports/exports/*`).
+- **Integrations** (`docs/API.md`): `/api/v1` routes are thin wrappers over `lib/api/*` through `apiHandler` (key,
+  scope, per-key limit, JSON errors); keep `lib/api/openapi.ts` in step with the routes (a unit test checks).
+  Webhooks are relayed from `BookingEvent` rows (`lib/integrations/webhooks/*`): add an event by mapping a timeline
+  kind in `events.ts`; payloads never carry names, emails, phone numbers or notes.
 - **File size:** no source file over 300 lines (owner rule). Split by responsibility; `tests/unit/file-length.test.ts`
   enforces it, skipping generated files. `tests/unit/product-names.test.ts` keeps the old product names out.
 - **Operations:**

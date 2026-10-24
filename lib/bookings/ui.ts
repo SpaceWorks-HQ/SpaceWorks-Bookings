@@ -2,6 +2,8 @@ import { addLocalDays, dateKey, localParts, parseDateKey, resolveLocal, startOfL
 
 export const BOOKING_STATUSES = ["HELD", "REQUESTED", "CONFIRMED", "DECLINED", "CANCELLED", "EXPIRED"] as const;
 export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+/** An audit action as a sentence ("API_KEY_CREATED" → "API key created"), keeping known acronyms. */
+export const auditWords = (value: string) => words(value).replace(/\b(api|mfa|gst|upi|ics|csv|ip|url)\b/gi, (match) => match.toUpperCase());
 export const words = (value: string) => { const text = value.replace(/_/g, " ").toLowerCase(); return text.charAt(0).toUpperCase() + text.slice(1); };
 
 export function minuteText(minute: number) {

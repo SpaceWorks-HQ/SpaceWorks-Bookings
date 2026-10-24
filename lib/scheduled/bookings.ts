@@ -5,6 +5,8 @@ import { autoMarkNoShows, completeOccurrences, sendBookingReminders } from "@/li
 import { checkBookingMoney, closeEndedCheckouts, handleOverduePayments, sendPaymentReminders } from "@/lib/bookings/money/jobs";
 import { recordExternalRefunds } from "@/lib/bookings/money/external";
 import { sendPendingBookingRefunds } from "@/lib/bookings/money/send";
+import { relayWebhookEvents } from "@/lib/integrations/webhooks/relay";
+import { deliverDueWebhooks } from "@/lib/integrations/webhooks/deliver";
 
 /** Booking upkeep (docs/BOOKINGS.md "Jobs"). Each run is idempotent; several workers may run it at once. */
 export const BOOKING_JOBS: JobDefinition[] = [
@@ -21,4 +23,7 @@ export const BOOKING_JOBS: JobDefinition[] = [
   { area: "booking-payment-reminders", schedule: { every: 5 * 60_000 }, run: async (now) => { await sendPaymentReminders(now); } },
   { area: "booking-refunds-external", schedule: { every: 10 * 60_000 }, run: async (now) => { await recordExternalRefunds(now); } },
   { area: "booking-money-check", schedule: { every: 60 * 60_000 }, run: async () => { await checkBookingMoney(); } },
+  // Outbound webhooks (docs/API.md): the booking timeline is relayed into deliveries, sent with backoff.
+  { area: "webhooks-relay", schedule: { every: 15_000 }, run: async (now) => { await relayWebhookEvents(now); } },
+  { area: "webhooks-deliver", schedule: { every: 10_000 }, run: async (now) => { await deliverDueWebhooks(now); } },
 ];

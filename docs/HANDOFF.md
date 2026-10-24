@@ -89,6 +89,12 @@ refund, retry, offline refund, write-off, due date), the customer pay panel (Raz
 offline/UPI instructions), the booking statement PDF and the reconciliation page. See `docs/PAYMENTS.md` "Booking
 money" and `docs/GST.md` "Booking payments".
 
+**Phase 3 (done, 2026-10-24):** the overview figures (arrivals, requests, this week, overdue, money this month), the
+staff calendar (day and week), reports (utilisation, bookings, no-shows; money, ways of paying and refunds for
+`reports.finance`) with audited CSV exports, the makerspace audit log, and integrations (migration `0004_integrations`):
+REST API keys and `/api/v1` with its OpenAPI document, and signed outbound webhooks relayed from the booking timeline
+with retries and a delivery log. See `docs/API.md`.
+
 ## Open questions (conservative choices made, owner to confirm)
 
 - **GST documents for advances.** Booking payments get the existing tax invoice / receipt; refunds a credit note.

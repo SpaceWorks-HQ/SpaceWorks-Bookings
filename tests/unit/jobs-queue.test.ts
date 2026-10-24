@@ -61,6 +61,8 @@ describe("the bookings job registry", () => {
       ["registry-booking-payment-reminders", "scheduled"],
       ["registry-booking-refunds-external", "scheduled"],
       ["registry-booking-money-check", "scheduled"],
+      ["registry-webhooks-relay", "scheduled"],
+      ["registry-webhooks-deliver", "scheduled"],
     ]);
     // Refunds opened by webhooks reach the gateway within a minute.
     expect(definitions.find((item) => item.id === "registry-booking-refunds-send")!.schedule).toEqual({ every: 60_000 });

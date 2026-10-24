@@ -8,11 +8,12 @@ import { MakerspacePageHeader } from "@/components/dashboard/makerspace/Makerspa
 import { buttonClasses } from "@/components/ui/button";
 import { Callout, Card, CardHeader, StatTile } from "@/components/ui/display";
 import { cn } from "@/lib/cn";
+import { money } from "@/lib/money/currencies";
 
 export const metadata: Metadata = { title: "Overview", robots: { index: false, follow: false } };
 
 export default async function MakerspaceOverviewPage({ params }: { params: Promise<{ makerspaceSlug: string }> }) {
-  const { makerspace, role, teamCount, openInvites, steps } = await loadMakerspaceOverviewView({ params });
+  const { makerspace, role, teamCount, openInvites, steps, stats } = await loadMakerspaceOverviewView({ params });
   const remaining = steps.filter((step) => !step.done).length;
   const base = `/dashboard/${makerspace.slug}`;
   return (
@@ -30,6 +31,11 @@ export default async function MakerspaceOverviewPage({ params }: { params: Promi
       ) : null}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <StatTile className="rounded-xl" label="Arriving today" value={stats.arrivals.toLocaleString("en-IN")} hint="Confirmed times today" href={`${base}/today`} />
+        <StatTile className="rounded-xl" label="Requests" value={stats.requests.toLocaleString("en-IN")} hint={stats.requests ? "Waiting for approval" : "Nothing to approve"} href={`${base}/bookings?status=REQUESTED`} />
+        <StatTile className="rounded-xl" label="This week" value={stats.weekBookings.toLocaleString("en-IN")} hint={stats.weekUtilisation === null ? "Bookings" : `Bookings · ${Math.round(stats.weekUtilisation * 100)}% of open time used`} href={`${base}/calendar`} />
+        <StatTile className="rounded-xl" label="Payments overdue" value={stats.overdue.toLocaleString("en-IN")} hint={stats.overdue ? "Past their due date" : "None overdue"} href={`${base}/bookings?status=CONFIRMED`} />
+        {stats.received.length ? <StatTile className="rounded-xl" label="Received this month" value={stats.received.map((row) => money(row.amountMinor, row.currency)).join(" · ")} href={`${base}/payments`} /> : null}
         <StatTile className="rounded-xl" label="Team" value={teamCount.toLocaleString("en-IN")} hint={openInvites ? `${openInvites} open invite${openInvites === 1 ? "" : "s"}` : "No open invites"} href={`${base}/team`} />
       </div>
 

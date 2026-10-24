@@ -41,6 +41,11 @@
       "id": "app__dashboard__makerspaceSlug__application__page:loadMakerspaceApplicationView"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__audit__page",
+      "name": "loadAuditLog",
+      "id": "app__dashboard__makerspaceSlug__audit__page:loadAuditLog"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__bookings__bookingId__page",
       "name": "loadBooking",
       "id": "app__dashboard__makerspaceSlug__bookings__bookingId__page:loadBooking"
@@ -54,6 +59,11 @@
       "module": "lib/views/app__dashboard__makerspaceSlug__bookings__page",
       "name": "loadBookings",
       "id": "app__dashboard__makerspaceSlug__bookings__page:loadBookings"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__calendar__page",
+      "name": "loadCalendar",
+      "id": "app__dashboard__makerspaceSlug__calendar__page:loadCalendar"
     },
     {
       "module": "lib/views/app__dashboard__makerspaceSlug__layout",
@@ -86,6 +96,11 @@
       "id": "app__dashboard__makerspaceSlug__payments__reconciliation__page:loadReconciliation"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__reports__page",
+      "name": "loadReports",
+      "id": "app__dashboard__makerspaceSlug__reports__page:loadReports"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__settings__bookings__page",
       "name": "loadBookingSettings",
       "id": "app__dashboard__makerspaceSlug__settings__bookings__page:loadBookingSettings"
@@ -99,6 +114,11 @@
       "module": "lib/views/app__dashboard__makerspaceSlug__settings__hours__page",
       "name": "loadHoursSettings",
       "id": "app__dashboard__makerspaceSlug__settings__hours__page:loadHoursSettings"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__integrations__page",
+      "name": "loadIntegrations",
+      "id": "app__dashboard__makerspaceSlug__settings__integrations__page:loadIntegrations"
     },
     {
       "module": "lib/views/app__dashboard__makerspaceSlug__settings__money__page",
@@ -531,6 +551,41 @@
       "module": "app/actions/instance",
       "name": "recordBackupRestoreVerification",
       "id": "instance:recordBackupRestoreVerification"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "createApiKey",
+      "id": "integrations:createApiKey"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "revokeApiKey",
+      "id": "integrations:revokeApiKey"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "createWebhookEndpoint",
+      "id": "integrations:createWebhookEndpoint"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "updateWebhookEndpoint",
+      "id": "integrations:updateWebhookEndpoint"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "rotateWebhookSecret",
+      "id": "integrations:rotateWebhookSecret"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "deleteWebhookEndpoint",
+      "id": "integrations:deleteWebhookEndpoint"
+    },
+    {
+      "module": "app/actions/integrations",
+      "name": "pingWebhookEndpoint",
+      "id": "integrations:pingWebhookEndpoint"
     },
     {
       "module": "app/actions/invite-acceptance",

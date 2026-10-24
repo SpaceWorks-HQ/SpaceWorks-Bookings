@@ -165,6 +165,8 @@ model Makerspace {
   bookings         Booking[]
   bookingEvents    BookingEvent[]
   calendarFeeds    CalendarFeed[]
+  apiKeys          ApiKey[]
+  webhookEndpoints WebhookEndpoint[]
 
   @@index([status, createdAt])
   @@index([visibility, status])
@@ -1209,4 +1211,82 @@ model CalendarFeed {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([makerspaceId, userId, kind])
+}
+
+/// A makerspace's REST API key (`/api/v1`). Only the hash of the secret is stored; the full key is shown once.
+model ApiKey {
+  id           String    @id @default(cuid())
+  makerspaceId String
+  name         String
+  /// Shown in the UI and the first part of the key, e.g. swb_k7m2q9xa.
+  prefix       String    @unique
+  secretHash   String
+  /// "read" and/or "write".
+  scopes       String[]
+  createdById  String?
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+
+  @@index([makerspaceId, revokedAt])
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+/// An outbound webhook subscription (lib/integrations/webhooks). The signing secret is encrypted at rest.
+model WebhookEndpoint {
+  id                  String    @id @default(cuid())
+  makerspaceId        String
+  url                 String
+  description         String    @default("")
+  events              String[]
+  secretEncrypted     String
+  isActive            Boolean   @default(true)
+  consecutiveFailures Int       @default(0)
+  disabledAt          DateTime?
+  createdById         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  makerspace Makerspace        @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@unique([makerspaceId, id])
+  @@index([makerspaceId, isActive])
+}
+
+model WebhookDelivery {
+  id             String                @id @default(cuid())
+  makerspaceId   String
+  endpointId     String
+  event          String
+  /// The source of the event (a BookingEvent id, or `ping-…`); unique per endpoint so a relay never sends twice.
+  eventId        String
+  payload        Json
+  status         WebhookDeliveryStatus @default(PENDING)
+  attempts       Int                   @default(0)
+  responseStatus Int?
+  lastError      String                @default("")
+  nextAttemptAt  DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime              @default(now())
+
+  endpoint WebhookEndpoint @relation(fields: [makerspaceId, endpointId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@unique([endpointId, eventId])
+  @@index([makerspaceId, endpointId, createdAt])
+  @@index([status, nextAttemptAt])
+}
+
+/// Where the webhook relay got to in the BookingEvent stream (one row, id "booking-events").
+model WebhookRelayCursor {
+  id        String   @id
+  createdAt DateTime
+  eventId   String
 }

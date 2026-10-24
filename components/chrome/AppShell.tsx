@@ -21,10 +21,13 @@ const MAKERSPACE_NAV: Array<{ path: string; label: string; capability: Capabilit
   { path: "", label: "Overview", capability: "makerspace.view", exact: true },
   { path: "/bookings", label: "Bookings", capability: "bookings.view" },
   { path: "/today", label: "Today", capability: "bookings.view" },
+  { path: "/calendar", label: "Calendar", capability: "bookings.view" },
   { path: "/spaces", label: "Spaces", capability: "spaces.manage" },
   { path: "/members", label: "Members", capability: "members.manage" },
   { path: "/payments", label: "Payments", capability: "payments.view" },
+  { path: "/reports", label: "Reports", capability: "reports.view" },
   { path: "/team", label: "Team", capability: "makerspace.view" },
+  { path: "/audit", label: "Audit log", capability: "audit.view" },
   { path: "/settings", label: "Settings", capability: "makerspace.settings" },
 ];
 
