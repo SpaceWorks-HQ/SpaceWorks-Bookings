@@ -1,0 +1,34 @@
+# Local development services only. For a server, use the installer (scripts/spaceworks-compose.sh).
+# Background jobs in development: REDIS_URL=redis://127.0.0.1:6379 with `npm run build:jobs` then
+# `npm run worker` and `npm run beat`, or no REDIS_URL and JOBS_INPROCESS=true to run them inside `npm run dev`.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: swbook
+      POSTGRES_PASSWORD: swbook_dev
+      POSTGRES_DB: swbook_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - swbook_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swbook -d swbook_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    # BullMQ needs durable keys that are never evicted.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  swbook_pgdata:

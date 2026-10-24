@@ -1,0 +1,476 @@
+{
+  "readers": [
+    {
+      "module": "lib/views/app__account__layout",
+      "name": "loadAccountShell",
+      "id": "app__account__layout:loadAccountShell"
+    },
+    {
+      "module": "lib/views/app__account__makerspaces__page",
+      "name": "loadAccountMakerspacesView",
+      "id": "app__account__makerspaces__page:loadAccountMakerspacesView"
+    },
+    {
+      "module": "lib/views/app__account__profile__page",
+      "name": "loadAccountProfileView",
+      "id": "app__account__profile__page:loadAccountProfileView"
+    },
+    {
+      "module": "lib/views/app__account__security__page",
+      "name": "loadAccountSecurityView",
+      "id": "app__account__security__page:loadAccountSecurityView"
+    },
+    {
+      "module": "lib/views/app__auth__login__page",
+      "name": "loadLoginView",
+      "id": "app__auth__login__page:loadLoginView"
+    },
+    {
+      "module": "lib/views/app__dashboard__layout",
+      "name": "loadDashboardShell",
+      "id": "app__dashboard__layout:loadDashboardShell"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__application__page",
+      "name": "loadMakerspaceApplicationView",
+      "id": "app__dashboard__makerspaceSlug__application__page:loadMakerspaceApplicationView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__layout",
+      "name": "loadMakerspaceSlugShell",
+      "id": "app__dashboard__makerspaceSlug__layout:loadMakerspaceSlugShell"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__page",
+      "name": "loadMakerspaceOverviewView",
+      "id": "app__dashboard__makerspaceSlug__page:loadMakerspaceOverviewView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__payments__page",
+      "name": "loadPaymentsDirectory",
+      "id": "app__dashboard__makerspaceSlug__payments__page:loadPaymentsDirectory"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__payments__paymentId__page",
+      "name": "loadPaymentView",
+      "id": "app__dashboard__makerspaceSlug__payments__paymentId__page:loadPaymentView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__email__page",
+      "name": "loadMakerspaceEmailSettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__email__page:loadMakerspaceEmailSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__money__page",
+      "name": "loadMakerspaceMoneySettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__money__page:loadMakerspaceMoneySettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__notifications__page",
+      "name": "loadMakerspaceNotificationsView",
+      "id": "app__dashboard__makerspaceSlug__settings__notifications__page:loadMakerspaceNotificationsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__page",
+      "name": "loadMakerspaceSettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__page:loadMakerspaceSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__settings__payments__page",
+      "name": "loadPaymentSettingsView",
+      "id": "app__dashboard__makerspaceSlug__settings__payments__page:loadPaymentSettingsView"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__team__page",
+      "name": "loadMakerspaceMembersView",
+      "id": "app__dashboard__makerspaceSlug__team__page:loadMakerspaceMembersView"
+    },
+    {
+      "module": "lib/views/app__dashboard__page",
+      "name": "loadDashboardView",
+      "id": "app__dashboard__page:loadDashboardView"
+    },
+    {
+      "module": "lib/views/app__join__makerspace__token__page",
+      "name": "loadJoinMakerspaceView",
+      "id": "app__join__makerspace__token__page:loadJoinMakerspaceView"
+    },
+    {
+      "module": "lib/views/app__m__makerspaceSlug__layout",
+      "name": "loadPublicMakerspaceLayout",
+      "id": "app__m__makerspaceSlug__layout:loadPublicMakerspaceLayout"
+    },
+    {
+      "module": "lib/views/app__m__makerspaceSlug__page",
+      "name": "loadPublicMakerspacePage",
+      "id": "app__m__makerspaceSlug__page:loadPublicMakerspacePage"
+    },
+    {
+      "module": "lib/views/app__makerspaces__page",
+      "name": "loadMakerspacesDirectory",
+      "id": "app__makerspaces__page:loadMakerspacesDirectory"
+    },
+    {
+      "module": "lib/views/app__sitemap",
+      "name": "loadSitemapMakerspaces",
+      "id": "app__sitemap:loadSitemapMakerspaces"
+    },
+    {
+      "module": "lib/views/app__start__page",
+      "name": "loadStartView",
+      "id": "app__start__page:loadStartView"
+    },
+    {
+      "module": "lib/views/app__super-admin__audit__page",
+      "name": "loadSuperAdminAuditView",
+      "id": "app__super-admin__audit__page:loadSuperAdminAuditView"
+    },
+    {
+      "module": "lib/views/app__super-admin__email__page",
+      "name": "loadSuperAdminEmailView",
+      "id": "app__super-admin__email__page:loadSuperAdminEmailView"
+    },
+    {
+      "module": "lib/views/app__super-admin__jobs__page",
+      "name": "loadSuperAdminJobsView",
+      "id": "app__super-admin__jobs__page:loadSuperAdminJobsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__layout",
+      "name": "loadSuperAdminShell",
+      "id": "app__super-admin__layout:loadSuperAdminShell"
+    },
+    {
+      "module": "lib/views/app__super-admin__makerspaces__makerspaceId__page",
+      "name": "loadSuperAdminMakerspaceDetailView",
+      "id": "app__super-admin__makerspaces__makerspaceId__page:loadSuperAdminMakerspaceDetailView"
+    },
+    {
+      "module": "lib/views/app__super-admin__makerspaces__new__page",
+      "name": "loadSuperAdminNewMakerspaceView",
+      "id": "app__super-admin__makerspaces__new__page:loadSuperAdminNewMakerspaceView"
+    },
+    {
+      "module": "lib/views/app__super-admin__makerspaces__page",
+      "name": "loadSuperAdminOrgsView",
+      "id": "app__super-admin__makerspaces__page:loadSuperAdminOrgsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__monitoring__page",
+      "name": "loadSuperAdminMonitoringView",
+      "id": "app__super-admin__monitoring__page:loadSuperAdminMonitoringView"
+    },
+    {
+      "module": "lib/views/app__super-admin__operations__page",
+      "name": "loadSuperAdminOperationsView",
+      "id": "app__super-admin__operations__page:loadSuperAdminOperationsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__page",
+      "name": "loadSuperAdminOverviewView",
+      "id": "app__super-admin__page:loadSuperAdminOverviewView"
+    },
+    {
+      "module": "lib/views/app__super-admin__security__page",
+      "name": "loadSuperAdminSecurityView",
+      "id": "app__super-admin__security__page:loadSuperAdminSecurityView"
+    },
+    {
+      "module": "lib/views/app__super-admin__settings__page",
+      "name": "loadSuperAdminSettingsView",
+      "id": "app__super-admin__settings__page:loadSuperAdminSettingsView"
+    },
+    {
+      "module": "lib/views/app__super-admin__storage__page",
+      "name": "loadSuperAdminStorageView",
+      "id": "app__super-admin__storage__page:loadSuperAdminStorageView"
+    },
+    {
+      "module": "lib/views/app__super-admin__users__page",
+      "name": "loadSuperAdminUsersView",
+      "id": "app__super-admin__users__page:loadSuperAdminUsersView"
+    },
+    {
+      "module": "lib/views/app__super-admin__users__userId__page",
+      "name": "loadSuperAdminUserDetailView",
+      "id": "app__super-admin__users__userId__page:loadSuperAdminUserDetailView"
+    }
+  ],
+  "actions": [
+    {
+      "module": "app/actions/account-makerspaces",
+      "name": "leaveMakerspace",
+      "id": "account-makerspaces:leaveMakerspace"
+    },
+    {
+      "module": "app/actions/account",
+      "name": "updateAccountProfile",
+      "id": "account:updateAccountProfile"
+    },
+    {
+      "module": "app/actions/account",
+      "name": "updateAccountPassword",
+      "id": "account:updateAccountPassword"
+    },
+    {
+      "module": "app/actions/auth",
+      "name": "signUpWithPassword",
+      "id": "auth:signUpWithPassword"
+    },
+    {
+      "module": "app/actions/auth",
+      "name": "confirmEmailVerification",
+      "id": "auth:confirmEmailVerification"
+    },
+    {
+      "module": "app/actions/auth",
+      "name": "resendEmailVerification",
+      "id": "auth:resendEmailVerification"
+    },
+    {
+      "module": "app/actions/chat-channels",
+      "name": "saveChatChannel",
+      "id": "chat-channels:saveChatChannel"
+    },
+    {
+      "module": "app/actions/chat-channels",
+      "name": "deleteChatChannel",
+      "id": "chat-channels:deleteChatChannel"
+    },
+    {
+      "module": "app/actions/chat-channels",
+      "name": "testChatChannel",
+      "id": "chat-channels:testChatChannel"
+    },
+    {
+      "module": "app/actions/instance-settings",
+      "name": "setNewUserRegistrationEnabled",
+      "id": "instance-settings:setNewUserRegistrationEnabled"
+    },
+    {
+      "module": "app/actions/instance-settings",
+      "name": "setMakerspaceApplicationsEnabled",
+      "id": "instance-settings:setMakerspaceApplicationsEnabled"
+    },
+    {
+      "module": "app/actions/instance-settings",
+      "name": "saveInstanceServiceSettings",
+      "id": "instance-settings:saveInstanceServiceSettings"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "deliverInstanceOutbox",
+      "id": "instance:deliverInstanceOutbox"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "purgeExpiredVerificationTokens",
+      "id": "instance:purgeExpiredVerificationTokens"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "retryFailedOutboxMessages",
+      "id": "instance:retryFailedOutboxMessages"
+    },
+    {
+      "module": "app/actions/instance",
+      "name": "recordBackupRestoreVerification",
+      "id": "instance:recordBackupRestoreVerification"
+    },
+    {
+      "module": "app/actions/invite-acceptance",
+      "name": "acceptMakerspaceInvite",
+      "id": "invite-acceptance:acceptMakerspaceInvite"
+    },
+    {
+      "module": "app/actions/ip-blocks",
+      "name": "unblockAddress",
+      "id": "ip-blocks:unblockAddress"
+    },
+    {
+      "module": "app/actions/jobs",
+      "name": "manageJobsAction",
+      "id": "jobs:manageJobsAction"
+    },
+    {
+      "module": "app/actions/magic-link",
+      "name": "requestMagicLink",
+      "id": "magic-link:requestMagicLink"
+    },
+    {
+      "module": "app/actions/makerspace-application",
+      "name": "checkMakerspaceSlug",
+      "id": "makerspace-application:checkMakerspaceSlug"
+    },
+    {
+      "module": "app/actions/makerspace-application",
+      "name": "submitMakerspaceApplication",
+      "id": "makerspace-application:submitMakerspaceApplication"
+    },
+    {
+      "module": "app/actions/makerspace-application",
+      "name": "resubmitMakerspaceApplication",
+      "id": "makerspace-application:resubmitMakerspaceApplication"
+    },
+    {
+      "module": "app/actions/makerspace-email",
+      "name": "saveMakerspaceEmailSettings",
+      "id": "makerspace-email:saveMakerspaceEmailSettings"
+    },
+    {
+      "module": "app/actions/makerspace-email",
+      "name": "sendMakerspaceTestEmail",
+      "id": "makerspace-email:sendMakerspaceTestEmail"
+    },
+    {
+      "module": "app/actions/makerspace-invites",
+      "name": "createMakerspaceInvite",
+      "id": "makerspace-invites:createMakerspaceInvite"
+    },
+    {
+      "module": "app/actions/makerspace-invites",
+      "name": "revokeMakerspaceInvite",
+      "id": "makerspace-invites:revokeMakerspaceInvite"
+    },
+    {
+      "module": "app/actions/makerspace",
+      "name": "updateMakerspace",
+      "id": "makerspace:updateMakerspace"
+    },
+    {
+      "module": "app/actions/media",
+      "name": "uploadMakerspaceLogo",
+      "id": "media:uploadMakerspaceLogo"
+    },
+    {
+      "module": "app/actions/media",
+      "name": "uploadAccountProfileImage",
+      "id": "media:uploadAccountProfileImage"
+    },
+    {
+      "module": "app/actions/password-reset",
+      "name": "requestPasswordReset",
+      "id": "password-reset:requestPasswordReset"
+    },
+    {
+      "module": "app/actions/password-reset",
+      "name": "confirmPasswordReset",
+      "id": "password-reset:confirmPasswordReset"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "savePaymentGateway",
+      "id": "payment-settings:savePaymentGateway"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "testPaymentGateway",
+      "id": "payment-settings:testPaymentGateway"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "saveTaxSettings",
+      "id": "payment-settings:saveTaxSettings"
+    },
+    {
+      "module": "app/actions/payment-settings",
+      "name": "saveOfflinePaymentSettings",
+      "id": "payment-settings:saveOfflinePaymentSettings"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "confirmPayment",
+      "id": "payments:confirmPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "rejectPayment",
+      "id": "payments:rejectPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "cancelOpenPayment",
+      "id": "payments:cancelOpenPayment"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "releaseDocument",
+      "id": "payments:releaseDocument"
+    },
+    {
+      "module": "app/actions/payments",
+      "name": "clearFlag",
+      "id": "payments:clearFlag"
+    },
+    {
+      "module": "app/actions/preferences",
+      "name": "updateMakerspacePreferences",
+      "id": "preferences:updateMakerspacePreferences"
+    },
+    {
+      "module": "app/actions/refunds",
+      "name": "refundPayment",
+      "id": "refunds:refundPayment"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "beginMfaEnrollment",
+      "id": "security:beginMfaEnrollment"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "confirmMfaEnrollment",
+      "id": "security:confirmMfaEnrollment"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "disableMfa",
+      "id": "security:disableMfa"
+    },
+    {
+      "module": "app/actions/security",
+      "name": "revokeAllSessions",
+      "id": "security:revokeAllSessions"
+    },
+    {
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "reviewMakerspace",
+      "id": "super-admin-makerspaces:reviewMakerspace"
+    },
+    {
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "setMakerspaceLimits",
+      "id": "super-admin-makerspaces:setMakerspaceLimits"
+    },
+    {
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "createMakerspaceForOwner",
+      "id": "super-admin-makerspaces:createMakerspaceForOwner"
+    },
+    {
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "resendOwnerInvite",
+      "id": "super-admin-makerspaces:resendOwnerInvite"
+    },
+    {
+      "module": "app/actions/super-admin-makerspaces",
+      "name": "setMakerspaceVisibility",
+      "id": "super-admin-makerspaces:setMakerspaceVisibility"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "updateTeamRole",
+      "id": "team:updateTeamRole"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "removeTeamMember",
+      "id": "team:removeTeamMember"
+    },
+    {
+      "module": "app/actions/team",
+      "name": "deleteMakerspace",
+      "id": "team:deleteMakerspace"
+    }
+  ]
+}

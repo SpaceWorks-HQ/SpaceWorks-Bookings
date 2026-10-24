@@ -1,0 +1,290 @@
+# Render Blueprint for Space Works Bookings (docs/DEPLOYMENT_CLOUD.md, "Render").
+# Deploy to Render: https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings
+# (a private repository needs Render's GitHub app to have access to it).
+#
+# What it creates, all in one region so they share Render's private network:
+#   swbook-db       managed PostgreSQL 16; services connect with TLS (DATABASE_URL_SSLMODE)
+#   swbook-backend  web service: the app and API. Before each deploy Render runs the image's
+#                   migrate role (preDeployCommand), then starts --role backend.
+#   swbook-worker   background worker, same image: --role worker (BullMQ: email outbox, jobs)
+#   swbook-beat     background worker, same image: --role beat (keeps the job schedules)
+#
+# What you bring, asked for once when the Blueprint is created:
+#   REDIS_URL       a TLS Redis (rediss://) with maxmemory-policy noeviction, for example
+#                   Upstash or Redis Cloud. The app refuses plain redis:// in production, and
+#                   Render Key Value's private URL is plain redis://, so it is not used here.
+#   S3_*            a private S3-compatible bucket and a key limited to it (Cloudflare R2:
+#                   endpoint https://<account>.r2.cloudflarestorage.com, region auto).
+#   SMTP and email  an authenticated SMTP relay on a verified sending domain.
+#   SUPER_ADMIN_EMAIL, then create the account in the backend's Shell:
+#                   node docker/ops/admin.mjs create --email <address>
+#
+# The public origin defaults to the service's onrender.com URL. For a custom domain, add it
+# in Render, set NEXT_PUBLIC_BASE_URL and AUTH_URL on swbook-backend to https://<domain>,
+# then redeploy (the origin is compiled into the build). Render builds the Dockerfile's last
+# stage (runner) and passes the service's variables as build arguments, so the generated
+# NEXT_SERVER_ACTIONS_ENCRYPTION_KEY is the same at build and run time. The three keys below
+# (Server Actions, MFA, payment secrets) are generated once; never change them afterwards.
+#
+# Background workers and preDeployCommand need paid plans. The worker is required: it
+# delivers every email (sign-in links included); /api/internal/outbox and /api/internal/jobs
+# only enqueue work for it. A short trial without preDeployCommand can set MIGRATE_ON_START=1
+# on the web service instead. Every variable is described in docs/CONFIGURATION.md.
+databases:
+  - name: swbook-db
+    plan: basic-256mb
+    region: singapore
+    postgresMajorVersion: "16"
+    databaseName: swbook
+    user: swbook
+    # No public access: only services in this workspace and region connect.
+    ipAllowList: []
+
+envVarGroups:
+  - name: swbook-shared
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: HEALTHCHECK_SECRET
+        generateValue: true
+      # Base64 of 32 random bytes each, which is what generateValue makes.
+      - key: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+        generateValue: true
+      - key: MFA_ENCRYPTION_KEY
+        generateValue: true
+      - key: PAYMENT_SECRETS_KEY
+        generateValue: true
+      # Render's private database URL has no TLS parameters; the entrypoint adds sslmode.
+      - key: DATABASE_URL_SSLMODE
+        value: require
+      # Render terminates TLS at its edge and appends the client to X-Forwarded-For.
+      - key: TRUSTED_PROXY_IP_HEADER
+        value: x-forwarded-for
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
+      - key: PWNED_PASSWORDS_CHECK
+        value: "1"
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: S3_REGION
+        value: auto
+      - key: S3_FORCE_PATH_STYLE
+        value: "1"
+      - key: OUTBOX_RETENTION_DAYS
+        value: "30"
+      # BullMQ (lib/queue): the worker and beat share this Redis with the web service.
+      - key: JOBS_QUEUE_PREFIX
+        value: "swb:jobs"
+      - key: JOBS_HEALTH_PORT
+        value: "3460"
+      - key: JOBS_INPROCESS
+        value: "false"
+      - key: QUEUE_OUTBOX_CONCURRENCY
+        value: "5"
+      - key: QUEUE_SCHEDULED_CONCURRENCY
+        value: "2"
+
+services:
+  - type: web
+    name: swbook-backend
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    # Runs in the built image before the new release starts; a failed migration stops the deploy.
+    preDeployCommand: docker-entrypoint.sh --role migrate
+    envVars:
+      - fromGroup: swbook-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: swbook-db
+          property: connectionString
+      - key: NEXT_PUBLIC_BASE_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: AUTH_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: REDIS_URL
+        sync: false
+      - key: SUPER_ADMIN_EMAIL
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+
+  - type: worker
+    name: swbook-worker
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: docker-entrypoint.sh --role worker node dist/worker.js
+    envVars:
+      - fromGroup: swbook-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: swbook-db
+          property: connectionString
+      - key: NEXT_PUBLIC_BASE_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: NEXT_PUBLIC_BASE_URL
+      - key: AUTH_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: AUTH_URL
+      - key: REDIS_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: REDIS_URL
+      - key: SUPER_ADMIN_EMAIL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SUPER_ADMIN_EMAIL
+      - key: EMAIL_FROM
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: EMAIL_FROM
+      - key: SMTP_HOST
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SMTP_HOST
+      - key: SMTP_USER
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SMTP_USER
+      - key: SMTP_PASSWORD
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SMTP_PASSWORD
+      - key: S3_ENDPOINT
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_ENDPOINT
+      - key: S3_BUCKET
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_BUCKET
+      - key: S3_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_ACCESS_KEY_ID
+      - key: S3_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_SECRET_ACCESS_KEY
+
+  - type: worker
+    name: swbook-beat
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: docker-entrypoint.sh --role beat node dist/beat.js
+    envVars:
+      - fromGroup: swbook-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: swbook-db
+          property: connectionString
+      - key: NEXT_PUBLIC_BASE_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: NEXT_PUBLIC_BASE_URL
+      - key: AUTH_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: AUTH_URL
+      - key: REDIS_URL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: REDIS_URL
+      - key: SUPER_ADMIN_EMAIL
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SUPER_ADMIN_EMAIL
+      - key: EMAIL_FROM
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: EMAIL_FROM
+      - key: SMTP_HOST
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SMTP_HOST
+      - key: SMTP_USER
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SMTP_USER
+      - key: SMTP_PASSWORD
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: SMTP_PASSWORD
+      - key: S3_ENDPOINT
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_ENDPOINT
+      - key: S3_BUCKET
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_BUCKET
+      - key: S3_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_ACCESS_KEY_ID
+      - key: S3_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: swbook-backend
+          envVarKey: S3_SECRET_ACCESS_KEY
+
