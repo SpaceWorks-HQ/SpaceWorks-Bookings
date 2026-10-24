@@ -5,7 +5,7 @@ const { GATEWAYS } = await import("@/lib/payments/config");
 const { sendBookingRefunds } = await import("@/lib/bookings/money/send");
 const { cancelBooking } = await import("@/lib/bookings/cancel");
 const { rescheduleOccurrence } = await import("@/lib/bookings/reschedule");
-const { markNoShow } = await import("@/lib/bookings/checkin");
+const { checkIn, markNoShow } = await import("@/lib/bookings/checkin");
 const { paymentState } = await import("@/lib/bookings/obligation");
 const { paymentPlan } = await import("@/lib/bookings/money/start");
 const staffMoney = await import("@/lib/bookings/money/staff");
@@ -107,6 +107,17 @@ describe("reschedule and no-show", () => {
     const booking = (await moneyOf(owed)).booking;
     expect(booking.chargeMinor).toBe(0);
     expect(paymentState(booking, at(11))).toBe("VOID");
+  });
+
+  it("restores the charge when someone marked absent arrives while the slot is still held", async () => {
+    const f = await fixture({ chargeMode: "PAY_LATER", noShowCharge: "NONE", noShowReleasesSlot: false });
+    const owed = await moneyBooking(f, [10, 12]);
+    const before = (await moneyOf(owed)).booking.chargeMinor;
+    const row = await firstRow(owed);
+    await markNoShow({ makerspaceId: f.makerspaceId, occurrenceId: row.id, actor: f.owner, now: at(11) });
+    expect((await moneyOf(owed)).booking.chargeMinor).toBe(0);
+    await checkIn({ makerspaceId: f.makerspaceId, occurrenceId: row.id, actor: f.owner, now: at(11.25) });
+    expect((await moneyOf(owed)).booking.chargeMinor).toBe(before);
   });
 });
 

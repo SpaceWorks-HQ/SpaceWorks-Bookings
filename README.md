@@ -182,7 +182,7 @@ DigitalOcean App Platform with [`.do/app.yaml`](.do/app.yaml). Details in
 
 ## Quick start (local)
 
-You need Node 22 or newer, Docker for PostgreSQL and Redis, and a terminal.
+You need Node 22.9 or newer, Docker for PostgreSQL and Redis, and a terminal.
 
 ```bash
 cp .env.example .env            # then fill in the secrets it asks for

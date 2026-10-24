@@ -17,17 +17,19 @@ const OPTIONS = [
 export function AccountAppearanceCard() {
   const { mode, setColorMode } = useAppColorMode();
   // Reveal the new mode from where the person clicked, or from the control itself for keyboard changes.
-  const pointer = useRef<Point | null>(null);
+  // A press only counts for the change it starts: one on the option already chosen must not linger.
+  const pointer = useRef<{ point: Point; at: number } | null>(null);
   const control = useRef<HTMLDivElement>(null);
   return (
     <AccountCard id="account-appearance" title="Appearance" description="Choose how Space Works Bookings looks in this browser.">
       <div className="flex flex-col gap-2">
-        <div ref={control} className="self-start" onPointerDownCapture={(event) => { pointer.current = { x: event.clientX, y: event.clientY }; }}>
+        <div ref={control} className="self-start" onPointerDownCapture={(event) => { pointer.current = { point: { x: event.clientX, y: event.clientY }, at: event.timeStamp }; }}>
         <SegmentedControl<ColorMode>
           ariaLabel="Colour mode"
           value={mode}
           onValueChange={(next) => {
-            const origin = pointer.current ?? (control.current ? centreOf(control.current.getBoundingClientRect()) : undefined);
+            const pressed = pointer.current && performance.now() - pointer.current.at < 1_000 ? pointer.current.point : null;
+            const origin = pressed ?? (control.current ? centreOf(control.current.getBoundingClientRect()) : undefined);
             pointer.current = null;
             setColorMode(next, origin);
           }}

@@ -4,7 +4,31 @@ Releases are published from `main` and titled **`Space Works Bookings <version>`
 file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
 to. Pushes to `dev` publish staging images tagged `dev` without a release.
 
-## 0.1.0 (unreleased)
+## 0.2.0 (unreleased)
+
+Bookings, money, integrations and the ship work (Phases 1 to 4 of `docs/plans/2026-10-23-bookings-build.md`).
+
+- **Spaces and rules.** Rooms, studios, desks and halls with photos, capacity, units, amenities, hourly, half-day
+  and day rates, member rates, peak rules, add-ons and a SAC; opening hours, exceptions and blackouts per makerspace
+  or per space; every booking rule a makerspace default that a space can override, each change audited.
+- **Booking.** Public makerspace and space pages with live availability and quotes, guests or signed-in customers,
+  recurring bookings, holds, approvals, check-in by button or code (or by the customer, when the space allows it),
+  no-shows, reschedules, moves, a manage link per booking, branded emails with calendar invites, personal and team
+  calendar feeds. Double bookings are refused by the database.
+- **Money.** Payments linked to bookings (full, deposit, balance, difference) through Razorpay Checkout, Stripe
+  Checkout, the desk or pay later; trigger-kept paid and refunded totals; refunds for every case in the build plan
+  (policy tiers, venue cancellations, cheaper reschedules, duplicate and late captures, provider-dashboard refunds,
+  retries, offline refunds); due dates, reminders and auto-cancel; booking statements; a reconciliation page
+  (`0003_booking_money`).
+- **Running it.** An overview of the day, a calendar by day or week, reports on utilisation, bookings, no-shows,
+  money and refunds with audited CSV exports, and the makerspace audit log.
+- **Integrations.** A REST API (`/api/v1`) with read and write keys and an OpenAPI document, and signed webhooks
+  relayed from the booking timeline with retries and a delivery log (`0004_integrations`, `docs/API.md`).
+- **Ship.** README in the Space Works layout with light and dark screenshots, a demo with payments, three booking
+  easter eggs, the colour-mode reveal from the control that changed it, a phone layout fix on public pages, and the
+  operations checks recorded in `docs/plans/ops-notes.md`.
+
+## 0.1.0
 
 The platform Space Works Bookings is built on (Phase 0 of `docs/plans/2026-10-23-bookings-build.md`).
 

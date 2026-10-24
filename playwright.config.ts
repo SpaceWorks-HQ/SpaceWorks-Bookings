@@ -8,8 +8,9 @@ const defaultServerCommand = process.env.PLAYWRIGHT_PRODUCTION_SERVER === "1"
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  // Signed-in journeys share the seeded demo makerspaces, so files run one after another.
+  // Signed-in journeys share the seeded demo makerspaces and one authenticator, so files run one after another.
   fullyParallel: false,
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   // The development server compiles each route on first visit, which is slow on CI runners.

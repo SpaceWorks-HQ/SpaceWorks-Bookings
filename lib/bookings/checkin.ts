@@ -58,6 +58,8 @@ export async function checkIn(input: CheckInInput, db: DbOrTx = defaultDb()) {
       throw invalidState("Check-in opens on the day and closes when the booking ends.");
     }
     await setOccurrenceStatus(tx, rows, "CHECKED_IN", { checkedInAt: now, checkedInById: input.actor.kind === "STAFF" ? input.actor.userId : null, noShowAt: null, noShowById: null });
+    // A no-show marked while the slot stayed held may have lowered the charge; arriving after all restores it.
+    if (rows.some((row) => row.noShowAt)) await recomputeCharge(tx, booking.id);
     await recordBookingEvent(tx, { makerspaceId: input.makerspaceId, bookingId: booking.id, occurrenceId: rows[0].id, kind: "checked-in", actor: input.actor, data: { self: !staff, units: rows.length } });
     await enqueueBookingNotice(tx, { makerspaceId: input.makerspaceId, bookingId: booking.id, notice: "checked-in", occurrenceIds: rows.map((row) => row.id) });
     return { bookingId: booking.id, occurrenceIds: rows.map((row) => row.id) };
