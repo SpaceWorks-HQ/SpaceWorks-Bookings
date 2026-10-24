@@ -7,6 +7,7 @@ import { flushSync } from "react-dom";
 import { ToastProvider } from "@/components/feedback/ToastProvider";
 import { TooltipProvider } from "@/components/ui/menu";
 import { COLOR_MODE_COOKIE, type ColorMode } from "@/lib/colorMode";
+import { REVEAL, revealOrigin, revealRadius, revealStrategy } from "@/lib/colorModeReveal";
 
 const CHANGE_EVENT = "swb:theme-change";
 
@@ -50,23 +51,23 @@ function supportsFeatheredReveal() {
  */
 function transitionColorMode(commit: () => void, origin?: ColorModeOrigin) {
   const root = document.documentElement;
-  if (prefersReducedMotion()) {
-    commit();
-    return;
-  }
   type ViewTransitionDocument = Document & { startViewTransition?: (update: () => void | Promise<void>) => { ready: Promise<void>; finished: Promise<void> } };
   const doc = document as ViewTransitionDocument;
-  if (typeof doc.startViewTransition !== "function") {
-    root.classList.add("sw-theme-fade");
+  const strategy = revealStrategy({ reducedMotion: prefersReducedMotion(), viewTransitions: typeof doc.startViewTransition === "function", featheredMask: supportsFeatheredReveal() });
+  if (strategy === "instant") {
     commit();
-    window.setTimeout(() => root.classList.remove("sw-theme-fade"), 460);
     return;
   }
-  const x = origin?.x ?? window.innerWidth - 40;
-  const y = origin?.y ?? 32;
-  const feather = 160;
-  const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) + feather;
-  const feathered = supportsFeatheredReveal();
+  if (strategy === "fade" || !doc.startViewTransition) {
+    root.classList.add("sw-theme-fade");
+    commit();
+    window.setTimeout(() => root.classList.remove("sw-theme-fade"), REVEAL.fadeMs + 40);
+    return;
+  }
+  const viewport = { width: window.innerWidth, height: window.innerHeight };
+  const { x, y } = revealOrigin(origin, viewport);
+  const radius = revealRadius({ x, y }, viewport);
+  const feathered = strategy === "feathered";
   root.style.setProperty("--sw-reveal-x", `${x}px`);
   root.style.setProperty("--sw-reveal-y", `${y}px`);
   root.classList.add(feathered ? "sw-theme-reveal-soft" : "sw-theme-reveal");
@@ -78,7 +79,7 @@ function transitionColorMode(commit: () => void, origin?: ColorModeOrigin) {
   const transition = doc.startViewTransition(commit);
   // Hold the final frame: without fill the mask snaps back to 0 for a frame
   // before the transition tears down, flashing the old mode.
-  const timing: KeyframeAnimationOptions = { duration: 720, easing: "cubic-bezier(0.45, 0, 0.2, 1)", fill: "forwards", pseudoElement: "::view-transition-new(root)" };
+  const timing: KeyframeAnimationOptions = { duration: REVEAL.durationMs, easing: REVEAL.easing, fill: "forwards", pseudoElement: "::view-transition-new(root)" };
   transition.ready
     .then(() => {
       root.animate(

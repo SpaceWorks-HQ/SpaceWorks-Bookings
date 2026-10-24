@@ -3,7 +3,7 @@ import { Field, Input, Dropdown } from "@/components/ui/field";
 
 export type RepeatChoice = { frequency: "DAILY" | "WEEKLY"; count?: number; until?: string } | null;
 export function RecurrenceFields({ value, onChange, max, today }: { value: RepeatChoice; onChange: (value: RepeatChoice) => void; max: number; today: string }) {
-  return <fieldset className="grid gap-4 sm:grid-cols-2"><legend className="mb-3 text-h3">Repeat</legend>
+  return <fieldset className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2"><legend className="mb-3 text-h3">Repeat</legend>
     <Field label="Frequency"><Dropdown value={value?.frequency ?? "NONE"} onChange={(event) => onChange(event.target.value === "NONE" ? null : { frequency: event.target.value as "DAILY" | "WEEKLY", count: Math.min(4, max) })}>
       <option value="NONE">Does not repeat</option><option value="DAILY">Daily</option><option value="WEEKLY">Weekly</option></Dropdown></Field>
     {value ? <><Field label="End series"><Dropdown value={value.until !== undefined ? "UNTIL" : "COUNT"} onChange={(event) => onChange(event.target.value === "UNTIL" ? { frequency: value.frequency, until: today } : { frequency: value.frequency, count: Math.min(4, max) })}>

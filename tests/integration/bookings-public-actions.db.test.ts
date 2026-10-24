@@ -113,6 +113,23 @@ describe.sequential("public booking Server Actions", () => {
     expect(await actions.cancelByManageToken({ ...fixture.scope, manageToken: held.manageToken })).toEqual({ ok: false, error: "Booking not found." });
   });
 
+  it("lets the customer check themselves in only where the space allows it, inside the window", async () => {
+    const desk = await addSpace(fixture.makerspaceId, { publicHourlyMinor: 0 });
+    const space = await addSpace(fixture.makerspaceId, { publicHourlyMinor: 0, ruleOverrides: { selfCheckInEnabled: true, selfCheckInOpensMinutesBefore: 15, selfCheckInClosesMinutesAfter: 30 } });
+    const atDesk = (await publicBook(desk.id)).submitted;
+    const { submitted } = await publicBook(space.id);
+    const owner = { ...fixture.scope, manageToken: submitted.manageToken };
+    vi.setSystemTime(at(47.5));
+    expect(await actions.selfCheckIn(owner)).toMatchObject({ ok: false });
+    vi.setSystemTime(at(48));
+    expect(await actions.selfCheckIn({ ...fixture.scope, manageToken: atDesk.manageToken })).toMatchObject({ ok: false, error: "Check in at the front desk." });
+    expect(await actions.selfCheckIn({ ...owner, ...stranger.scope })).toMatchObject({ ok: false });
+    dataOf(await actions.selfCheckIn(owner));
+    expect(await rowsOf(submitted.bookingId)).toEqual([expect.objectContaining({ status: "CHECKED_IN", checkedInById: null, checkedInAt: at(48) })]);
+    expect(await prisma.bookingEvent.findFirst({ where: { bookingId: submitted.bookingId, kind: "checked-in" } })).toMatchObject({ actorKind: "CUSTOMER", data: { self: true, units: 1 } });
+    expect(await actions.selfCheckIn(owner)).toMatchObject({ ok: false });
+  });
+
   it("submits approval bookings as requests and keeps the occurrence blocking", async () => {
     const space = await addSpace(fixture.makerspaceId, { ruleOverrides: { approvalMode: "APPROVAL" } });
     const { submitted } = await publicBook(space.id);

@@ -12,6 +12,8 @@ import * as links from "@/lib/bookings/links";
 import * as cancel from "@/lib/bookings/cancel";
 import * as reschedule from "@/lib/bookings/reschedule";
 import * as feeds from "@/lib/ics/feeds";
+import * as attendance from "@/lib/bookings/checkin";
+import { checkInCode } from "@/lib/bookings/tokens";
 import { publicBookingPlan } from "@/lib/actions/publicBookingPlan";
 import { expandRecurrence, RecurrenceError } from "@/lib/bookings/recurrence";
 import { parseDateKey } from "@/lib/time/zoned";
@@ -133,4 +135,12 @@ export async function issuePersonalCalendarFeed(input: unknown) {
 
 export async function revokePersonalCalendarFeed(input: unknown) {
   return publicAction(inputs.slugSchema, input, (_data, ctx) => feeds.revokeCalendarFeed({ makerspaceId: ctx.makerspaceId, userId: ctx.actor.userId!, kind: "CUSTOMER" }), { signedIn: true, mutation: true });
+}
+
+/** Self check-in from the manage page; the domain enforces the space's self check-in rule and window. */
+export async function selfCheckIn(input: unknown) {
+  return publicAction(inputs.selfCheckInSchema, input, async (data, ctx) => {
+    const owned = await customerBooking(ctx.makerspaceId, ctx.actor, data);
+    return attendance.checkIn({ makerspaceId: ctx.makerspaceId, actor: owned.actor, code: checkInCode(ctx.makerspaceId, owned.booking.reference) });
+  }, { active: true, mutation: true });
 }

@@ -48,8 +48,8 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   (branch protection + `.github/CODEOWNERS`). Branch from `dev`, open PRs into `dev`.
 - Work in phases; each phase ends with lint, typecheck and tests green, a commit and a push to `dev`.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical; edit one, copy it over the other.
-- The original build was done by Claude Code sessions (no Codex). Any coding agent can continue from
-  this file plus `CLAUDE.md`.
+- Built by Claude Code sessions, with Codex (gpt-6.1-sol) writing most of the Phase 1 actions and UI and reviewing
+  them. Any coding agent can continue from this file plus `CLAUDE.md`.
 
 ## Bookings-specific decisions
 
@@ -64,7 +64,7 @@ Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.gith
   with a reason. Covers staff cancellation (100%), reschedule, no-show, partial, failed or duplicate
   payments, late or out-of-order webhooks, refund retry, offline refunds and the ledger.
 
-## Status (2026-10-23)
+## Status (2026-10-24)
 
 **Done and committed on `dev`:** Phase 0 (platform fork, makerspace rename, magic link, roles, BullMQ
 worker and beat, baseline migration). Also the ops track merged from `phase/ops`: installer menu,
@@ -95,6 +95,21 @@ staff calendar (day and week), reports (utilisation, bookings, no-shows; money, 
 REST API keys and `/api/v1` with its OpenAPI document, and signed outbound webhooks relayed from the booking timeline
 with retries and a delivery log. See `docs/API.md`.
 
+**Phase 4 (done, 2026-10-24):** README in the SpaceWorks-Events layout with light and dark banners and real
+screenshots (`docs/screenshots`, `scripts/capture-readme-screens.mjs`, `scripts/render-readme-banner.mjs`), demo money
+in the seed, design polish (free spaces, capacity wording, phone layout, calendar columns), three booking easter eggs
+(`docs/DESIGN.md`), the colour-mode reveal from the control that changed it (`lib/colorModeReveal.ts`), and the ops
+checks recorded in `docs/plans/ops-notes.md` "Verified, and how".
+
+## Deferred checks (only the owner can run these)
+
+| Check | Accepted when |
+| --- | --- |
+| A real Render deploy from `render.yaml` | The Blueprint deploys; web, worker and beat are healthy; sign-in works; the open questions in `docs/plans/ops-notes.md` "Not verifiable here" are answered |
+| A real VPS install (`curl … install.sh \| bash`, the release path and `--ref dev`) | A fresh Ubuntu server installs, `scripts/status.sh` and the `ops` checks pass, and update, backup and restore work |
+| GHCR images and a release install | The first tagged release publishes both images and the installer pulls them |
+| Live Razorpay and Stripe in test mode | One booking paid and refunded through each gateway, with the webhook and the refund landing |
+
 ## Open questions (conservative choices made, owner to confirm)
 
 - **GST documents for advances.** Booking payments get the existing tax invoice / receipt; refunds a credit note.
@@ -108,15 +123,15 @@ with retries and a delivery log. See `docs/API.md`.
 
 ## What is left
 
-Phases 1 (finish) to 5 from the build plan:
-1. Finish Phase 1: Server Actions and UI for settings, spaces, pricing, availability calendar and the
-   booking flow (public, guest, member, staff, recurring, holds, approval, check-in, no-show,
-   reschedule, ICS and emails).
-2. Payments and refunds (every scenario), ledger, receipts, reconciliation, and the free/paid matrix tests.
-3. Dashboard, calendar, reports, exports, audit, members, API keys, REST API, webhooks.
-4. README with real screenshots, e2e suite, design polish and demo seed. The ops part is already done.
-   Its open questions are in `docs/plans/ops-notes.md`, and a real Render deploy has not been tried.
-5. Independent review passes, then open the `dev → main` PR for the owner.
+The build plan's Phases 0 to 5 are done on `dev` (local commits until the owner has checked them and pushes).
+1. The owner's QA, then push `dev`.
+2. The deferred checks above (Render, a VPS install, a release, live gateways in test mode).
+3. The open questions above.
+4. The `dev → main` pull request, opened and merged by the owner.
+
+Ideas not in the build plan: GST receipt and refund vouchers for advances, team chat alerts for overdue payments,
+and space photos on the calendar. (Customer self check-in now has its button on the booking page, shown inside the
+space's window.)
 
 ## Run it locally
 

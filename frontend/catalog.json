@@ -443,6 +443,11 @@
       "id": "bookings-public:revokePersonalCalendarFeed"
     },
     {
+      "module": "app/actions/bookings-public",
+      "name": "selfCheckIn",
+      "id": "bookings-public:selfCheckIn"
+    },
+    {
       "module": "app/actions/bookings-staff",
       "name": "createHold",
       "id": "bookings-staff:createHold"

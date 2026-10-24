@@ -113,6 +113,9 @@ this). The box symbol stays the logo everywhere; Patch is never put inside or be
     mode it sits on a Warm Cream disc, because its dark outline disappears on Deep Ink.
   - **The sneeze vote**, saved for moments when the community decides together: a makerspace's application
     approved (`/dashboard/[makerspaceSlug]/application` once it is active). It sneezes once.
+  - **Empty calendar** (`/dashboard/[makerspaceSlug]/calendar`): Patch naps when nothing is booked in the view.
+  - **Everyone's here** (`/dashboard/[makerspaceSlug]/today`): Patch sneezes once when every arrival due today has
+    checked in.
   - Not on makerspace-branded public pages (`/m/…`), which carry the makerspace's brand, not ours.
 - **Bold moments.** Patch counts as a layout's one bold moment, so a screen with Patch has no Unbounded phrase
   and no Workshop Orange flap. None of the screens above has either.
@@ -127,4 +130,7 @@ All decorative: hidden from assistive technology, never blocking a control, and 
 | **Hopping loader** (`components/brand/BrandLoader.tsx`) | Dashboard route loading | Three brand dots hop in turn under the walking Patch. |
 | **Mood-tile wiggle** (`MoodTile`, `.sw-wiggle` in `app/styles/patch.css`) | Empty states, the invite panel | Hover a mood tile, or a `.group` card around one: the icon gives one quick wiggle. Mouse only. |
 | **Colour-mode change event** (`components/providers.tsx`) | Everywhere | Switching light or dark dispatches `swb:theme-change` on `window` in the same frame the tokens change, so anything can follow along; the new mode is revealed as a soft circle from the toggle. |
+| **"Booked" stamp** (`BookedStamp` in `components/eggs/BookingEggs.tsx`, rule in `lib/bookings/eggs.ts`) | A customer's booking page (`/m/[makerspaceSlug]/bookings/[reference]`) | For 15 minutes after a booking is confirmed, a tilted rubber "Booked" stamp presses in once beside the heading, in the accent ink. No Patch: the page carries the makerspace's brand. Reduced motion: the stamp is simply there. |
+| **Patch's nap** (`NappingPatch`) | Staff calendar (`/dashboard/[makerspaceSlug]/calendar`) | A day or week with nothing booked: Patch idles in the empty state while three z's drift up and fade. Reduced motion: one still "z". |
+| **Everyone's here** (`AllHerePatch`, rule in `lib/bookings/eggs.ts`) | Today (`/dashboard/[makerspaceSlug]/today`) | Once every confirmed arrival due today has checked in, a card says so and Patch sneezes once (the sneeze is kept for moments the community shares). Reduced motion: Patch rests on its first frame. |
 | **The team's note** (`components/about/*`, `app/styles/eggs.css`) | `/about`, linked from the footer | Click the airmail envelope: the Workshop Orange seal cracks and tumbles, the flap swings back on its teal lining, the letter slides out and opens into a note from the team, signed by all six of us. "Skip to the letter" and reduced motion go straight to the letter. Its Unbounded title and orange seal are that page's one bold moment. |

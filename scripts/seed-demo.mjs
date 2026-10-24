@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { seedBookingCatalogue } from "./seed/booking-catalogue.mjs";
 import { seedBookings } from "./seed/bookings.mjs";
+import { seedMoney } from "./seed/money.mjs";
 
 if (process.env.NODE_ENV === "production") throw new Error("seed-demo never runs in production.");
 const password = process.env.DEMO_PASSWORD ?? "";
@@ -70,6 +71,7 @@ if (!(await prisma.makerspaceReview.count({ where: { makerspaceId: makerspace.id
 try {
   const spaces = await seedBookingCatalogue(prisma, makerspace.id);
   await seedBookings(prisma, { makerspaceId: makerspace.id, spaces, owner, front, customer, now });
+  await seedMoney(prisma, { makerspaceId: makerspace.id, owner, now });
 } finally {
   await prisma.$disconnect();
 }

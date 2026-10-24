@@ -115,7 +115,7 @@ export function PublicBookingForm(props: Props) {
       } catch { setError("Could not submit your booking. Please try again."); }
     });
   }} className="flex flex-col gap-6">
-    <fieldset disabled={pending} className="flex flex-col gap-6">
+    <fieldset disabled={pending} className="flex min-w-0 flex-col gap-6">
       <AvailabilityPicker slug={slug} spaceId={spaceId} zone={zone} today={today} units={units} rules={rules} owner={owner} onHoldGone={dropHold} onChange={(value) => changeSelection(() => { setChoice(value); setSkip(false); })} />
       <RecurrenceFields value={repeat} onChange={(value) => changeSelection(() => { setRepeat(value); setSkip(false); })} max={rules.recurrenceMaxOccurrences} today={today} />
       {conflicts.length ? <Callout tone="warning" title="These dates are unavailable"><ul>{conflicts.map((item, index) => <li key={index}>{item.date}: {item.reasons.join(" ")}</li>)}</ul>
@@ -125,7 +125,7 @@ export function PublicBookingForm(props: Props) {
         <Field label="Phone" optional><Input name="phone" type="tel" autoComplete="tel" maxLength={40} /></Field>
         <Field label="Attendees" required><Input type="number" min={1} max={props.capacity > 0 ? Math.min(100_000, props.capacity * (choice?.quantity ?? 1)) : 100_000} value={attendees} onChange={(event) => setAttendees(Number(event.target.value))} /></Field></div>
       <Field label="Purpose" optional><Textarea name="purpose" maxLength={2000} /></Field>
-      {addOns.length ? <fieldset className="flex flex-col gap-4"><legend className="mb-3 text-h3">Add-ons</legend>{addOns.map((extra) => <Field key={extra.id} label={`${extra.name} · ${money(extra.priceMinor, currency)} · ${words(extra.unit)}`} helperText={extra.description || undefined}>
+      {addOns.length ? <fieldset className="flex min-w-0 flex-col gap-4"><legend className="mb-3 text-h3">Add-ons</legend>{addOns.map((extra) => <Field key={extra.id} label={`${extra.name} · ${money(extra.priceMinor, currency)} · ${words(extra.unit)}`} helperText={extra.description || undefined}>
         <Input type="number" min={0} max={100} value={extras[extra.id] ?? 0} onChange={(event) => setExtras({ ...extras, [extra.id]: Number(event.target.value) })} /></Field>)}</fieldset> : null}
       {canPayLater ? <CheckboxField name="payLater" label="Pay later" /> : null}
       {rules.chargeMode === "PAY_LATER" ? <p>Payment is due by the date shown on your confirmation.</p> : null}

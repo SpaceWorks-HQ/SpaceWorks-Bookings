@@ -6,12 +6,15 @@ import { MakerspacePageHeader } from "@/components/dashboard/makerspace/Makerspa
 import { AttendanceActions } from "@/components/bookings/AttendanceActions";
 import { CheckInCodeForm } from "@/components/bookings/CheckInCodeForm";
 import { Card, CardHeader, Chip, EmptyState } from "@/components/ui/display";
+import { AllHerePatch } from "@/components/eggs/BookingEggs";
+import { everyoneArrived } from "@/lib/bookings/eggs";
 
 export const metadata = { title: "Today" };
 export default async function Page(props: Parameters<typeof loadToday>[0]) {
   const { makerspace, date, canManage, spaces, rows } = await loadToday(props);
   const groups = groupBySpace(rows);
   return <div className="flex flex-col gap-6"><MakerspacePageHeader makerspace={makerspace} title="Today" description={`${date} · ${makerspace.timezone}`} />
+    {everyoneArrived(rows) ? <Card className="flex items-center gap-4"><AllHerePatch /><p className="text-ink">Everyone due today has checked in.</p></Card> : null}
     {canManage ? <CheckInCodeForm slug={makerspace.slug} /> : null}
     {!rows.length ? <EmptyState title="No bookings today">Confirmed bookings and requests appear here, grouped by space.</EmptyState> : spaces.filter((space) => groups[space.id]?.length).map((space) => <Card key={space.id}>
       <CardHeader title={space.name} />{groups[space.id].map((row, index, occurrences) => <div key={row.id} className="flex flex-wrap items-center gap-4 border-b border-line py-4 last:border-0">

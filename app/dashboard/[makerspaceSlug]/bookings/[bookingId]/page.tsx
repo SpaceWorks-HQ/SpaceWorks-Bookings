@@ -21,7 +21,7 @@ export default async function Page(props: Parameters<typeof loadBooking>[0]) {
       ...(booking.internalNotes ? [{ label: "Internal notes", value: booking.internalNotes }] : []),
       { label: "Current charge", value: money(booking.chargeMinor, booking.currency) }, { label: "Paid", value: money(booking.paidMinor, booking.currency) },
       { label: "Refunded", value: money(booking.refundedMinor, booking.currency) }, { label: "Balance due", value: money(booking.balanceDue, booking.currency) },
-      { label: "Refund due", value: money(booking.refundDue, booking.currency) }, { label: "Payment due", value: booking.paymentDueAt ? formatDayTime(booking.paymentDueAt, zone) : "No deadline" },
+      { label: "Refund due", value: money(booking.refundDue, booking.currency) }, { label: "Payment due", value: booking.balanceDue <= 0 ? "Nothing due" : booking.paymentDueAt ? formatDayTime(booking.paymentDueAt, zone) : "No deadline" },
     ]} /></Card>
     <section className="flex flex-col gap-4"><h2 className="text-h3 text-ink">Occurrences</h2>{booking.occurrences.map((row, index, rows) => <OccurrenceCard key={row.id}
       slug={makerspace.slug} bookingId={booking.id} bookingStatus={booking.status} row={row} timezone={zone} currency={booking.currency} canManage={data.canManage} canOverride={data.canOverride}

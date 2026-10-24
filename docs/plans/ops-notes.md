@@ -45,7 +45,20 @@ not be verified on this machine, and the lines README.md and CLAUDE.md should ca
 
 ## Verified, and how
 
-VERIFICATION_RESULTS
+Run on 2026-10-24 from a Windows 11 workstation (Docker Desktop 29.9, Git Bash) and a Linux container
+(`mcr.microsoft.com/playwright:v1.64.1-noble`, Node 24) for anything POSIX-only:
+
+| Check | How | Result |
+| --- | --- | --- |
+| Bundled stack end to end | `SWB_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh` (builds both images from the checkout, writes a config as `setup.sh` does, starts every service, runs the `ops` checks, proves worker, beat and edge, backs up and restores) | Passed: database over TLS, runtime role can't change schema, all migrations applied, Redis over TLS with password, private bucket, readiness, worker and beat heartbeats, trigger endpoints refuse requests without the secret, SMTP relay; backup and restore finished |
+| Shell scripts | `docker run koalaman/shellcheck:v0.10.0 -S warning -x install.sh setup.sh scripts/*.sh deploy/*.sh` (the CI list) | Clean |
+| Installer | `bash install.sh --help`; `bash install.sh --dry-run --ref dev` in the Linux container | Help prints; the dry run passes every preflight check (architecture, OS, dependencies, disk) and reports the source build of `dev`, then stops at the first question because the container has no terminal (as designed; unattended runs use `SWB_ANSWER_*`) |
+| Installer, compose and Render units | `tests/unit/ops-install.test.ts`, `ops-compose.test.ts`, `ops-render.test.ts` in the Linux container | 24 of 24 pass (`ops-install` skips on Windows by design) |
+| Whole production build in a browser | `npm run test:e2e:vps -- --external-services` (standalone server, seeded demo, every Playwright spec) | Passes; signed-in journeys run, none skipped |
+| Split hosting | `npm run test:e2e:split -- --external-services` (website image over the signed gateway, separate action keys) | Passes, see the B4 commit |
+
+`render.yaml` and `.do/app.yaml` were checked statically (`ops-render.test.ts`: every production variable
+`lib/env.ts` requires is set or generated, every role runs `docker-entrypoint.sh`), not against a live account.
 
 ## Not verifiable here
 

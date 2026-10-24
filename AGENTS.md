@@ -71,11 +71,14 @@ registered job once a minute in the web process.
 Operations (bash; see `docs/DEPLOYMENT_VPS.md`, `docs/DEPLOYMENT_CLOUD.md`, `docs/CONFIGURATION.md`):
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash   # install, or the menu when installed
+bash install.sh --help                                   # --ref REF, --release TAG, --action ACTION, --non-interactive, --dry-run
+bash scripts/status.sh                                   # release, services, worker/beat health, newest backup, ops checks
 bash setup.sh [--build]                                  # guided install from a checkout (setup.ps1 on Windows)
 scripts/spaceworks-compose.sh bundled up -d              # the only way to run docker-compose.prod.yml
 scripts/spaceworks-compose.sh bundled run --rm ops       # operator checks (incl. worker and beat health)
 scripts/spaceworks-compose.sh cloud up -d                # docker-compose.cloud.yml with /etc/spaceworks-bookings/cloud.env
-bash scripts/update.sh --force [--version V | --rollback]
+bash scripts/update.sh --force [--version V | --rollback | --source REF]
 bash scripts/backup.sh && bash scripts/restore.sh backups/<dump>.sql.gz [--with-storage]
 bash scripts/admin.sh create|set-password|reset-mfa|revoke|list --email <address>   # super admins (server only)
 SWB_COMPOSE_BUILD_LAYER=1 bash scripts/compose-smoke.sh  # bundled stack end to end (disposable)
@@ -137,8 +140,9 @@ npx vitest run tests/unit/health.test.ts
   scheduler `registry-<area>` per entry and the worker runs it. Ad-hoc jobs add a `QueueJob` kind in
   `lib/queue/definitions.ts` and a branch in `lib/queue/worker.ts`, enqueued with a stable `jobId`. Redis carries
   ids only; SQL owns retry timing for the outbox. Queue prefix `swb:jobs` (`JOBS_QUEUE_PREFIX`).
-- **Public pages:** `/m/[makerspaceSlug]` is the makerspace's own page (name, logo, description, contact; spaces
-  come in Phase 1). User content is rendered as React text, never as HTML strings.
+- **Public pages:** `/m/[makerspaceSlug]` is the makerspace's own page (name, logo, description, contact, spaces), with
+  space pages and the customer's booking page under it. User content is rendered as React text, never as HTML
+  strings, and Patch never appears there (it carries the makerspace's brand).
 - **Reports:** the pure helpers in `lib/reports/*` (periods, money totals, chart scales, masking, finance and GST
   maths, `bookings/stats.ts`) are unit-tested; loaders read rows, pages render them. Every CSV export goes through
   `auditedCsvResponse` and `exportAccess` (`lib/reports/exports/*`).
@@ -153,8 +157,15 @@ npx vitest run tests/unit/health.test.ts
     `scripts/docker-entrypoint.sh --role backend|migrate|worker|beat|ops`) and `spaceworks-bookings-frontend`
     (`frontend`). Public origins are placeholders replaced at start; never bake an installation's key or origin.
   - The `worker` (`node dist/worker.js`) and `beat` (`node dist/beat.js`) serve `/health` on `JOBS_HEALTH_PORT`
-    (3460). `/api/internal/outbox` and `/api/internal/jobs` only enqueue (bearer `CRON_SECRET`), for hosts without
-    a worker; Caddy hides them.
+    (3460). The worker is required on every host: `/api/internal/outbox` and `/api/internal/jobs` (bearer
+    `CRON_SECRET`) only enqueue work for it; Caddy hides them.
+  - `install.sh` is self-contained (`curl | bash`); menu entries are scripts in `scripts/` listed in
+    `install-host-bundle.sh`. A private repository is reached with `SWB_GITHUB_TOKEN`/`GITHUB_TOKEN`/`GH_TOKEN` or
+    `gh auth token`; never write a token to `.env`.
+  - `render.yaml` and `.do/app.yaml` run every role as `docker-entrypoint.sh --role …`; keep them in step with
+    `docker-compose.cloud.yml` (`tests/unit/ops-render.test.ts` checks the production variables against `lib/env.ts`).
+  - README screenshots: `node scripts/capture-readme-screens.mjs <url>` against the seeded demo (light and dark into
+    `docs/screenshots`); banners: `node scripts/render-readme-banner.mjs`.
   - Every new environment variable goes into `.env.example`, `.env.production.example`, the compose
     `x-app-env` blocks and `docs/CONFIGURATION.md`.
   - Shell scripts are bash or POSIX sh, LF, and pass `shellcheck -S warning -x`. Host files an update must

@@ -18,3 +18,12 @@ test("a guest books the free Meeting room from the makerspace page and downloads
   expect(ics).toContain("BEGIN:VEVENT");
   expect(ics).toContain("Meeting room");
 });
+
+test("public booking pages fit a phone without sideways scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const path of ["/m/tinkerspace", "/m/tinkerspace/spaces/meeting-room", "/m/tinkerspace/spaces/hot-desks"]) {
+    await page.goto(path, { waitUntil: "networkidle" });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, path).toBeLessThanOrEqual(0);
+  }
+});

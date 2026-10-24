@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingDate, bookingDayWindow, conflictDates, displayRates, durationChoices, navigateBookingDate, quoteDisplay } from "@/lib/bookings/publicUi";
+import { bookingDate, bookingDayWindow, conflictDates, displayRates, durationChoices, navigateBookingDate, quoteDisplay, selfCheckInOpen } from "@/lib/bookings/publicUi";
 import { expandRecurrence } from "@/lib/bookings/recurrence";
 import { checkSlots } from "@/lib/bookings/slotCheck";
 import { DEFAULT_RULES } from "@/lib/bookingRules/schema";
@@ -66,5 +66,24 @@ describe("ICS and manage route authorisation", () => {
     }
     expect(canReadBooking(null, { ...request, userId: "owner" })).toBe(false);
     expect(canReadBooking({ ...booking, customerUserId: null }, { ...request, userId: "owner" })).toBe(false);
+  });
+});
+
+describe("self check-in window", () => {
+  const rules = { ...DEFAULT_RULES, selfCheckInEnabled: true, selfCheckInOpensMinutesBefore: 15, selfCheckInClosesMinutesAfter: 30 };
+  const slot = (start: string, end: string, status = "SCHEDULED") => ({ startsAt: new Date(start), endsAt: new Date(end), status });
+  const slots = [slot("2026-11-02T10:00:00Z", "2026-11-02T11:00:00Z"), slot("2026-11-01T10:00:00Z", "2026-11-01T11:00:00Z")];
+
+  it("opens before the earliest scheduled slot that hasn't ended and closes after its start", () => {
+    expect(selfCheckInOpen(rules, slots, new Date("2026-11-01T09:44:00Z"))).toBe(false);
+    expect(selfCheckInOpen(rules, slots, new Date("2026-11-01T09:45:00Z"))).toBe(true);
+    expect(selfCheckInOpen(rules, slots, new Date("2026-11-01T10:30:00Z"))).toBe(true);
+    expect(selfCheckInOpen(rules, slots, new Date("2026-11-01T10:31:00Z"))).toBe(false);
+    expect(selfCheckInOpen(rules, slots, new Date("2026-11-02T09:50:00Z"))).toBe(true);
+  });
+
+  it("stays shut when the space doesn't allow it or the next slot is no longer scheduled", () => {
+    expect(selfCheckInOpen({ ...rules, selfCheckInEnabled: false }, slots, new Date("2026-11-01T10:00:00Z"))).toBe(false);
+    expect(selfCheckInOpen(rules, [slot("2026-11-01T10:00:00Z", "2026-11-01T11:00:00Z", "CHECKED_IN")], new Date("2026-11-01T10:00:00Z"))).toBe(false);
   });
 });

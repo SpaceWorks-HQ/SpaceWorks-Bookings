@@ -9,6 +9,7 @@ import { Field, Dropdown } from "@/components/ui/field";
 import { formatTimeRange } from "@/lib/format/datetime";
 import { words } from "@/lib/bookings/ui";
 import { cn } from "@/lib/cn";
+import { NappingPatch } from "@/components/eggs/BookingEggs";
 
 export const metadata: Metadata = { title: "Calendar", robots: { index: false, follow: false } };
 
@@ -33,9 +34,9 @@ export default async function CalendarPage(props: Parameters<typeof loadCalendar
         <button type="submit" className={buttonClasses({ variant: "secondary" })}>Show</button>
       </form>
     </div>
-    {view.empty ? <EmptyState mood="sleepy" title="Nothing booked">No bookings in this {view.view === "day" ? "day" : "week"}.</EmptyState> : null}
+    {view.empty ? <EmptyState icon={<NappingPatch />} title="Nothing booked">No bookings in this {view.view === "day" ? "day" : "week"}.</EmptyState> : null}
     <Card padding="none" className="overflow-x-auto">
-      <table className="w-full min-w-[720px] border-collapse text-left">
+      <table className="w-full min-w-[720px] table-fixed border-collapse text-left">
         <thead><tr className="border-b border-line"><th className="w-40 px-4 py-3 text-ink-muted">Space</th>
           {view.days.map((day) => <th key={day} scope="col" className={cn("px-3 py-3 font-semibold text-ink", day === view.today && "text-accent")}>{dayLabel(day)}</th>)}</tr></thead>
         <tbody>{view.rows.map((space) => <tr key={space.id} className="border-b border-line align-top">

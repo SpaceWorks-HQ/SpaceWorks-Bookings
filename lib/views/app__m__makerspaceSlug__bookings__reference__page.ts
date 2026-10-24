@@ -7,7 +7,7 @@ import { canReadBooking } from "@/lib/ics/access";
 import { checkInCode } from "@/lib/bookings/tokens";
 import { paymentState, PAYMENT_STATE_LABELS, balanceDue } from "@/lib/bookings/obligation";
 import { cancellationPreview } from "@/lib/bookings/cancellationPreview";
-import { bookingDate } from "@/lib/bookings/publicUi";
+import { bookingDate, selfCheckInOpen } from "@/lib/bookings/publicUi";
 import { slotRows } from "@/lib/ics/booking";
 import { paymentPlan } from "@/lib/bookings/money/start";
 
@@ -33,12 +33,13 @@ export async function loadPublicBookingPage({ params, searchParams }: { params: 
     upiVpa: settings?.upiVpa ?? null, upiPayeeName: settings?.upiPayeeName ?? null, offlineInstructions: settings?.offlineInstructions ?? "",
   };
   return { makerspace, payment, detail: {
-    id: booking.id, reference, status: booking.status, space: { id: booking.spaceId, name: booking.space.name, units: booking.space.units },
+    id: booking.id, reference, status: booking.status, confirmedAt: booking.confirmedAt, space: { id: booking.spaceId, name: booking.space.name, units: booking.space.units },
     currency: booking.currency, totalMinor: booking.totalMinor, chargeMinor: booking.chargeMinor, priceSnapshot: booking.priceSnapshot,
     paymentLabel: PAYMENT_STATE_LABELS[paymentState(booking, now)], balanceMinor: balanceDue(booking.chargeMinor, booking),
     awaitingPayment: booking.awaitingPayment, payLater: booking.payLater, paymentDueAt: booking.paymentDueAt,
     holdExpiresAt: booking.holdExpiresAt, declineReason: booking.declineReason, cancelReason: booking.cancelReason,
     code: booking.status === "CONFIRMED" ? checkInCode(makerspace.id, reference) : null,
+    selfCheckIn: makerspace.status === "ACTIVE" && booking.status === "CONFIRMED" && selfCheckInOpen(rules, slots, now),
     slots: slots.map((row) => ({ id: row.id, startsAt: row.startsAt, endsAt: row.endsAt, status: row.status,
       canMove: makerspace.status === "ACTIVE" && ["CONFIRMED", "REQUESTED"].includes(booking.status) && row.status === "SCHEDULED" && rules.customerRescheduleAllowed && now.getTime() <= row.startsAt.getTime() - rules.customerRescheduleCutoffHours * 3_600_000 })),
     quantity: booking.quantity, cancellations, rules, today: bookingDate(now, makerspace.timezone),

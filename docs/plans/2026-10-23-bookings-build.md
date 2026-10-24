@@ -1,17 +1,20 @@
 # Space Works Bookings build plan (v1, 2026-10-23)
 
-Claude does all planning, building, testing and review. Codex is not used. Work happens in phases; each phase
-ends with green lint, typecheck, unit and integration tests, a commit and a push to `dev`. `main` is never
-touched.
+Phase 0 and the Phase 1 domain layer were built by Claude Code alone. From 2026-10-23 the owner brought in Codex
+(gpt-6.1-sol) for the Phase 1 actions and UI and for reviews; from 2026-10-24 the rest (Phases 2 to 5) was built and
+reviewed by Claude Code again. Work happens in phases; each phase ends with green lint, typecheck, unit, integration
+and end-to-end tests, a commit on `dev`, and a push once the owner has checked it. `main` is never touched.
 
 Research notes (read them, they are the porting basis):
 
 - `docs/plans/research/survey-django.md`: the Django booking + payments domain (what to port, bugs not to repeat).
 - `docs/plans/research/survey-ops.md`: ops, BullMQ, auth and tests across Organization (O), Workspace (W), Events (E).
 
-Reference checkouts (read only, shallow clones of `main`):
-`/private/tmp/claude-501/-Users-shaanshoukath-Documents-TInkerspace/570ee526-1161-4b9a-946f-a26b3388c341/scratchpad/ref/`
-`SpaceWorks`, `SpaceWorks-Organization`, `SpaceWorks-Workspace`, `SpaceWorks-Events`, `SpaceWorks-Design`.
+Reference repositories (read only): [SpaceWorks](https://github.com/SpaceWorks-HQ/SpaceWorks),
+[SpaceWorks-Organization](https://github.com/SpaceWorks-HQ/SpaceWorks-Organization),
+[SpaceWorks-Workspace](https://github.com/SpaceWorks-HQ/SpaceWorks-Workspace),
+[SpaceWorks-Events](https://github.com/SpaceWorks-HQ/SpaceWorks-Events) and
+[SpaceWorks-Design](https://github.com/SpaceWorks-HQ/SpaceWorks-Design); clone them beside this one.
 
 ## Product
 
