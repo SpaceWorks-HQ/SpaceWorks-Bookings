@@ -32,6 +32,7 @@ Desktop.ini
 
 # production
 /build
+/dist
 /backups/
 
 # misc

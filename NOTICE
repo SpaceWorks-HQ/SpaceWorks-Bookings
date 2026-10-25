@@ -1,0 +1,25 @@
+SpaceWorks-Bookings
+Copyright (C) 2026 Space Works
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See the LICENSE file for the full text.
+
+Source code: https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings
+
+Space Works Bookings is derived from these Space Works projects, all licensed
+under the GNU Affero General Public License v3.0 or later:
+
+- SpaceWorks-Organization (https://github.com/SpaceWorks-Labs/SpaceWorks-Organization),
+  forked at commit bc716137ade147ac1217cbc83bd1ef54851caafe: the platform
+  (accounts, multi-tenancy, payments, receipts, outbox, operations).
+- SpaceWorks-Workspace (https://github.com/SpaceWorks-Labs/SpaceWorks-Workspace),
+  at commit f6f021053c7496b1e08d826781491dcdcf13e877: the BullMQ worker and
+  beat (lib/queue, lib/scheduled, scripts/queue, scripts/build-jobs.mjs).
+- SpaceWorks-Events (https://github.com/SpaceWorks-Labs/SpaceWorks-Events),
+  at commit 9a68c458d25b4602661660df5a6b6172601c1c58: parts of the platform
+  layer that SpaceWorks-Organization itself took from it.
+
+The Space Works name, logo and visual identity come from the Space Works
+design system (https://github.com/SpaceWorks-Labs/SpaceWorks-Design).

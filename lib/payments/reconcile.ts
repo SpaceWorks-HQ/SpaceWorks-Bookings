@@ -1,0 +1,50 @@
+import "server-only";
+
+import { prisma } from "@/lib/db";
+import { refreshGatewayPayment } from "./checkout";
+
+const MINUTE = 60_000;
+/** Give webhooks a head start before polling, and keep asking for a week (late captures still settle). */
+const POLL_AFTER_MS = 5 * MINUTE;
+const POLL_FOR_MS = 7 * 24 * 60 * MINUTE;
+const BATCH = 50;
+
+async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date) {
+  if (now.getTime() - payment.createdAt.getTime() <= POLL_FOR_MS) return;
+  await prisma.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "FAILED", note: "Closed: no payment arrived within a week." } });
+}
+
+/**
+ * Poll open gateway attempts so a missed webhook never leaves a paid customer waiting. Each run takes the
+ * attempts checked longest ago (`updatedAt` is touched on every check), so abandoned checkouts cannot starve
+ * newer ones. Settling is idempotent, so overlapping runs on several replicas are harmless. Attempts still
+ * open after a week are closed as FAILED, even when the provider can't be reached; a capture that arrives
+ * later is still receipted and flagged by the webhook path.
+ */
+export async function reconcileGatewayPayments(now = new Date()) {
+  const open = await prisma.payment.findMany({
+    where: {
+      status: "PENDING",
+      provider: { in: ["RAZORPAY", "STRIPE"] },
+      gatewayOrderId: { not: null },
+      createdAt: { lte: new Date(now.getTime() - POLL_AFTER_MS) },
+    },
+    orderBy: { updatedAt: "asc" },
+    take: BATCH,
+    select: { id: true, makerspaceId: true, createdAt: true },
+  });
+  let settled = 0;
+  for (const payment of open) {
+    await prisma.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { updatedAt: now } });
+    try {
+      const status = await refreshGatewayPayment(payment.makerspaceId, payment.id);
+      if (status === "PAID") settled += 1;
+      else if (status === "PENDING") await closeIfStale(payment, now);
+    } catch {
+      // One makerspace's bad keys or a provider outage must not stop the others.
+      console.error("[payments reconcile] one payment could not be checked");
+      await closeIfStale(payment, now).catch(() => undefined);
+    }
+  }
+  return { checked: open.length, settled };
+}
