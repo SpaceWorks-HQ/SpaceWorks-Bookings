@@ -113,7 +113,7 @@ export SWB_NONINTERACTIVE
 [[ -z "$RELEASE" || -z "$SOURCE_REF" ]] || die 'Use either --release or --ref, not both.'
 RELEASE="${RELEASE#v}"
 [[ -z "$RELEASE" || "$RELEASE" =~ ^[0-9]+\.[0-9]+\.[0-9]+-main\.[0-9]+\.[0-9a-f]{12}$ ]] \
-  || die '--release needs a published main release such as v0.1.0-main.12.0123456789ab.'
+  || die '--release needs a published main release such as v0.5.0-main.12.0123456789ab.'
 [[ -z "$SOURCE_REF" || ( "$SOURCE_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,150}$ && "$SOURCE_REF" != *..* ) ]] \
   || die '--ref needs a branch, tag or commit name.'
 if [[ -n "$REQUESTED_ACTION" ]]; then

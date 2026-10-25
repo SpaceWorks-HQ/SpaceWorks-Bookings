@@ -64,7 +64,8 @@ structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks
    finance page and export. A technician sees only what they asked and whether it was paid.
 9. **Version.** The first public release is **0.5.0**.
 10. **Dashboard sections collapse; empty ones start collapsed; choice remembered per browser** (`components/ui/collapsible.tsx`,
-    `localStorage` keys `swb:dash:<id>`): the overview checklist, each space on Today, and the report and finance charts.
+    `localStorage` keys `swb:dash:<id>` and `swb:nav:<group>`): sidebar groups (the current page's group always open), the overview
+    checklist, each space on Today, the report and finance charts, and secondary booking and issue sections.
 
 ## Original decisions (2026-10-23)
 

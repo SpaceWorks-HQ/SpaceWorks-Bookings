@@ -40,7 +40,7 @@ const ACTION_SCRIPTS: Record<string, string> = {
 function fakeInstall(name: string, sourceRef?: string) {
   const dir = join(work, name);
   mkdirSync(join(dir, "scripts"), { recursive: true });
-  writeFileSync(join(dir, ".spaceworks-version"), sourceRef ? "local\n" : "0.1.0-main.1.0123456789ab\n");
+  writeFileSync(join(dir, ".spaceworks-version"), sourceRef ? "local\n" : "0.5.0-main.1.0123456789ab\n");
   if (sourceRef) writeFileSync(join(dir, ".spaceworks-source-ref"), `${sourceRef}\n`);
   for (const script of new Set(["update.sh", ...Object.values(ACTION_SCRIPTS).map((entry) => entry.split(" ")[0])])) {
     writeFileSync(join(dir, "scripts", script), "exit 99\n");
@@ -74,7 +74,7 @@ describe.skipIf(process.platform === "win32")("install.sh", { timeout: 180_000 }
   it("refuses unknown options, unknown actions and --release with --ref", () => {
     expect(install(["--bogus"]).status).toBe(64);
     expect(install(["--action", "explode"]).out).toContain("Unknown action 'explode'");
-    expect(install(["--release", "v0.1.0-main.1.0123456789ab", "--ref", "main"]).out).toContain("either --release or --ref");
+    expect(install(["--release", "v0.5.0-main.1.0123456789ab", "--ref", "main"]).out).toContain("either --release or --ref");
     expect(install(["--release", "latest"]).out).toContain("--release needs a published main release");
   });
 
@@ -89,7 +89,7 @@ describe.skipIf(process.platform === "win32")("install.sh", { timeout: 180_000 }
     expect(install(["--dir", dir, "--update", "--dry-run", "--yes"]).out).toContain(`would update ${dir}`);
     expect(install(["--dir", dir, "--action", "rollback", "--dry-run", "--yes"]).out).toContain("would roll");
     expect(install(["--dir", dir, "--action", "cancel", "--yes"]).out).toContain("Cancelled");
-    expect(readFileSync(join(dir, ".spaceworks-version"), "utf8")).toBe("0.1.0-main.1.0123456789ab\n");
+    expect(readFileSync(join(dir, ".spaceworks-version"), "utf8")).toBe("0.5.0-main.1.0123456789ab\n");
   });
 
   it("rebuilds a source install's ref on update and refuses a rollback there", () => {

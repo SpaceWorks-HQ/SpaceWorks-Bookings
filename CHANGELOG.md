@@ -39,8 +39,9 @@ of `docs/plans/2026-10-23-bookings-build.md` and the owner decisions in `docs/DE
   transaction (history backfilled), plus hand-posted income and expenses and reversals; a Finance page with money
   in, out and net by period, category, way of paying and space, CSV and Excel exports, an hourly consistency check
   and a `finance.entry_posted` webhook. Finance is the bookings manager's alone.
-- **Calmer dashboard.** Overview, Today, report and finance sections fold away; empty ones start folded and each
-  choice is remembered in the browser.
+- **Calmer dashboard.** Sidebar groups, overview, Today, report and finance sections and the secondary parts of booking
+  and issue pages fold away; empty ones start folded and each choice is remembered in the browser. The dark-mode
+  reveal switches colours at once inside the circle and starts after the account menu has closed.
 - **Ship.** README in the Space Works layout with light and dark screenshots, a demo with payments, three booking
   easter eggs, the colour-mode reveal from the control that changed it, a phone layout fix on public pages, and the
   operations checks recorded in `docs/plans/ops-notes.md`.

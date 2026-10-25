@@ -122,7 +122,7 @@ Each option of `install.sh --help` has an environment equivalent, for unattended
 |---|---|---|
 | `SWB_REPOSITORY` | `--repo` | Repository to install from (a fork works). |
 | `SWB_DIR` | `--dir` | Install directory (`/opt/spaceworks-bookings`). |
-| `SWB_RELEASE` | `--release` | A published release (`0.1.0-main.<run>.<sha12>`) instead of the latest. |
+| `SWB_RELEASE` | `--release` | A published release (`0.5.0-main.<run>.<sha12>`) instead of the latest. |
 | `SWB_REF` | `--ref` | A branch, tag or commit to build from source on the server; updates rebuild it. Recorded in `.spaceworks-source-ref`. |
 | `SWB_ACTION` | `--action` | On an existing install, one menu entry: `update`, `status`, `backup`, `backup-settings`, `restore`, `rollback`, `reconfigure`, `harden`, `recover-admin`, `support`, `runner`, `runner-remove`, `uninstall`, `cancel`. |
 | `SWB_NONINTERACTIVE` | `--non-interactive`, `--yes` | `1` never asks: questions take `SWB_ANSWER_<KEY>`, else their default, and the run stops on a missing or invalid answer. |
