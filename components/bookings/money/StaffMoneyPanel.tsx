@@ -21,7 +21,7 @@ export function StaffMoneyPanel({ slug, bookingId, reference, currency, timezone
   if (!view.canView) return null;
   const amount = (minor: number) => money(minor, currency);
   return <Card as="section" id="money"><CardHeader title="Money" description="Every payment and refund for this booking. Receipts and credit notes open as PDFs."
-    action={<a href={`/api/bookings/${slug}/${reference}/statement`} target="_blank" rel="noopener" className="text-ink underline underline-offset-4">Statement (PDF)</a>} />
+    action={<a href={`/api/bookings/${slug}/${reference}/statement`} target="_blank" rel="noopener" className="sw-hit text-ink underline underline-offset-4">Statement (PDF)</a>} />
     {view.writtenOffAt ? <Callout tone="warning" title="Written off">{view.writtenOffReason}</Callout> : null}
     {view.concessionMinor ? <p className="text-ink-secondary">The team gave back {amount(view.concessionMinor)} beyond what was due.</p> : null}
     <h3 className="mt-2 text-h4 text-ink">Payments</h3>

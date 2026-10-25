@@ -236,6 +236,19 @@
   /* One short expressive phrase per public layout; never in staff chrome. */
   .font-accent { font-family: var(--font-accent); font-weight: 500; letter-spacing: -0.01em; }
 
+  /* A 44px touch target around a small inline control (a link in a row, a disclosure, a compact icon button)
+     without changing how it looks or the line it sits on. */
+  .sw-hit { position: relative; }
+  .sw-hit::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
   /* Quiet dotted band at the top of dashboard cards. */
   .sw-dot-strip {
     background-color: rgb(var(--sw-ui-muted));

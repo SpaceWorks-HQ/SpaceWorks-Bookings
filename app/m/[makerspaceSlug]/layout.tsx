@@ -27,7 +27,7 @@ export default async function PublicMakerspaceLayout({ children, params }: Props
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="border-b border-line bg-canvas">
         <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href={`/m/${makerspace.slug}`} className="flex min-w-0 items-center gap-3 rounded-md">
+          <Link href={`/m/${makerspace.slug}`} className="flex min-h-11 min-w-0 items-center gap-3 rounded-md">
             <MakerspaceLogo name={makerspace.name} src={makerspace.logoUrl} size="sm" />
             <span className="truncate text-label font-semibold text-ink">{makerspace.name}</span>
           </Link>

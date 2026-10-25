@@ -149,7 +149,7 @@ export const Switch = forwardRef<ElementRef<typeof SwitchPrimitive.Root>, Compon
     <SwitchPrimitive.Root
       ref={ref}
       className={cn(
-        "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full bg-line-strong transition-colors duration-[180ms] ease-sw disabled:cursor-not-allowed disabled:bg-line data-[state=checked]:bg-primary",
+        "sw-hit relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full bg-line-strong transition-colors duration-[180ms] ease-sw disabled:cursor-not-allowed disabled:bg-line data-[state=checked]:bg-primary",
         className,
       )}
       {...props}
@@ -213,7 +213,7 @@ export function SegmentedControl<T extends string>({
           value={option.value}
           aria-label={option.ariaLabel}
           className={cn(
-            "inline-flex items-center justify-center gap-1.5 rounded-md font-semibold text-ink-muted transition-[background-color,color,box-shadow] duration-[120ms] ease-sw hover:text-ink data-[state=on]:bg-panel data-[state=on]:text-ink data-[state=on]:shadow-segment [&_svg]:size-4",
+            "sw-hit inline-flex items-center justify-center gap-1.5 rounded-md font-semibold text-ink-muted transition-[background-color,color,box-shadow] duration-[120ms] ease-sw hover:text-ink data-[state=on]:bg-panel data-[state=on]:text-ink data-[state=on]:shadow-segment [&_svg]:size-4",
             size === "sm" ? "min-h-8 px-3 text-[13px]" : "min-h-9 px-4 text-sm",
           )}
         >
@@ -237,7 +237,7 @@ export const FilterChip = forwardRef<HTMLButtonElement, React.ButtonHTMLAttribut
       type={type ?? "button"}
       aria-pressed={selected}
       className={cn(
-        "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors duration-[180ms] ease-sw [&_svg]:size-4",
+        "sw-hit inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors duration-[180ms] ease-sw [&_svg]:size-4",
         selected ? "border-[1.5px] border-primary bg-primary text-on-primary" : "border-line-strong bg-panel text-ink-secondary hover:bg-subtle hover:text-ink",
         className,
       )}

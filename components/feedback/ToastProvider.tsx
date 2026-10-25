@@ -86,7 +86,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   {toast.action.label}
                 </button>
               ) : null}
-              <button type="button" onClick={dismiss} aria-label="Dismiss" className="inline-flex size-8 shrink-0 items-center justify-center rounded-full opacity-70 hover:opacity-100">
+              <button type="button" onClick={dismiss} aria-label="Dismiss" className="sw-hit inline-flex size-8 shrink-0 items-center justify-center rounded-full opacity-70 hover:opacity-100">
                 <X aria-hidden className="size-4" />
               </button>
             </div>

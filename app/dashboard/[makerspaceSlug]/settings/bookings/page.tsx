@@ -7,7 +7,7 @@ export const metadata = { title: "Booking settings" };
 export default async function Page(props: Parameters<typeof loadBookingSettings>[0]) {
   const data = await loadBookingSettings(props);
   return <div className="flex flex-col gap-6">
-    <MakerspacePageHeader makerspace={data.makerspace} title="Booking settings" description="Defaults for every space. Individual spaces can override these rules." />
+    <MakerspacePageHeader makerspace={data.makerspace} title="Settings" description="Booking rules for every space. A space can override them." />
     <SettingsTabs slug={data.makerspace.slug} /><BookingRulesForm slug={data.makerspace.slug} {...data} />
   </div>;
 }

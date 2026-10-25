@@ -50,17 +50,17 @@ export default async function FinancePage(props: Parameters<typeof loadFinance>[
       {view.canManage ? <Card className="flex flex-col gap-3"><h2 className="text-h3 text-ink">Post an entry</h2><p className="text-ink-secondary">Rent, utilities, supplies or other income. Payments, refunds and repair payouts post themselves.</p>
         <ManualEntryForm makerspaceSlug={slug} currency={view.currency} today={bookingDate(new Date(), view.makerspace.timezone)} /></Card> : null}
     </div>
-    <Card padding="none">{view.entries.length === 0 ? <EmptyState mood="sleepy" title="No money moved in this period" /> : <Table label="Ledger">
+    {view.entries.length === 0 ? <EmptyState mood="sleepy" title="No money moved in this period">Payments, refunds, repair payouts and posted entries appear here.</EmptyState> : <Card padding="none"><Table label="Ledger" className="min-w-[720px]" sticky>
       <THead><TR><TH>When</TH><TH>What</TH><TH>How</TH><TH className="text-right">Amount</TH><TH>Source</TH></TR></THead>
       <TBody>{view.entries.map((entry) => <TR key={entry.id}>
         <TD className="whitespace-nowrap">{formatDayTime(entry.occurredAt, view.makerspace.timezone)}</TD>
         <TD>{entry.category}{entry.space ? <span className="block text-ink-muted">{entry.space}</span> : null}{entry.note ? <span className="block text-ink-muted">{entry.note}</span> : null}</TD>
         <TD>{entry.method}{entry.reference ? <span className="block text-ink-muted">{entry.reference}</span> : null}</TD>
         <TD className="text-right tabular-nums">{entry.direction === "IN" ? "" : "−"}{money(entry.amountMinor, entry.currency)}</TD>
-        <TD>{entry.href ? <Link className="underline underline-offset-4" href={entry.href}>Open</Link> : entry.sourceType === "REVERSAL" ? <Chip size="sm">Reversal</Chip> : entry.reversed ? <Chip size="sm">Reversed</Chip> : null}
-          {entry.reversible && view.canManage ? <details className="mt-2"><summary className="cursor-pointer underline underline-offset-4">Reverse</summary><div className="mt-3"><ReverseEntryForm makerspaceSlug={slug} entryId={entry.id} /></div></details> : null}</TD>
+        <TD>{entry.href ? <Link className="sw-hit underline underline-offset-4" href={entry.href} aria-label={`Open the source of ${entry.category}`}>Open</Link> : entry.sourceType === "REVERSAL" ? <Chip size="sm">Reversal</Chip> : entry.reversed ? <Chip size="sm">Reversed</Chip> : null}
+          {entry.reversible && view.canManage ? <details className="mt-2"><summary className="sw-hit w-fit cursor-pointer underline underline-offset-4">Reverse</summary><div className="mt-3"><ReverseEntryForm makerspaceSlug={slug} entryId={entry.id} /></div></details> : null}</TD>
       </TR>)}</TBody>
-    </Table>}</Card>
+    </Table></Card>}
     <Pagination page={view.page} pages={view.pages} query={{ period: view.period.preset }} />
   </div>;
 }

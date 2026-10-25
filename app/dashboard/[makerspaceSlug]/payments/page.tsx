@@ -52,7 +52,7 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
             href={query({ status: key === "all" ? "" : key, page: "" })}
             aria-current={filter === key ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors",
+              "sw-hit inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors",
               filter === key ? "border-primary bg-primary font-semibold text-on-primary" : "border-line bg-panel text-ink hover:bg-muted",
               key !== "all" && counts[key] === 0 && filter !== key && "opacity-60",
             )}
@@ -93,7 +93,7 @@ export default async function PaymentsPage({ params, searchParams }: Props) {
           {counts.all === 0 ? "Payments appear here when customers pay online or the team records one." : "Try another filter or search."}
         </EmptyState>
       ) : (
-        <Table label="Payments">
+        <Table label="Payments" className="min-w-[720px]" sticky>
           <THead>
             <tr>
               <TH>Customer</TH>

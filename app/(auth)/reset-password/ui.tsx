@@ -104,7 +104,7 @@ export function ResetPasswordForm(props: { token: string; email: string }) {
         </form>
       )}
 
-      <Link href="/login" className="self-center text-sm font-semibold text-ink-secondary underline underline-offset-4 hover:text-ink">
+      <Link href="/login" className="inline-flex min-h-11 items-center self-center text-sm font-semibold text-ink-secondary underline underline-offset-4 hover:text-ink">
         Back to sign in
       </Link>
     </div>

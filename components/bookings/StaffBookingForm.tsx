@@ -30,9 +30,9 @@ export function StaffBookingForm({ slug, timezone, currency, spaces, addOns, can
         skipConflicts: data.has("skipConflicts"), ...(canOverride ? overrideInput(data) : {}),
       })} onSuccess={(result) => setHold({ bookingId: result.bookingId, reference: result.reference, holdExpiresAt: result.holdExpiresAt, skipped: result.conflicts.length })}>
         <Field label="Space"><Dropdown value={spaceId} onChange={(event) => setSpaceId(event.target.value)}>{spaces.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</Dropdown></Field>
-        <p className="text-ink-muted">Capacity {space.capacity} per unit · {space.units} units</p>
+        <p className="text-ink-muted">{space.units > 1 ? `Capacity ${space.capacity} per unit · ${space.units} units` : `Capacity ${space.capacity}`}</p>
         <div className="grid gap-4 sm:grid-cols-2"><TextField name="start" label="Start" type="datetime-local" required /><TextField name="end" label="End" type="datetime-local" required />
-          <TextField name="quantity" label="Quantity" type="number" value={1} min={1} max={space.units} required /></div>
+          {space.units > 1 ? <TextField key={space.id} name="quantity" label="Quantity" type="number" value={1} min={1} max={space.units} required helper={`Up to ${space.units} units at once.`} /> : <input type="hidden" name="quantity" value={1} />}</div>
         <div onChange={(event) => setRecurring((event.target as HTMLInputElement).checked)}><CheckField name="recurring" label="Repeat this booking" /></div>
         {recurring ? <div className="grid gap-4 sm:grid-cols-2"><SelectField name="frequency" label="Repeat" value="WEEKLY" options={["DAILY", "WEEKLY"]} />
           <TextField name="interval" label="Repeat every (days or weeks)" type="number" value={1} min={1} max={12} required />

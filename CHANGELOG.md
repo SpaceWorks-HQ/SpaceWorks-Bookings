@@ -42,6 +42,18 @@ of `docs/plans/2026-10-23-bookings-build.md` and the owner decisions in `docs/DE
 - **Calmer dashboard.** Sidebar groups, overview, Today, report and finance sections and the secondary parts of booking
   and issue pages fold away; empty ones start folded and each choice is remembered in the browser. The dark-mode
   reveal switches colours at once inside the circle and starts after the account menu has closed.
+- **Changed: a page-by-page polish.** Every control is a 44px target (a `sw-hit` area where the control stays
+  compact); long tables (ledger, audit log, payments, issues, super-admin lists) keep their header in view and
+  scroll inside their box on a phone; the week calendar keeps the space column pinned, truncates with titles and
+  marks today in a contrast-safe colour; booking, arrival and member rows stack on a phone instead of squeezing;
+  amounts in stat tiles shrink to fit and never wrap after the minus sign; rates, add-ons, tax, surcharges and
+  refund tiers are typed in the currency or as a percentage instead of minor units and basis points; empty states
+  no longer sit inside a second border, a single page has no pager, dropdowns without a value say "Choose one",
+  the makerspace breadcrumb is a real breadcrumb, settings tabs share one title, an expired email link offers a way
+  back to sign in, a space with one unit asks for no quantity, and leftover Google sign-in wording is gone. The
+  sidebar no longer squeezes the makerspace switcher on short windows. The colour reveal switches transitions off
+  inside the view-transition update (a production build could capture a blank old page), and choosing the mode
+  from the account menu with the mouse leaves no focus ring behind.
 - **Ship.** README in the Space Works layout with light and dark screenshots, a demo with payments, three booking
   easter eggs, the colour-mode reveal from the control that changed it, a phone layout fix on public pages, and the
   operations checks recorded in `docs/plans/ops-notes.md`.

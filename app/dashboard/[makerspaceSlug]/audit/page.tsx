@@ -19,11 +19,11 @@ export default async function AuditPage(props: Parameters<typeof loadAuditLog>[0
       <Field label="Action"><Dropdown name="action" defaultValue={view.action}><option value="">All actions</option>{view.actions.map((action) => <option key={action} value={action}>{auditWords(action)}</option>)}</Dropdown></Field>
       <Button type="submit" variant="secondary">Filter</Button>
     </form>
-    <Card padding="none">{view.events.length === 0 ? <EmptyState mood="sleepy" title="Nothing recorded yet">Changes appear here as the team works.</EmptyState> : <Table label="Audit log">
+    {view.events.length === 0 ? <EmptyState mood="sleepy" title="Nothing recorded yet">Changes appear here as the team works.</EmptyState> : <Card padding="none"><Table label="Audit log" className="min-w-[640px]" sticky>
       <THead><TR><TH>When</TH><TH>Who</TH><TH>Action</TH><TH>Details</TH></TR></THead>
       <TBody>{view.events.map((event) => <TR key={event.id}><TD className="whitespace-nowrap">{formatDayTime(event.createdAt, view.makerspace.timezone)}</TD><TD>{event.actor}</TD>
         <TD><span className="block">{auditWords(event.action)}</span><span className="block text-ink-muted">{event.target}</span></TD><TD className="max-w-[420px] text-ink-secondary">{event.details}</TD></TR>)}</TBody>
-    </Table>}</Card>
+    </Table></Card>}
     <Pagination page={view.page} pages={view.pages} query={{ action: view.action || undefined }} />
   </div>;
 }

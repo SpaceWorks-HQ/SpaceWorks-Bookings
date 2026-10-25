@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { HAIRLINE, INK, LETTER, Lines, PAPER } from "./letter";
@@ -49,7 +50,7 @@ function Label() {
         <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] opacity-60">{LETTER.overline}</span>
         <span className="mt-0.5 block font-accent text-[16px] font-medium leading-tight">{LETTER.title}</span>
       </span>
-      <span className="hidden shrink-0 text-[12px] font-semibold opacity-60 transition-opacity group-hover:opacity-100 sm:inline">Open the letter →</span>
+      <span className="hidden shrink-0 items-center gap-1 text-[12px] font-semibold opacity-60 transition-opacity group-hover:opacity-100 sm:inline-flex">Open the letter<ArrowRight aria-hidden className="size-3.5" /></span>
     </span>
   );
 }

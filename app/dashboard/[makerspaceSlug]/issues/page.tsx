@@ -25,7 +25,7 @@ export default async function IssuesPage(props: Parameters<typeof loadIssues>[0]
       actions={view.flags.manage ? <Link className={buttonClasses({ variant: "secondary" })} href={`/dashboard/${view.makerspace.slug}/technicians`}>Technicians</Link> : undefined} />
     <NavTabs label="Status" items={tabs.map((tab) => ({ href: tab.value ? `${base}?status=${tab.value}` : base, label: tab.label, active: view.status === tab.value }))} />
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <Card padding="none">{view.issues.length === 0 ? <EmptyState mood="happy" title="Nothing here">No issues with this status.</EmptyState> : <Table label="Issues">
+      {view.issues.length === 0 ? <EmptyState mood="happy" title={view.status ? "Nothing with this status" : "Nothing open"}>{view.status ? "No issues with this status." : "Every space is working. Report a problem when something breaks."}</EmptyState> : <Card padding="none"><Table label="Issues" className="min-w-[640px]" sticky>
         <THead><TR><TH>Issue</TH><TH>Space</TH><TH>Priority</TH><TH>Status</TH><TH>Technician</TH></TR></THead>
         <TBody>{view.issues.map((issue) => <TR key={issue.id}>
           <TD><Link className="font-semibold text-ink underline underline-offset-4" href={`${base}/${issue.id}`}>{issue.title}</Link><span className="block text-ink-muted">{issue.reference} · {formatDayTime(issue.createdAt, view.makerspace.timezone)}</span></TD>
@@ -34,7 +34,7 @@ export default async function IssuesPage(props: Parameters<typeof loadIssues>[0]
           <TD>{STATUS_LABELS[issue.status]}{issue.myRequest && !view.flags.viewAll ? <span className="block text-ink-muted">{REQUEST_LABELS[issue.myRequest]}</span> : null}{issue.payout ? <span className="block text-ink-muted">{PAYOUT_LABELS[issue.payout]}</span> : null}</TD>
           <TD>{issue.technician ?? "Not yet"}</TD>
         </TR>)}</TBody>
-      </Table>}</Card>
+      </Table></Card>}
       {view.flags.report && view.spaces.length ? <Card className="flex flex-col gap-3"><h2 className="text-h3 text-ink">Report an issue</h2>
         <ReportIssueForm staff={{ makerspaceSlug: view.makerspace.slug, spaces: view.spaces }} /></Card> : null}
     </div>

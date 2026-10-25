@@ -33,10 +33,10 @@ function ContactFields({ value, staff }: { value?: Technician; staff?: boolean }
 export function TechnicianDirectory({ makerspaceSlug, technicians, unlisted }: { makerspaceSlug: string; technicians: Technician[]; unlisted: Array<{ userId: string; name: string }> }) {
   return <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
     <div className="flex flex-col gap-4">
-      {technicians.length === 0 ? <Card><EmptyState mood="sleepy" title="No technicians yet">Add the people you call when something breaks.</EmptyState></Card> : technicians.map((row) => <Card key={row.id} className="flex flex-col gap-3">
+      {technicians.length === 0 ? <EmptyState mood="sleepy" title="No technicians yet">Add the people you call when something breaks.</EmptyState> : technicians.map((row) => <Card key={row.id} className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2"><h2 className="text-h3 text-ink">{row.name}</h2><Chip size="sm" tone={row.kind === "STAFF" ? "info" : "neutral"}>{row.kind === "STAFF" ? "Team" : "Outside"}</Chip>{row.active ? null : <Chip size="sm" tone="warning">Inactive</Chip>}</div>
         <p className="text-ink-secondary">{[row.skills.join(", "), row.email, row.whatsapp && `WhatsApp ${row.whatsapp}`, row.telegramChatId && "Telegram"].filter(Boolean).join(" · ") || "No details yet"}</p>
-        <details><summary className="cursor-pointer text-ink underline underline-offset-4">Edit</summary>
+        <details><summary className="sw-hit w-fit cursor-pointer text-ink underline underline-offset-4">Edit</summary>
           <div className="mt-4"><ActionForm label="Save" action={(data) => updateTechnician({ makerspaceSlug, technicianId: row.id, fields: { ...fields(data), email: row.kind === "STAFF" ? row.email : text(data, "email") }, active: data.get("active") === "on" })}>
             <ContactFields value={row} staff={row.kind === "STAFF"} />
             <CheckField name="active" label="Active (can be asked)" checked={row.active} />

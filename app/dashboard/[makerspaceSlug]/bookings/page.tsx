@@ -24,11 +24,11 @@ export default async function Page(props: Parameters<typeof loadBookings>[0]) {
       <Field label="From local date"><Input type="date" name="from" defaultValue={data.from} /></Field><Field label="Through local date"><Input type="date" name="to" defaultValue={data.to} /></Field>
       <div><Button type="submit" variant="secondary">Filter bookings</Button></div>
     </form></Card>
-    {!rows.length ? <EmptyState title="No matching bookings">Choose other filters or create a booking for a customer.</EmptyState> : <Card>{rows.map((row) => <div key={row.id} className="flex flex-wrap items-center gap-4 border-b border-line py-4 last:border-0">
-      <div className="min-w-0 flex-1"><Link href={`${base}/${row.id}`} className="font-semibold text-accent-text underline-offset-4 hover:underline">{row.reference}</Link>
-        <p className="text-ink">{row.spaceName}{row.name ? ` · ${row.name}` : ""}</p>{row.email ? <p className="text-ink-secondary">{row.email}</p> : null}
+    {!rows.length ? <EmptyState title="No matching bookings">Choose other filters or create a booking for a customer.</EmptyState> : <Card>{rows.map((row) => <div key={row.id} className="flex flex-col gap-2 border-b border-line py-4 first:pt-0 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4">
+      <div className="min-w-0 flex-1"><Link href={`${base}/${row.id}`} className="sw-hit font-semibold text-accent-text underline-offset-4 hover:underline">{row.reference}</Link>
+        <p className="truncate text-ink" title={`${row.spaceName}${row.name ? ` · ${row.name}` : ""}`}>{row.spaceName}{row.name ? ` · ${row.name}` : ""}</p>{row.email ? <p className="truncate text-ink-secondary" title={row.email}>{row.email}</p> : null}
         <p className="text-ink-muted">{row.startsAt ? formatDayTime(row.startsAt, makerspace.timezone) : "No occurrences"}</p></div>
-      <Chip>{words(row.status)}</Chip><Chip>{row.paymentLabel}</Chip>
+      <div className="flex flex-wrap gap-2"><Chip>{words(row.status)}</Chip><Chip>{row.paymentLabel}</Chip></div>
     </div>)}</Card>}
     <Pagination page={data.page} pages={data.pages} query={{ q: data.q, status: data.status, space: data.space, from: data.from, to: data.to }} />
     <CalendarFeedCard slug={makerspace.slug} feed={data.feed} />

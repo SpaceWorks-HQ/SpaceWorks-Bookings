@@ -51,7 +51,7 @@ export default async function MakerspaceSettingsPage({ params }: Props) {
             <CopyMakerspaceUrl slug={makerspace.slug} />
             <Link
               href={`/m/${makerspace.slug}`}
-              className="inline-flex min-h-9 items-center gap-1 px-2 text-sm font-semibold text-ink-secondary underline-offset-4 hover:text-ink hover:underline"
+              className="inline-flex min-h-11 items-center gap-1 px-2 text-sm font-semibold text-ink-secondary underline-offset-4 hover:text-ink hover:underline"
             >
               Open
               <ExternalLink aria-hidden className="size-3.5" />

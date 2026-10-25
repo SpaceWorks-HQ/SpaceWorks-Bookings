@@ -200,8 +200,8 @@ export function LoginForm({ accountCreationEnabled }: { accountCreationEnabled: 
   return (
     <Tabs value={mode} onValueChange={(value) => switchMode(value as Mode)} className="flex flex-col gap-4">
       <TabsList aria-label="Sign in or create an account" className="grid auto-cols-fr grid-flow-col gap-1 rounded-full border border-line bg-surface p-1">
-        <TabsTrigger value="signin" className="min-h-10 justify-center rounded-full px-4 after:hidden border border-transparent data-[state=active]:border-line-strong data-[state=active]:bg-panel data-[state=active]:font-semibold">Sign in</TabsTrigger>
-        {accountCreationEnabled ? <TabsTrigger value="signup" className="min-h-10 justify-center rounded-full px-4 after:hidden border border-transparent data-[state=active]:border-line-strong data-[state=active]:bg-panel data-[state=active]:font-semibold">Create account</TabsTrigger> : null}
+        <TabsTrigger value="signin" className="min-h-11 justify-center rounded-full px-4 after:hidden border border-transparent data-[state=active]:border-line-strong data-[state=active]:bg-panel data-[state=active]:font-semibold">Sign in</TabsTrigger>
+        {accountCreationEnabled ? <TabsTrigger value="signup" className="min-h-11 justify-center rounded-full px-4 after:hidden border border-transparent data-[state=active]:border-line-strong data-[state=active]:bg-panel data-[state=active]:font-semibold">Create account</TabsTrigger> : null}
       </TabsList>
 
       <TabsContent value={mode} className="flex flex-col gap-4 pt-0">
@@ -247,7 +247,7 @@ export function LoginForm({ accountCreationEnabled }: { accountCreationEnabled: 
               />
             </Field>
             {!isSignUp ? (
-              <Link href="/reset-password" className="absolute right-0 top-0 text-sm font-semibold text-ink-secondary underline underline-offset-4 hover:text-ink">
+              <Link href="/reset-password" className="sw-hit absolute right-0 top-0 text-sm font-semibold text-ink-secondary underline underline-offset-4 hover:text-ink">
                 Forgot password?
               </Link>
             ) : null}
@@ -269,7 +269,7 @@ export function LoginForm({ accountCreationEnabled }: { accountCreationEnabled: 
           <button
             type="button"
             onClick={() => switchMode(isSignUp ? "signin" : "signup")}
-            className="self-center text-sm text-ink-secondary underline-offset-4 hover:text-ink hover:underline"
+            className="inline-flex min-h-11 items-center self-center text-sm text-ink-secondary underline-offset-4 hover:text-ink hover:underline"
           >
             {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Create one"}
           </button>

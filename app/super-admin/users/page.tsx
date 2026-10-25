@@ -48,7 +48,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
         ))}
       </nav>
 
-      <Table label="Users">
+      <Table label="Users" sticky>
         <THead>
           <tr>
             <TH>User</TH>

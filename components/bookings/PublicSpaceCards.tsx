@@ -9,9 +9,9 @@ import { money } from "@/lib/money/currencies";
 export function PublicSpaceCards({ spaces, slug, currency }: { spaces: Array<Space & { photos: SpacePhoto[] }>; slug: string; currency: string }) {
   return <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{spaces.map((space) => {
     const rate = displayRates(space).sort((a, b) => a.price - b.price)[0];
-    return <Card key={space.id} className="flex flex-col gap-3">
+    return <Card key={space.id} className="relative flex flex-col gap-3 transition-colors duration-[120ms] ease-sw hover:border-line-strong">
       {space.photos[0] ? <Image src={space.photos[0].url} alt={space.photos[0].alt || space.name} width={600} height={400} unoptimized className="aspect-[3/2] w-full rounded-xl object-cover" /> : null}
-      <h3 className="text-h3"><Link className="underline-offset-4 hover:underline" href={`/m/${slug}/spaces/${space.slug}`}>{space.name}</Link></h3>
+      <h3 className="text-h3"><Link className="underline-offset-4 after:absolute after:inset-0 after:rounded-xl after:content-[''] hover:underline" href={`/m/${slug}/spaces/${space.slug}`}>{space.name}</Link></h3>
       <p>{words(space.kind)} · {capacityText(space)}</p>
       {space.summary ? <p className="text-ink-secondary">{space.summary}</p> : null}
       {isFreeSpace(space) ? <p>Free to book</p> : rate ? <p>From {money(rate.price, currency)} {rate.label}{rate.member !== null ? <span className="block text-ink-secondary">Members from {money(rate.member, currency)} {rate.label}</span> : null}</p> : <p>Contact the makerspace for prices.</p>}

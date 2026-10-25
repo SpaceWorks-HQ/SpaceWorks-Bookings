@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 import { loadPublicSpacePage } from "@/lib/views/app__m__makerspaceSlug__spaces__spaceSlug__page";
 import { capacityText, displayRates, isFreeSpace } from "@/lib/bookings/publicUi";
 import { words } from "@/lib/bookings/ui";
@@ -11,7 +12,7 @@ import { PublicBookingForm } from "@/components/bookings/PublicBookingForm";
 export default async function PublicSpacePage({ params }: { params: Promise<{ makerspaceSlug: string; spaceSlug: string }> }) {
   const { makerspace, space, rules, addOns, signedIn, contact, today } = await loadPublicSpacePage({ params });
   return <div className="mx-auto flex max-w-[1120px] flex-col gap-8 px-4 py-10 sm:px-6">
-    <Link href={`/m/${makerspace.slug}`} className="underline underline-offset-4">All spaces at {makerspace.name}</Link>
+    <Link href={`/m/${makerspace.slug}`} className="inline-flex min-h-11 w-fit items-center gap-1.5 underline underline-offset-4"><ArrowLeft aria-hidden className="size-4 shrink-0" />All spaces at {makerspace.name}</Link>
     <h1 className="text-display-m">{space.name}</h1><p>{words(space.kind)} · {capacityText(space)}</p>
     {space.photos.length ? <div className="grid gap-4 sm:grid-cols-2">{space.photos.map((photo) => <Image key={photo.id} src={photo.url} alt={photo.alt || space.name} width={800} height={500} unoptimized className="aspect-[8/5] w-full rounded-xl object-cover" />)}</div> : null}
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-2"><section className="flex flex-col gap-6" aria-label="About this space">

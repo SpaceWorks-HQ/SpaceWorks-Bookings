@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { loadBookingAvailability } from "@/app/actions/booking-availability";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Dropdown } from "@/components/ui/field";
@@ -40,9 +41,9 @@ export function AvailabilityPicker({ slug, spaceId, zone, today, units, rules, o
   function reset() { setSelected(""); setStarts([]); setMessage("Loading available times…"); onChange(null); }
   return <fieldset className="flex min-w-0 flex-col gap-4"><legend className="mb-3 text-h3">Choose a time</legend>
     <p className="text-ink-secondary">All times are in {zone}.</p>
-    <div className="flex flex-wrap items-end gap-2"><Button variant="secondary" disabled={date <= today} onClick={() => { reset(); setDate(navigateBookingDate(date, -1)); }}>Previous day</Button>
-      <Field label="Date" className="min-w-[10rem] flex-1"><Input type="date" min={today} value={date} onChange={(event) => { reset(); setDate(event.target.value); }} /></Field>
-      <Button variant="secondary" disabled={!date} onClick={() => { reset(); setDate(navigateBookingDate(date, 1)); }}>Next day</Button></div>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end"><Field label="Date" className="min-w-[10rem] flex-1"><Input type="date" min={today} value={date} onChange={(event) => { reset(); setDate(event.target.value); }} /></Field>
+      <div className="flex gap-2"><Button variant="secondary" className="flex-1 sm:flex-none" startIcon={<ChevronLeft />} disabled={date <= today} title={date <= today ? "Bookings start from today" : undefined} onClick={() => { reset(); setDate(navigateBookingDate(date, -1)); }}>Previous day</Button>
+        <Button variant="secondary" className="flex-1 sm:flex-none" endIcon={<ChevronRight />} disabled={!date} onClick={() => { reset(); setDate(navigateBookingDate(date, 1)); }}>Next day</Button></div></div>
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label="Duration"><Dropdown value={duration} onChange={(event) => { reset(); setDuration(Number(event.target.value)); }}>
       {durations.map((minutes) => <option key={minutes} value={minutes}>{minutes} minutes</option>)}</Dropdown></Field>
       {units > 1 ? <Field label="Quantity"><Input type="number" min={1} max={units} value={quantity} onChange={(event) => { reset(); setQuantity(Number(event.target.value)); }} /></Field> : null}</div>

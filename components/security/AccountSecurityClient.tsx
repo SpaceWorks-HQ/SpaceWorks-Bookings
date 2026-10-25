@@ -61,7 +61,7 @@ export function AccountSecurityClient(props: { mfaEnabled: boolean }) {
         {!enabled ? (
           <div className="flex flex-col gap-4 rounded-xl bg-warning-bg p-4 text-warning-fg sm:flex-row sm:items-center sm:p-5">
             <ShieldAlert aria-hidden className="size-5 shrink-0" />
-            <p className="min-w-0 flex-1 text-body-ui">Add an authenticator app so a stolen password isn’t enough. Google sign-in follows your Google security.</p>
+            <p className="min-w-0 flex-1 text-body-ui">Add an authenticator app so a stolen password isn’t enough.</p>
             {!enrollment ? (
               <Button variant="primary" className="w-full shrink-0 sm:w-auto" disabled={pending} onClick={startEnrollment}>
                 Set up authenticator
@@ -71,7 +71,7 @@ export function AccountSecurityClient(props: { mfaEnabled: boolean }) {
         ) : (
           <div className="flex items-start gap-3 rounded-xl bg-success-bg p-4 text-success-fg sm:p-5">
             <ShieldCheck aria-hidden className="mt-0.5 size-5 shrink-0" />
-            <p className="min-w-0 flex-1 text-body-ui">Password sign-in needs a six-digit authenticator code. Google sign-in follows your Google security.</p>
+            <p className="min-w-0 flex-1 text-body-ui">Signing in needs a six-digit authenticator code, with a password or an emailed link.</p>
           </div>
         )}
 

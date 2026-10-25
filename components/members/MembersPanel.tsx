@@ -13,13 +13,13 @@ export function MembersPanel({ slug, members }: { slug: string; members: Member[
   const [report, setReport] = useState<{ imported: number; errors: Array<{ line: number; message: string }> } | null>(null);
   return <div className="flex flex-col gap-6">
     {!members.length ? <EmptyState title="No matching members">Add an email to offer member rates, or change your search.</EmptyState> : <Card>
-      {members.map((member) => <div key={member.id} className="flex flex-wrap items-center gap-3 border-b border-line py-4 last:border-0">
-        <div className="min-w-0 flex-1 text-ink"><p className="break-words font-semibold">{member.name || member.email}</p><p className="break-words">{member.email}</p><p className="text-ink-muted">{member.validUntil ? `Valid through ${member.validUntil}` : "No end date"}</p></div>
-        <Chip>{member.active ? "Active" : "Inactive"}</Chip><Button variant="secondary" onClick={() => setEditing(member)}>Edit member</Button>
-        <ActionForm label="Remove member" confirm="Remove member-rate eligibility for this email? Existing bookings keep their rates." action={() => removeMember({ makerspaceSlug: slug, memberId: member.id })} />
+      {members.map((member) => <div key={member.id} className="flex flex-col gap-3 border-b border-line py-4 first:pt-0 last:border-0 last:pb-0 md:flex-row md:items-center">
+        <div className="min-w-0 flex-1 text-ink"><p className="truncate font-semibold" title={member.name || member.email}>{member.name || member.email}</p><p className="truncate" title={member.email}>{member.email}</p><p className="text-ink-muted">{member.validUntil ? `Valid through ${member.validUntil}` : "No end date"}</p></div>
+        <div className="flex flex-wrap items-center gap-3"><Chip>{member.active ? "Active" : "Inactive"}</Chip><Button variant="secondary" onClick={() => { setEditing(member); requestAnimationFrame(() => document.getElementById("member-form")?.scrollIntoView({ block: "start" })); }}>Edit member</Button>
+          <ActionForm label="Remove member" confirm="Remove member-rate eligibility for this email? Existing bookings keep their rates." action={() => removeMember({ makerspaceSlug: slug, memberId: member.id })} /></div>
       </div>)}
     </Card>}
-    <Card><CardHeader title={editing ? "Edit member" : "Add member"} description="Email identifies the member. Rates are checked against each occurrence's local date." />
+    <Card id="member-form" className="scroll-mt-6"><CardHeader title={editing ? "Edit member" : "Add member"} description="Email identifies the member. Rates are checked against each occurrence's local date." />
       <ActionForm guard key={editing?.id ?? "new"} label={editing ? "Save member" : "Add member"} onSuccess={() => setEditing(null)} action={(data) => upsertMember({ makerspaceSlug: slug, member: {
         email: editing?.email ?? text(data, "email"), name: text(data, "name"), validUntil: text(data, "validUntil") || null, active: data.has("active"), note: text(data, "note"),
       } })}>

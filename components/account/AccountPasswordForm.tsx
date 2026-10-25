@@ -26,7 +26,7 @@ export function AccountPasswordForm({ hasPassword }: { hasPassword: boolean }) {
       title={hasPassword ? "Password" : title}
       description={hasPassword
         ? "Changing your password signs you out on every device."
-        : "Add email-and-password sign-in alongside your Google account. You will be signed out after it is set."}
+        : "Add a password alongside emailed sign-in links. You will be signed out after it is set."}
     >
       <form
         className="flex max-w-md flex-col gap-4"

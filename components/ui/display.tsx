@@ -163,12 +163,19 @@ export function StatTile({ label, value, hint, progress, tone = "default", class
   const body = (
     <>
       <span className="block text-sm text-ink-muted">{label}</span>
-      <span className="mt-1 block font-display text-[32px] font-semibold leading-tight tracking-[-0.01em] tabular-nums text-ink">{value}</span>
+      {/* Long values (amounts) shrink with the tile instead of breaking after a minus sign or overflowing it. */}
+      <span
+        className="mt-1 block font-display text-[32px] font-semibold leading-tight tracking-[-0.01em] tabular-nums text-ink"
+        style={typeof value === "string" && value.length > 6 ? { fontSize: `clamp(18px, ${(180 / value.length).toFixed(1)}cqi, 32px)` } : undefined}
+      >
+        {/* A real minus joined to its amount (U+2212, U+2060), so "-₹11,300.00" never wraps after the sign. */}
+        {typeof value === "string" ? value.replace(/(^|\s)-(?=\S)/g, "$1−⁠") : value}
+      </span>
       {hint ? <span className="mt-0.5 block text-caption text-ink-muted">{hint}</span> : null}
       {progress ? <ProgressBar className="mt-2.5" value={progress.value} max={progress.max} tone={progress.tone ?? "accent"} /> : null}
     </>
   );
-  const classes = cn("block rounded-xl border p-4", tone === "attention" ? "border-transparent bg-warning-bg [&_span]:text-warning-fg" : "border-line bg-panel", href && "transition-colors hover:bg-subtle", className);
+  const classes = cn("block rounded-xl border p-4 [container-type:inline-size]", tone === "attention" ? "border-transparent bg-warning-bg [&_span]:text-warning-fg" : "border-line bg-panel", href && "transition-colors hover:bg-subtle", className);
   return href ? <Link href={href} className={classes}>{body}</Link> : <div className={classes}>{body}</div>;
 }
 

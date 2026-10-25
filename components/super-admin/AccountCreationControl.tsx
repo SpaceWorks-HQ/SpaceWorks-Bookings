@@ -12,7 +12,7 @@ export function AccountCreationControl({ initialEnabled }: { initialEnabled: boo
 
   return (
     <Card as="section" className="rounded-xl">
-      <CardHeader title="New account creation" description="When disabled, password and Google sign-in remain available only for existing users." />
+      <CardHeader title="New account creation" description="When off, only existing accounts can sign in, with a password or an emailed link." />
       <div className="flex flex-col gap-3">
         {error ? <Callout tone="danger" role="alert">{error}</Callout> : null}
         <SwitchRow

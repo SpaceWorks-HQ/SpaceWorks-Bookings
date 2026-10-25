@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { rescheduleOccurrence } from "@/app/actions/bookings-staff";
 import { Card, Chip } from "@/components/ui/display";
 import { formatDate, formatTimeRange } from "@/lib/format/datetime";
@@ -19,7 +20,7 @@ export function OccurrenceCard({ slug, bookingId, bookingStatus, row, timezone, 
     <Chip>{row.noShowAt ? "No-show" : words(row.status)}</Chip><span className="text-ink">{money(row.priceMinor, currency)}</span></div>
     <p className="mb-4 text-ink-secondary">{formatTimeRange(row.startsAt, row.endsAt, timezone)}</p>
     {firstUnit && scheduled && bookingStatus === "CONFIRMED" && canManage ? <AttendanceActions slug={slug} occurrenceId={row.id} noShow={Boolean(row.noShowAt)} /> : null}
-    {firstUnit && scheduled && canManage && ["REQUESTED", "CONFIRMED"].includes(bookingStatus) ? <details className="mt-4"><summary className="cursor-pointer text-accent-text">Reschedule this occurrence (all its units)</summary>
+    {firstUnit && scheduled && canManage && ["REQUESTED", "CONFIRMED"].includes(bookingStatus) ? <details className="group mt-4"><summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-accent-text [&::-webkit-details-marker]:hidden"><ChevronRight aria-hidden className="size-4 shrink-0 transition-transform duration-200 group-open:rotate-90" />Reschedule this occurrence (all its units)</summary>
       <div className="mt-4"><ActionForm guard label="Reschedule occurrence" action={(data) => rescheduleOccurrence({ makerspaceSlug: slug, bookingId, occurrenceId: row.id,
         start: localInputToIso(text(data, "start"), timezone), end: localInputToIso(text(data, "end"), timezone, true), ...(canOverride ? overrideInput(data) : {}),
       })}>

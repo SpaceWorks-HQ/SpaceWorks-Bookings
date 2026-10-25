@@ -126,7 +126,7 @@ function SidebarContents({ user, makerspaces, onNavigate }: { user: ShellUser; m
   const active = current?.status === "ACTIVE";
 
   return (
-    <div className="flex h-full flex-col gap-4 px-3 py-3.5">
+    <div className="flex min-h-full flex-col gap-4 px-3 py-3.5 [&>*]:shrink-0">
       <div className="pl-2 pt-1">
         <BrandHomeLink href="/dashboard" stacked />
       </div>
@@ -193,7 +193,7 @@ export function AppShell({ user, makerspaces, children }: { user: ShellUser; mak
       </aside>
 
       <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-canvas px-4 lg:hidden">
-        <Link href="/dashboard" aria-label="Space Works Bookings home" className="inline-flex shrink-0 items-center rounded-md">
+        <Link href="/dashboard" aria-label="Space Works Bookings home" className="inline-flex min-h-11 shrink-0 items-center rounded-md">
           <SpaceWorksProductLogo height={30} label={null} />
         </Link>
         <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>

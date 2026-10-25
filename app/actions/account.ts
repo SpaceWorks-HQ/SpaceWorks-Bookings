@@ -124,7 +124,7 @@ export async function updateAccountPassword(
   } else if (!(await hasRecentAuthentication())) {
     return {
       ok: false,
-      error: "Sign in with Google again before adding a password.",
+      error: "Sign in again before adding a password.",
     };
   }
 

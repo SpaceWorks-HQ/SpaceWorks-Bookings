@@ -66,7 +66,7 @@ export const SelectItem = forwardRef<
   return (
     <SelectPrimitive.Item
       ref={ref}
-      className={cn("relative flex min-h-10 cursor-pointer select-none items-start gap-2 rounded-md py-2 pl-3 pr-9 text-body-ui outline-none data-[disabled]:pointer-events-none data-[disabled]:text-ink-disabled data-[highlighted]:bg-muted", className)}
+      className={cn("relative flex min-h-11 cursor-pointer select-none items-start gap-2 rounded-md py-2 pl-3 pr-9 text-body-ui outline-none data-[disabled]:pointer-events-none data-[disabled]:text-ink-disabled data-[highlighted]:bg-muted", className)}
       {...props}
     >
       <span className="min-w-0">
@@ -179,7 +179,7 @@ export const Dropdown = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLS
           data-placeholder={isPlaceholder ? "" : undefined}
           className={className}
         >
-          {selected ? selected.label : null}
+          {selected ? selected.label : "Choose one"}
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (

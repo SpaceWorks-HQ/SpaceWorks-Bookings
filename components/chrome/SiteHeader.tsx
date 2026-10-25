@@ -33,7 +33,7 @@ export function BrandHomeLink({ href = "/", stacked = false, className }: { href
     );
   }
   return (
-    <Link href={href} aria-label="Space Works Bookings home" className={cn("inline-flex shrink-0 items-center gap-3 rounded-md", className)}>
+    <Link href={href} aria-label="Space Works Bookings home" className={cn("inline-flex min-h-11 min-w-11 shrink-0 items-center gap-3 rounded-md", className)}>
       <SpaceWorksLogo variant="app-icon" height={36} label={null} className="sm:hidden" />
       <SpaceWorksProductLogo height={32} label={null} className="hidden sm:inline-flex" />
     </Link>

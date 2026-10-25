@@ -33,7 +33,7 @@ export default async function ReportsPage(props: Parameters<typeof loadReports>[
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       <KpiTile label="Bookings" value={total} href={`/dashboard/${view.makerspace.slug}/bookings`} />
       <KpiTile label="Utilisation" value={view.overall} format="percent" hint="Booked time over open time" />
-      <KpiTile label="No-show rate" value={view.noShows.rate} format="percent" hint={`${view.noShows.noShows} of ${view.noShows.noShows + view.noShows.attended} visits`} />
+      <KpiTile label="No-show rate" value={view.noShows.rate} format="percent" hint={`${view.noShows.noShows} of ${view.noShows.noShows + view.noShows.attended} ${view.noShows.noShows + view.noShows.attended === 1 ? "visit" : "visits"}`} />
       {view.finance ? <KpiTile label="Received" value={view.revenueSeries.reduce((sum, value) => sum + value, 0)} format={`money:${view.currency}`} /> : <KpiTile label="Cancelled" value={view.statuses.CANCELLED ?? 0} />}
     </div>
     <ChartFrame collapse={{ id: "reports-utilisation", empty: view.perSpace.length === 0 }} title="Utilisation by space" description="Booked hours over open hours (every unit of a space counts).">

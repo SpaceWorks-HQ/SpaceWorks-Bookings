@@ -8,6 +8,7 @@ import { PROVIDER_LABELS } from "@/lib/payments/labels";
 import { money } from "@/lib/money/currencies";
 import { formatDayTime } from "@/lib/format/datetime";
 import { words } from "@/lib/bookings/ui";
+import { formatCalendarDate } from "@/lib/calendarDate";
 
 export const metadata: Metadata = { title: "Reconciliation", robots: { index: false, follow: false } };
 
@@ -42,7 +43,7 @@ export default async function ReconciliationPage({ params }: { params: Promise<{
       </TBody></Table></Card> : null}
     <Card as="section"><CardHeader title="Daily totals" description={`Paid in and refunded per provider, by day in ${zone}.`} />
       {view.days.length === 0 ? <p className="text-ink-muted">No money moved in the last 14 days.</p> : <Table label="Daily totals"><THead><TR><TH>Day</TH><TH>Provider</TH><TH className="text-right">Paid in</TH><TH className="text-right">Refunded</TH><TH className="text-right">Net</TH></TR></THead><TBody>
-        {view.days.map((row) => <TR key={`${row.day}-${row.provider}-${row.currency}`}><TD>{row.day}</TD><TD>{provider(row.provider)}</TD>
+        {view.days.map((row) => <TR key={`${row.day}-${row.provider}-${row.currency}`}><TD className="whitespace-nowrap">{formatCalendarDate({ year: Number(row.day.slice(0, 4)), month: Number(row.day.slice(5, 7)), day: Number(row.day.slice(8, 10)) })}</TD><TD>{provider(row.provider)}</TD>
           <TD className="text-right tabular-nums">{money(row.inMinor, row.currency)} <span className="text-ink-muted">({row.payments})</span></TD>
           <TD className="text-right tabular-nums">{money(row.outMinor, row.currency)} <span className="text-ink-muted">({row.refunds})</span></TD>
           <TD className="text-right tabular-nums">{money(row.inMinor - row.outMinor, row.currency)}</TD></TR>)}

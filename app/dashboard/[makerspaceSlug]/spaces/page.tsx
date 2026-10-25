@@ -15,8 +15,8 @@ export default async function Page(props: Parameters<typeof loadSpaces>[0]) {
     actions={<Button asChild><Link href={`${base}/new`}>Add space</Link></Button>} />
     <NavTabs label="Space status" items={["all", "published", "draft", "archived"].map((value) => ({ href: `?status=${value}`, label: words(value), active: value === status }))} />
     {!rows.length ? <EmptyState title="No spaces here">Add a space or choose a different status.</EmptyState> : <div className="grid gap-4 sm:grid-cols-2">{rows.map((row) => <Card key={row.id}>
-      <div className="mb-3 flex items-center justify-between gap-3"><Link className="font-semibold text-accent-text underline-offset-4 hover:underline" href={`${base}/${row.id}`}>{row.name}</Link><Chip>{row.archivedAt ? "Archived" : row.published ? "Published" : "Draft"}</Chip></div>
-      <p className="text-ink-secondary">{words(row.kind)} · Capacity {row.capacity} · {row.units} units</p>
+      <div className="mb-3 flex items-center justify-between gap-3"><Link className="sw-hit min-w-0 truncate font-semibold text-accent-text underline-offset-4 hover:underline" href={`${base}/${row.id}`} title={row.name}>{row.name}</Link><Chip>{row.archivedAt ? "Archived" : row.published ? "Published" : "Draft"}</Chip></div>
+      <p className="text-ink-secondary">{words(row.kind)} · Capacity {row.capacity}{row.units > 1 ? ` · ${row.units} units` : ""}</p>
     </Card>)}</div>}<Pagination page={page} pages={pages} query={{ status }} />
   </div>;
 }

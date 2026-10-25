@@ -42,7 +42,7 @@ export function ChartFrame({ title, description, drill, table, children, classNa
     const link = drill ? <Link href={drill.href} className="sw-print-hide inline-flex min-h-11 items-center gap-1 text-label font-semibold text-accent-text underline-offset-4 hover:underline">{drill.label ?? "See the list"}<ArrowRight aria-hidden className="size-4" /></Link> : null;
     return <CollapsibleSection id={collapse.id} title={title} description={description} empty={collapse.empty} className={cn("sw-chart", className)} actions={action || link ? <>{action}{link}</> : undefined}>
       {children}
-      {table && table.rows.length ? <details className="sw-print-hide mt-4"><summary className="inline-flex min-h-9 cursor-pointer select-none items-center text-label text-ink-secondary">Show as table</summary><DataTable table={table} className="mt-2" /></details> : null}
+      {table && table.rows.length ? <details className="sw-print-hide mt-4"><summary className="inline-flex min-h-11 cursor-pointer select-none items-center text-label text-ink-secondary">Show as table</summary><DataTable table={table} className="mt-2" /></details> : null}
     </CollapsibleSection>;
   }
   return (
@@ -55,7 +55,7 @@ export function ChartFrame({ title, description, drill, table, children, classNa
         <span className="flex shrink-0 items-center gap-3">
           {action}
           {drill ? (
-            <Link href={drill.href} className="sw-print-hide inline-flex min-h-9 items-center gap-1 text-label font-semibold text-accent-text underline-offset-4 hover:underline">
+            <Link href={drill.href} className="sw-print-hide inline-flex min-h-11 items-center gap-1 text-label font-semibold text-accent-text underline-offset-4 hover:underline">
               {drill.label ?? "See the list"}
               <ArrowRight aria-hidden className="size-4" />
             </Link>
@@ -65,7 +65,7 @@ export function ChartFrame({ title, description, drill, table, children, classNa
       <div className="min-w-0">{children}</div>
       {table && table.rows.length ? (
         <details className="group sw-print-hide">
-          <summary className="inline-flex min-h-9 cursor-pointer select-none items-center text-label text-ink-secondary underline-offset-4 hover:text-ink hover:underline">
+          <summary className="inline-flex min-h-11 cursor-pointer select-none items-center text-label text-ink-secondary underline-offset-4 hover:text-ink hover:underline">
             <span className="group-open:hidden">Show as table</span>
             <span className="hidden group-open:inline">Hide table</span>
           </summary>

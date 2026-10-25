@@ -34,7 +34,7 @@ function metadataSummary(value: unknown) {
 export function AuditTable({ events, label, empty = "No audit events found.", hideMakerspace = false }: { events: AuditRow[]; label: string; empty?: string; hideMakerspace?: boolean }) {
   const columns = hideMakerspace ? 5 : 6;
   return (
-    <Table label={label} className="min-w-[900px]">
+    <Table label={label} className="min-w-[900px]" sticky>
       <THead>
         <tr>
           <TH>When</TH>

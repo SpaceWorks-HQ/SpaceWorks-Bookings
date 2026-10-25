@@ -16,8 +16,8 @@ const publicLinks = [
   { label: "Terms", href: "/terms" },
 ];
 
-const linkClasses = "text-body-ui text-ink-secondary underline-offset-4 transition-colors hover:text-ink hover:underline";
-const creditLinkClasses = "underline underline-offset-4 hover:text-ink";
+const linkClasses = "sw-hit text-body-ui text-ink-secondary underline-offset-4 transition-colors hover:text-ink hover:underline";
+const creditLinkClasses = "sw-hit underline underline-offset-4 hover:text-ink";
 
 /** Who runs this instance, e.g. "Shaan Shoukath, Systems Engineer". Inlined at build time; empty hides it. */
 const HOSTED_BY = process.env.NEXT_PUBLIC_HOSTED_BY?.trim() ?? "";
@@ -55,7 +55,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-[1160px] flex-col gap-5 px-4 py-10 sm:px-6 xl:px-0">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-2.5">
-            <Link href="/" className="inline-flex items-center self-start" aria-label="Space Works Bookings home">
+            <Link href="/" className="inline-flex min-h-11 items-center self-start" aria-label="Space Works Bookings home">
               <SpaceWorksProductLogo height={32} label={null} />
             </Link>
             <p className="text-body-ui text-ink-secondary">Space booking for the people who make things happen.</p>
@@ -88,7 +88,7 @@ export function MakerspaceFooter() {
   return (
     <footer className="mt-auto border-t border-line bg-canvas">
       <div className="mx-auto flex max-w-[1160px] flex-col gap-3 px-4 py-6 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <Link href="/" className="inline-flex items-center gap-2 self-start hover:text-ink">
+        <Link href="/" className="inline-flex min-h-11 items-center gap-2 self-start hover:text-ink">
           <SpaceWorksLogo variant="app-icon" height={18} label={null} />
           <span>Powered by Space Works</span>
         </Link>

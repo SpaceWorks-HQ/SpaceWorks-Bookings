@@ -16,11 +16,11 @@ export function RefundTiersForm({ slug, spaceId, tiers, inherited, canMoney }: {
   return <Card><CardHeader title="Refund policy" description="The first tier whose notice is met applies. Venue cancellations refund everything paid." />
     <Chip>{tiers.length ? "Space policy" : "Inherited from makerspace"}</Chip>
     <ActionForm guard disabled={!canMoney} label="Save refund policy" action={() => replaceRefundTiers({ makerspaceSlug: slug, spaceId, tiers: inherit ? [] : rows })}>
-      {!canMoney ? <p className="text-ink-muted">Read-only: payment settings access is required to change this policy.</p> : null}
+      {!canMoney ? <p className="text-ink-muted">Only the bookings manager can change the refund policy.</p> : null}
       <div onChange={(event) => setInherit((event.target as HTMLInputElement).checked)}><CheckField name="inherit" label="Inherit makerspace refund policy" checked={inherit} disabled={!canMoney} /></div>
       {visibleRows.map((tier, index) => <div className="flex flex-wrap items-end gap-3" key={index}>
         <Field label="Minimum notice (hours)"><Input type="number" min={0} max={8760} required value={tier.minHoursBefore} disabled={!canMoney || inherit} onChange={(event) => setRows(rows.map((row, i) => i === index ? { ...row, minHoursBefore: Number(event.target.value) } : row))} /></Field>
-        <Field label="Refund (basis points, 100 = 1%)"><Input type="number" min={0} max={10000} required value={tier.refundBps} disabled={!canMoney || inherit} onChange={(event) => setRows(rows.map((row, i) => i === index ? { ...row, refundBps: Number(event.target.value) } : row))} /></Field>
+        <Field label="Refund (%)"><Input type="number" min={0} max={100} step="any" required value={tier.refundBps / 100} disabled={!canMoney || inherit} onChange={(event) => setRows(rows.map((row, i) => i === index ? { ...row, refundBps: Math.round(Number(event.target.value) * 100) } : row))} /></Field>
         {canMoney && !inherit ? <Button type="button" variant="quiet" onClick={() => setRows(rows.filter((_, i) => i !== index))}>Remove tier</Button> : null}
       </div>)}
       {!visibleRows.length ? <p className="text-ink-muted">No tiers: customer cancellations receive a full refund, subject to any non-refundable deposit.</p> : null}

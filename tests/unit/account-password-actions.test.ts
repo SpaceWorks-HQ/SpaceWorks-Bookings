@@ -52,17 +52,17 @@ describe("account password actions", () => {
     expect(mocks.userUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ passwordHash: "new-hash", sessionVersion: { increment: 1 } }) }));
   });
 
-  it("lets a recently authenticated Google-only user add a password", async () => {
+  it("lets a recently authenticated user without a password add one", async () => {
     mocks.userFind.mockResolvedValue({ email: "person@example.com", passwordHash: null });
     await expect(updateAccountPassword({ newPassword: "new-password", confirmPassword: "new-password" })).resolves.toEqual({ ok: true, data: { passwordSet: true } });
     expect(mocks.compare).not.toHaveBeenCalled();
     expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "ACCOUNT_PASSWORD_ADDED" }) }));
   });
 
-  it("requires a fresh Google sign-in before adding a password", async () => {
+  it("requires a fresh sign-in before adding a password", async () => {
     mocks.userFind.mockResolvedValue({ email: "person@example.com", passwordHash: null });
     mocks.recent.mockResolvedValue(false);
-    await expect(updateAccountPassword({ newPassword: "new-password", confirmPassword: "new-password" })).resolves.toEqual({ ok: false, error: "Sign in with Google again before adding a password." });
+    await expect(updateAccountPassword({ newPassword: "new-password", confirmPassword: "new-password" })).resolves.toEqual({ ok: false, error: "Sign in again before adding a password." });
   });
 });
 

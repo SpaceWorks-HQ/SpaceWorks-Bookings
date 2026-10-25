@@ -19,20 +19,20 @@ export default async function PublicMakerspacePage({ params }: { params: Promise
           </div>
           {makerspace.description ? <p className="whitespace-pre-wrap text-body-l text-ink-secondary">{makerspace.description}</p> : null}
         </div>
-        <dl className="flex shrink-0 flex-col gap-3 rounded-2xl border border-line bg-panel p-5 text-body-ui lg:w-[300px]">
-          {place ? <div className="flex items-center gap-2.5"><dt><MapPin aria-label="Location" className="size-4 text-ink-muted" /></dt><dd>{place}</dd></div> : null}
-          {makerspace.contactEmail ? <div className="flex items-center gap-2.5"><dt><Mail aria-label="Email" className="size-4 text-ink-muted" /></dt><dd className="min-w-0 truncate"><a className="underline-offset-4 hover:underline" href={`mailto:${makerspace.contactEmail}`}>{makerspace.contactEmail}</a></dd></div> : null}
-          {makerspace.contactPhone ? <div className="flex items-center gap-2.5"><dt><Phone aria-label="Phone" className="size-4 text-ink-muted" /></dt><dd><a className="underline-offset-4 hover:underline" href={`tel:${makerspace.contactPhone.replace(/\s/g, "")}`}>{makerspace.contactPhone}</a></dd></div> : null}
-          {makerspace.website ? <div className="flex items-center gap-2.5"><dt><Globe aria-label="Website" className="size-4 text-ink-muted" /></dt><dd className="min-w-0 truncate"><a className="underline-offset-4 hover:underline" href={makerspace.website} rel="noopener noreferrer" target="_blank">{makerspace.website.replace(/^https?:\/\//, "")}</a></dd></div> : null}
+        <dl className="flex shrink-0 flex-col gap-0.5 rounded-2xl border border-line bg-panel p-5 text-body-ui lg:w-[300px]">
+          {place ? <div className="flex min-h-11 items-center gap-2.5"><dt><MapPin aria-label="Location" className="size-4 text-ink-muted" /></dt><dd>{place}</dd></div> : null}
+          {makerspace.contactEmail ? <div className="flex items-center gap-2.5"><dt><Mail aria-label="Email" className="size-4 text-ink-muted" /></dt><dd className="min-w-0 truncate"><a className="block truncate py-2.5 underline-offset-4 hover:underline" href={`mailto:${makerspace.contactEmail}`}>{makerspace.contactEmail}</a></dd></div> : null}
+          {makerspace.contactPhone ? <div className="flex items-center gap-2.5"><dt><Phone aria-label="Phone" className="size-4 text-ink-muted" /></dt><dd><a className="block truncate py-2.5 underline-offset-4 hover:underline" href={`tel:${makerspace.contactPhone.replace(/\s/g, "")}`}>{makerspace.contactPhone}</a></dd></div> : null}
+          {makerspace.website ? <div className="flex items-center gap-2.5"><dt><Globe aria-label="Website" className="size-4 text-ink-muted" /></dt><dd className="min-w-0 truncate"><a className="block truncate py-2.5 underline-offset-4 hover:underline" href={makerspace.website} rel="noopener noreferrer" target="_blank">{makerspace.website.replace(/^https?:\/\//, "")}</a></dd></div> : null}
         </dl>
       </section>
 
       <section aria-labelledby="spaces" className="flex flex-col gap-6">
         <h2 id="spaces" className="text-h1 text-ink">Spaces</h2>
         {spaces.length ? <PublicSpaceCards spaces={spaces} slug={makerspace.slug} currency={makerspace.currency} /> : null}
-        <Link href={`/m/${makerspace.slug}/bookings/find`} className="underline underline-offset-4">Find your booking</Link>
+        <Link href={`/m/${makerspace.slug}/bookings/find`} className="inline-flex min-h-11 w-fit items-center underline underline-offset-4">Find your booking</Link>
         {takingBookings && !spaces.length ? (
-          <EmptyState mood="waiting" title="No spaces to book yet">
+          <EmptyState title="No spaces to book yet">
             {makerspace.name} hasn&apos;t opened any spaces for booking here yet. Contact them to ask.
           </EmptyState>
         ) : !takingBookings ? (
