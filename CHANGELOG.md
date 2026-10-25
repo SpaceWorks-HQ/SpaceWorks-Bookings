@@ -4,9 +4,10 @@ Releases are published from `main` and titled **`Space Works Bookings <version>`
 file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
 to. Pushes to `dev` publish staging images tagged `dev` without a release.
 
-## 0.2.0 (unreleased)
+## 0.5.0
 
-Bookings, money, integrations and the ship work (Phases 1 to 4 of `docs/plans/2026-10-23-bookings-build.md`).
+The first public release: bookings, money, integrations, repairs, the finance ledger and the ship work (Phases 1 to 4
+of `docs/plans/2026-10-23-bookings-build.md` and the owner decisions in `docs/DECISIONS.md`).
 
 - **Spaces and rules.** Rooms, studios, desks and halls with photos, capacity, units, amenities, hourly, half-day
   and day rates, member rates, peak rules, add-ons and a SAC; opening hours, exceptions and blackouts per makerspace
@@ -25,8 +26,21 @@ Bookings, money, integrations and the ship work (Phases 1 to 4 of `docs/plans/20
 - **Integrations.** A REST API (`/api/v1`) with read and write keys and an OpenAPI document, and signed webhooks
   relayed from the booking timeline with retries and a delivery log (`0004_integrations`, `docs/API.md`).
 - **Roles.** The bookings manager is the top role with every capability, deleting the makerspace included; front
-  desk and viewer remain. Owners and space managers became bookings managers and treasurers viewers
-  (`0005_manager_roles`); a makerspace always keeps one bookings manager. Decisions moved to `docs/DECISIONS.md`.
+  desk, viewer and technician (repairs only) remain. Owners and space managers became bookings managers and
+  treasurers viewers (`0005_manager_roles`); a makerspace always keeps one bookings manager. Decisions moved to
+  `docs/DECISIONS.md`.
+- **Repairs.** Staff and customers report problems with a space (severity, photos); a technician directory of team
+  technicians and outside contacts with skills; requests sent to the chosen technicians by email, WhatsApp or
+  Telegram, the first to accept takes it, outside technicians work through a private link; fix remarks, parts and
+  the amount asked; verify, close or reopen; spaces blocked while out of service; approved amounts paid out in
+  cash, by bank transfer or UPI; repair spend in reports and exports; chat alerts and webhooks
+  (`0006_repairs_finance`).
+- **Finance ledger.** Every payment, refund and repair payout posts itself to an append-only ledger in its own
+  transaction (history backfilled), plus hand-posted income and expenses and reversals; a Finance page with money
+  in, out and net by period, category, way of paying and space, CSV and Excel exports, an hourly consistency check
+  and a `finance.entry_posted` webhook. Finance is the bookings manager's alone.
+- **Calmer dashboard.** Overview, Today, report and finance sections fold away; empty ones start folded and each
+  choice is remembered in the browser.
 - **Ship.** README in the Space Works layout with light and dark screenshots, a demo with payments, three booking
   easter eggs, the colour-mode reveal from the control that changed it, a phone layout fix on public pages, and the
   operations checks recorded in `docs/plans/ops-notes.md`.

@@ -4,6 +4,7 @@ import { Card, Callout } from "@/components/ui/display";
 import { buttonClasses } from "@/components/ui/button";
 import { CustomerBookingControls } from "@/components/bookings/CustomerBookingControls";
 import { CheckInCode } from "@/components/bookings/CheckInCode";
+import { ReportIssueForm } from "@/components/repairs/ReportIssueForm";
 import { PayPanel } from "@/components/bookings/money/PayPanel";
 import { BookedStamp } from "@/components/eggs/BookingEggs";
 import { showBookedStamp } from "@/lib/bookings/eggs";
@@ -29,6 +30,9 @@ export default async function PublicBookingPage(props: { params: Promise<{ maker
       <div className="flex flex-wrap gap-3"><a href={`/api/bookings/${makerspace.slug}/${detail.reference}/calendar${tokenQuery}`} download className={buttonClasses({ variant: "secondary" })}>Add to calendar (ICS)</a>
         <a href={`/api/bookings/${makerspace.slug}/${detail.reference}/statement${tokenQuery}`} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary" })}>Statement (PDF)</a></div>
       {detail.code ? <CheckInCode code={detail.code} selfAccess={detail.selfCheckIn ? { makerspaceSlug: makerspace.slug, ...(detail.manageToken ? { manageToken: detail.manageToken } : { bookingId: detail.id }) } : undefined} /> : null}
+      {detail.status === "CONFIRMED" && makerspace.status === "ACTIVE" ? <section className="flex flex-col gap-3"><h2 className="text-h2">Something wrong with the space?</h2>
+        <p className="text-ink-secondary">Tell {makerspace.name} about it: the AC, the projector, the lights or anything else.</p>
+        <ReportIssueForm customer={{ makerspaceSlug: makerspace.slug, ...(detail.manageToken ? { manageToken: detail.manageToken } : { bookingId: detail.id }) }} /></section> : null}
       <section><h2 className="text-h2">Contact {makerspace.name}</h2>{makerspace.contactEmail ? <a className="block underline" href={`mailto:${makerspace.contactEmail}`}>{makerspace.contactEmail}</a> : null}{makerspace.contactPhone ? <a className="block underline" href={`tel:${makerspace.contactPhone}`}>{makerspace.contactPhone}</a> : null}
         {!makerspace.contactEmail && !makerspace.contactPhone ? <Link className="underline" href={`/m/${makerspace.slug}`}>Visit the makerspace page for contact details</Link> : null}</section>
     </Card><Card><CustomerBookingControls slug={makerspace.slug} bookingId={detail.id} manageToken={detail.manageToken} currency={detail.currency} cancellations={detail.cancellations}

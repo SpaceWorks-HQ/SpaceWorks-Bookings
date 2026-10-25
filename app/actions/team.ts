@@ -174,7 +174,7 @@ export async function deleteMakerspace(input: unknown): Promise<ActionResult> {
   }
 
   // Money records are kept for audit (8 years); a makerspace that has taken payments is archived instead.
-  if (await prisma.payment.count({ where: { makerspaceId: makerspace.id, status: { in: ["PAID", "WAIVED"] } } })) {
+  if (await prisma.payment.count({ where: { makerspaceId: makerspace.id, status: { in: ["PAID", "WAIVED"] } } }) || await prisma.financeEntry.count({ where: { makerspaceId: makerspace.id } })) {
     return { ok: false, error: "This makerspace has taken payments, so its records must be kept. Ask a platform admin to archive it instead." };
   }
 

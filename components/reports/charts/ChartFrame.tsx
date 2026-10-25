@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { CollapsibleSection } from "@/components/ui/collapsible";
 
 export type TableView = { columns: string[]; rows: Array<Array<string | number>>; caption?: string };
 
@@ -36,7 +37,14 @@ export function DataTable({ table, className }: { table: TableView; className?: 
  * The card every chart sits in: a title that names what is plotted, an optional one-line reading of it,
  * a drill-down link, the chart, and a "Show as table" disclosure with the same numbers.
  */
-export function ChartFrame({ title, description, drill, table, children, className, action }: { title: string; description?: ReactNode; drill?: { href: string; label?: string }; table?: TableView; children: ReactNode; className?: string; action?: ReactNode }) {
+export function ChartFrame({ title, description, drill, table, children, className, action, collapse }: { title: string; description?: ReactNode; drill?: { href: string; label?: string }; table?: TableView; children: ReactNode; className?: string; action?: ReactNode; collapse?: { id: string; empty?: boolean } }) {
+  if (collapse) {
+    const link = drill ? <Link href={drill.href} className="sw-print-hide inline-flex min-h-11 items-center gap-1 text-label font-semibold text-accent-text underline-offset-4 hover:underline">{drill.label ?? "See the list"}<ArrowRight aria-hidden className="size-4" /></Link> : null;
+    return <CollapsibleSection id={collapse.id} title={title} description={description} empty={collapse.empty} className={cn("sw-chart", className)} actions={action || link ? <>{action}{link}</> : undefined}>
+      {children}
+      {table && table.rows.length ? <details className="sw-print-hide mt-4"><summary className="inline-flex min-h-9 cursor-pointer select-none items-center text-label text-ink-secondary">Show as table</summary><DataTable table={table} className="mt-2" /></details> : null}
+    </CollapsibleSection>;
+  }
   return (
     <figure className={cn("sw-chart flex min-w-0 flex-col gap-4 rounded-xl border border-line bg-panel p-4 sm:p-5", className)}>
       <figcaption className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">

@@ -23,8 +23,9 @@ structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks
 1. **Roles.** There is no owner, space manager or treasurer role. The **bookings manager** is the top role and has
    full access: every setting (payments and providers, refund tiers, taxes, rules, hours, notifications, branding),
    the team, members, API keys and webhooks, the audit log, refunds, finance and reports, overrides, and deleting
-   the makerspace. Ranks: bookings manager > front desk > viewer. Front desk takes bookings, checks people in and
-   records payments taken at the desk; viewers read, with customer contact details hidden.
+   the makerspace. Ranks: bookings manager > front desk > viewer, plus the technician (repairs only). Front desk
+   takes bookings, checks people in and records payments taken at the desk (seeing that booking's own payments);
+   viewers read, with customer contact details hidden; technicians see only the repairs they are asked to do.
    - Whoever creates a makerspace, or is invited by a platform admin to run one, becomes its bookings manager.
    - Bookings managers manage everyone, other bookings managers included (invite, change role, remove).
    - A makerspace always keeps at least one bookings manager: removing, demoting or leaving as the last one is
@@ -42,6 +43,28 @@ structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks
    and reviewed them, and the rest (Phases 2 onwards) was built and reviewed by Claude Code alone.
 6. **README.** It follows SpaceWorks-Events: banner, light screenshots, the one-line install and Render, with the
    Patch easter eggs and the Events light and dark circular reveal from the control that changed it.
+7. **Repairs.** Staff (and customers, from their booking page) report problems with a space: severity, photos,
+   description. Each makerspace keeps a directory of many technicians, team members with the TECHNICIAN role and
+   outside contacts (phone, email, WhatsApp, Telegram, skill tags, preferred channel, notes, active), managed by
+   bookings managers and audited. A manager selects one or more technicians (filtering by skill) and sends the
+   request on every channel each has: email always, WhatsApp or Telegram when the makerspace has that chat set up.
+   The first to accept is assigned, the others' requests close and they are told; the timeline shows who was asked,
+   when, how and what they answered. Outside technicians answer through a private link (32 random bytes, only its
+   SHA-256 stored, one issue, expiring, rate limited, nothing else visible). The technician records remarks, parts,
+   photos and the amount asked; a bookings manager verifies and closes or reopens with a reason, approves the amount
+   (a reason when it differs) and records payouts (cash, bank transfer, UPI or other; a reference except for cash)
+   until it is paid. Payouts are append-only. A space can be kept unbookable while out of service through the
+   existing blackouts. Chat events and webhooks: issue reported, assigned, resolved, repair paid. No to-buy list.
+8. **Finance.** Every money movement is in one append-only ledger (`FinanceEntry`) posted in the same transaction as
+   its source: settled payments, processed refunds (gateway and offline) and repair payouts by trigger, plus
+   hand-posted other income and expenses (rent, utilities…). Corrections are reversing entries. History was
+   backfilled. The Finance page (money in, out and net by period and financial year April to March, by category, way
+   of paying and space), money reports, exports (CSV and Excel), the payout ledger and finance figures on the
+   overview are for the **bookings manager only**: front desk, viewers and technicians get "not found" on every
+   finance page and export. A technician sees only what they asked and whether it was paid.
+9. **Version.** The first public release is **0.5.0**.
+10. **Dashboard sections collapse; empty ones start collapsed; choice remembered per browser** (`components/ui/collapsible.tsx`,
+    `localStorage` keys `swb:dash:<id>`): the overview checklist, each space on Today, and the report and finance charts.
 
 ## Original decisions (2026-10-23)
 
@@ -93,6 +116,13 @@ structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks
 - **Late arrival after a no-show.** Checking in someone already marked absent (while the slot was still held)
   restores the charge.
 - **Treasurers became viewers** in the role migration (see "Roles").
+- **Repair timings.** A request waits three days for an answer, then expires; an accepted link works for fourteen
+  days; after the issue closes it stays readable (to see the payment) for fourteen more days but takes no more work.
+- **Issue photos** are re-encoded WebP derivatives under random, unlisted keys (like space photos), shown only on the
+  issue, its technician's link and the dashboard. Moving them to private, signed storage is a possible later step.
+- **Only hand-posted ledger entries are reversed** on the Finance page; a payment, refund or payout is corrected at its
+  source (a credit note or refund), which posts its own entry.
+- **A payment posts the amount captured** (or the amount, when nothing different was captured) when it becomes PAID.
 
 ## Deferred owner checks
 

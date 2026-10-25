@@ -87,7 +87,9 @@ if (process.argv[2] === "serve-frontend") {
       }
       if (!ready) throw new Error("Disposable backend did not become ready.");
     }
-    await run("npx", ["playwright", "test", "--workers=1"], { ...env, ...demo, ...(process.env.PLAYWRIGHT_BROWSERS_PATH ? { PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH } : {}) });
+    // Arguments that aren't options pick spec files, e.g. `npm run test:e2e:vps -- --external-services repairs`.
+    const specs = process.argv.slice(2).filter((value) => !value.startsWith("--"));
+    await run("npx", ["playwright", "test", "--workers=1", ...specs], { ...env, ...demo, ...(process.env.PLAYWRIGHT_BROWSERS_PATH ? { PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH } : {}) });
     if (monolith) console.log("Whole-VPS production browser suite passed against disposable dependencies.");
     else console.log("Split hosting passed with separate action keys and no database/auth/mail/storage credentials on the frontend.");
   } finally { cleanup(); }

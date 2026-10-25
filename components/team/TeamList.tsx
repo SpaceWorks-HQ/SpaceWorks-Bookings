@@ -14,7 +14,7 @@ const FILTERS: Array<{ value: TeamFilter; label: string }> = [
   { value: "others", label: "Everyone else" },
 ];
 
-const AVATAR_TONES: Record<TeamRole, "ink" | "warning" | "success" | "neutral"> = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral" };
+const AVATAR_TONES: Record<TeamRole, "ink" | "warning" | "success" | "neutral"> = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral", TECHNICIAN: "success" };
 
 export function TeamList({
   makerspaceSlug,

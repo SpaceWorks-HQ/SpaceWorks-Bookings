@@ -20,6 +20,8 @@ enum TeamRole {
   BOOKINGS_MANAGER
   FRONT_DESK
   VIEWER
+  /// Repairs only: the issues they are asked to fix (lib/repairs).
+  TECHNICIAN
 }
 
 enum OutboxStatus {
@@ -165,6 +167,9 @@ model Makerspace {
   calendarFeeds    CalendarFeed[]
   apiKeys          ApiKey[]
   webhookEndpoints WebhookEndpoint[]
+  technicians      Technician[]
+  spaceIssues      SpaceIssue[]
+  financeEntries   FinanceEntry[]
 
   @@index([status, createdAt])
   @@index([visibility, status])
@@ -877,6 +882,7 @@ model Space {
   refundTiers     RefundTier[]
   bookings        Booking[]
   occurrences     BookingOccurrence[]
+  issues          SpaceIssue[]
 
   @@unique([makerspaceId, slug])
   @@unique([makerspaceId, id])
@@ -1287,4 +1293,261 @@ model WebhookRelayCursor {
   id        String   @id
   createdAt DateTime
   eventId   String
+}
+
+// ── Repairs and the finance ledger (0006_repairs_finance; docs/DECISIONS.md, owner decisions 2026-10-24) ──
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+/// REPORTED → ASSIGNED (a technician accepted or was assigned) → FIXED (by the technician) → CLOSED (verified by a
+/// bookings manager); a manager may reopen a FIXED or CLOSED issue to ASSIGNED with a reason.
+enum IssueStatus {
+  REPORTED
+  ASSIGNED
+  FIXED
+  CLOSED
+}
+
+enum TechnicianKind {
+  STAFF
+  EXTERNAL
+}
+
+enum TechnicianChannel {
+  EMAIL
+  WHATSAPP
+  TELEGRAM
+}
+
+enum RepairRequestStatus {
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CLOSED
+}
+
+enum PayoutMethod {
+  CASH
+  BANK_TRANSFER
+  UPI
+  OTHER
+}
+
+enum FinanceDirection {
+  IN
+  OUT
+}
+
+enum FinanceMethod {
+  GATEWAY_RAZORPAY
+  GATEWAY_STRIPE
+  CASH
+  BANK_TRANSFER
+  UPI
+  OTHER
+}
+
+enum FinanceCategory {
+  BOOKING_PAYMENT
+  OTHER_PAYMENT
+  REFUND
+  REPAIR_PAYOUT
+  RENT
+  UTILITIES
+  SUPPLIES
+  STAFF_COSTS
+  OTHER_INCOME
+  OTHER_EXPENSE
+}
+
+/// Someone a makerspace can ask to fix things: a team member with the TECHNICIAN role, or an outside contact.
+model Technician {
+  id               String            @id @default(cuid())
+  makerspaceId     String
+  kind             TechnicianKind
+  /// STAFF only: the team member this entry is for.
+  userId           String?
+  name             String
+  email            String?
+  phone            String?
+  whatsapp         String?
+  telegramChatId   String?
+  skills           String[]          @default([])
+  preferredChannel TechnicianChannel @default(EMAIL)
+  notes            String            @default("")
+  active           Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  makerspace Makerspace      @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  issues     SpaceIssue[]
+  requests   RepairRequest[]
+  payouts    RepairPayout[]
+
+  @@unique([makerspaceId, id])
+  @@unique([makerspaceId, userId])
+  @@index([makerspaceId, active])
+}
+
+/// Something wrong with a space (the AC, the projector, the lights…), from report to paid repair.
+model SpaceIssue {
+  id               String        @id @default(cuid())
+  makerspaceId     String
+  spaceId          String
+  reference        String
+  title            String
+  description      String        @default("")
+  severity         IssueSeverity @default(MEDIUM)
+  status           IssueStatus   @default(REPORTED)
+  /// STAFF or CUSTOMER.
+  reporterKind     String
+  reportedById     String?
+  bookingId        String?
+  technicianId     String?
+  assignedAt       DateTime?
+  fixRemarks       String        @default("")
+  partsUsed        String        @default("")
+  /// What the technician asks for the work, in `currency`.
+  amountAskedMinor Int?
+  currency         String
+  fixedAt          DateTime?
+  /// What a bookings manager agreed to pay; payouts never exceed it.
+  approvedMinor    Int?
+  approvedById     String?
+  approvalNote     String        @default("")
+  closedAt         DateTime?
+  closedById       String?
+  /// The blackout keeping the space unbookable while it is out of service (removed when the issue closes).
+  blackoutId       String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  makerspace Makerspace      @relation(fields: [makerspaceId], references: [id], onDelete: Cascade)
+  space      Space           @relation(fields: [makerspaceId, spaceId], references: [makerspaceId, id], onDelete: Cascade)
+  technician Technician?     @relation(fields: [makerspaceId, technicianId], references: [makerspaceId, id], onDelete: Restrict)
+  photos     IssuePhoto[]
+  requests   RepairRequest[]
+  events     IssueEvent[]
+  payouts    RepairPayout[]
+
+  @@unique([makerspaceId, id])
+  @@unique([makerspaceId, reference])
+  @@index([makerspaceId, status, createdAt])
+  @@index([makerspaceId, spaceId])
+}
+
+model IssuePhoto {
+  id           String   @id @default(cuid())
+  makerspaceId String
+  issueId      String
+  url          String
+  storageKey   String
+  /// STAFF, CUSTOMER or TECHNICIAN.
+  addedBy      String
+  createdAt    DateTime @default(now())
+
+  issue SpaceIssue @relation(fields: [makerspaceId, issueId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([issueId, createdAt])
+}
+
+/// One technician asked to take one issue. External technicians answer through a link (SHA-256 of the token here).
+model RepairRequest {
+  id           String              @id @default(cuid())
+  makerspaceId String
+  issueId      String
+  technicianId String
+  status       RepairRequestStatus @default(SENT)
+  channels     String[]            @default([])
+  tokenHash    String?             @unique
+  expiresAt    DateTime
+  sentById     String?
+  sentAt       DateTime            @default(now())
+  answeredAt   DateTime?
+
+  issue      SpaceIssue @relation(fields: [makerspaceId, issueId], references: [makerspaceId, id], onDelete: Cascade)
+  technician Technician @relation(fields: [makerspaceId, technicianId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@unique([makerspaceId, id])
+  @@unique([issueId, technicianId])
+  @@index([status, expiresAt])
+}
+
+/// The issue's timeline (append-only); also the source of the issue webhooks.
+model IssueEvent {
+  id           String   @id @default(cuid())
+  makerspaceId String
+  issueId      String
+  kind         String
+  /// STAFF, CUSTOMER, TECHNICIAN (through a link) or SYSTEM.
+  actorKind    String
+  actorUserId  String?
+  technicianId String?
+  data         Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  issue SpaceIssue @relation(fields: [makerspaceId, issueId], references: [makerspaceId, id], onDelete: Cascade)
+
+  @@index([issueId, createdAt])
+  @@index([makerspaceId, createdAt])
+}
+
+/// Money paid to a technician for an issue. Append-only (trigger); each row posts one FinanceEntry.
+model RepairPayout {
+  id           String       @id @default(cuid())
+  makerspaceId String
+  issueId      String
+  technicianId String?
+  amountMinor  Int
+  currency     String
+  method       PayoutMethod
+  reference    String?
+  note         String       @default("")
+  paidAt       DateTime
+  paidById     String
+  createdAt    DateTime     @default(now())
+
+  issue      SpaceIssue  @relation(fields: [makerspaceId, issueId], references: [makerspaceId, id], onDelete: Restrict)
+  technician Technician? @relation(fields: [makerspaceId, technicianId], references: [makerspaceId, id], onDelete: Restrict)
+
+  @@index([makerspaceId, paidAt])
+  @@index([issueId])
+}
+
+/// Every money movement, append-only (trigger), posted in its source's own transaction: settled payments, processed
+/// refunds and repair payouts by trigger, manual entries and reversals by lib/finance/ledger.ts. A source posts once
+/// (`sourceType` + `sourceId` unique).
+model FinanceEntry {
+  id           String           @id
+  makerspaceId String
+  direction    FinanceDirection
+  category     FinanceCategory
+  amountMinor  Int
+  currency     String
+  method       FinanceMethod
+  reference    String?
+  occurredAt   DateTime
+  /// PAYMENT, REFUND, REPAIR_PAYOUT, MANUAL or REVERSAL.
+  sourceType   String
+  sourceId     String
+  actorUserId  String?
+  note         String           @default("")
+  spaceId      String?
+  bookingId    String?
+  issueId      String?
+  technicianId String?
+  /// REVERSAL only: the entry this one cancels out.
+  reversesId   String?          @unique
+  createdAt    DateTime         @default(now())
+
+  makerspace Makerspace @relation(fields: [makerspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([sourceType, sourceId])
+  @@index([makerspaceId, occurredAt])
 }

@@ -100,9 +100,11 @@ npx vitest run tests/unit/health.test.ts
   - Every tenant row carries `makerspaceId`, with composite FKs to its parent.
   - Every query is scoped through the makerspace resolved for the request.
   - Cross-tenant access returns 404.
-- **Roles and capabilities** (`lib/permissionRoles.ts`): `BOOKINGS_MANAGER`, `FRONT_DESK` and `VIEWER` (no owner,
-  space manager or treasurer: owner decisions, 2026-10-24), mapped to capabilities (`makerspace.*`, `team.manage`, `spaces.manage`, `bookings.*`,
-  `payments.*`, `refunds.manage`, `members.manage`, `reports.*`, `integrations.manage`, `audit.view`). Gate pages
+- **Roles and capabilities** (`lib/permissionRoles.ts`): `BOOKINGS_MANAGER`, `FRONT_DESK`, `VIEWER` and `TECHNICIAN`
+  (repairs only; no owner, space manager or treasurer: owner decisions, 2026-10-24), mapped to capabilities
+  (`makerspace.*`, `team.manage`, `spaces.manage`, `bookings.*`, `payments.*`, `refunds.manage`, `members.manage`,
+  `reports.*`, `integrations.manage`, `audit.view`, `issues.*`, `repairs.*`, `finance.*`). Money (payments pages,
+  finance, money reports, payouts) is the bookings manager's alone and answers 404 to anyone else. Gate pages
   with `requireMakerspaceCapability` and actions with `makerspaceActionAccess`; never check role names directly.
   The bookings manager is the top role with every capability; whoever creates a makerspace becomes one. Rank:
   bookings manager > front desk > viewer; bookings managers manage everyone, other bookings managers included,
@@ -148,6 +150,15 @@ npx vitest run tests/unit/health.test.ts
 - **Public pages:** `/m/[makerspaceSlug]` is the makerspace's own page (name, logo, description, contact, spaces), with
   space pages and the customer's booking page under it. User content is rendered as React text, never as HTML
   strings, and Patch never appears there (it carries the makerspace's brand).
+- **Repairs** (`lib/repairs/*`): `SpaceIssue` REPORTED → ASSIGNED → FIXED → CLOSED (`rules.ts` `canMove`), each change
+  in one transaction that locks the issue (`lockIssue`) and appends an `IssueEvent`. Requests go to technicians picked
+  from the directory; the first accept wins under the issue lock. Outside technicians act through a link token
+  (sha256 stored, `/repair/[token]`); a technician is never shown other issues or money beyond their own amount.
+  Payouts (`RepairPayout`) are append-only and never exceed the approved amount.
+- **Finance ledger** (`lib/finance/*`): `FinanceEntry` is append-only (trigger); payments, refunds and payouts post
+  themselves by trigger in their own transaction (`0006_repairs_finance`), unique per source. Never write entries for
+  them in code; hand-posted entries and reversals go through `ledger.ts`. `checkFinanceLedger` compares the ledger
+  with its sources (hourly job and tests).
 - **Reports:** the pure helpers in `lib/reports/*` (periods, money totals, chart scales, masking, finance and GST
   maths, `bookings/stats.ts`) are unit-tested; loaders read rows, pages render them. Every CSV export goes through
   `auditedCsvResponse` and `exportAccess` (`lib/reports/exports/*`).

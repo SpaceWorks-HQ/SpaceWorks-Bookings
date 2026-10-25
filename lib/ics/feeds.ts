@@ -4,6 +4,7 @@ import { requireStaff, type Actor } from "@/lib/bookings/actor";
 import { defaultDb, type DbOrTx } from "@/lib/bookings/db";
 import { forbidden } from "@/lib/bookings/errors";
 import { hashToken } from "@/lib/bookings/tokens";
+import { can } from "@/lib/permissionRoles";
 import { bookingEvent } from "./booking";
 import { buildIcs } from "./format";
 
@@ -41,7 +42,10 @@ export async function renderCalendarFeed(token: string, now = new Date(), db: Db
   if (!token || token.length > 128) return null;
   const feed = await db.calendarFeed.findUnique({ where: { tokenHash: hashToken(token) }, include: { makerspace: { select: { name: true, contactEmail: true, addressLine: true, city: true } } } });
   if (!feed || feed.revokedAt) return null;
-  if (feed.kind === "STAFF" && !(await db.teamMember.findUnique({ where: { userId_makerspaceId: { userId: feed.userId, makerspaceId: feed.makerspaceId } } }))) return null;
+  if (feed.kind === "STAFF") {
+    const member = await db.teamMember.findUnique({ where: { userId_makerspaceId: { userId: feed.userId, makerspaceId: feed.makerspaceId } }, select: { role: true } });
+    if (!member || !can(member.role, "bookings.view")) return null;
+  }
   const staff = feed.kind === "STAFF";
   const occurrences = await db.bookingOccurrence.findMany({
     where: {

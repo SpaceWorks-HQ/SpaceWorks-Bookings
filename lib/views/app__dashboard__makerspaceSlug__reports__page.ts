@@ -4,6 +4,7 @@ import { can, makerspaceAllows } from "@/lib/permissionRoles";
 import { makerspaceSummary } from "@/lib/bookings/staffView";
 import { periodBuckets, resolvePeriod, PERIOD_PRESETS } from "@/lib/reports/period";
 import { loadBookingReport } from "@/lib/reports/bookings/load";
+import { spaceRepairCosts } from "@/lib/finance/summary";
 import { bookingsPerBucket, noShowRate, overallUtilisation, paymentMethods, refundsByKind, statusCounts, utilisation } from "@/lib/reports/bookings/stats";
 
 /** Reports: utilisation, bookings, no-shows; money (revenue, refunds, methods) only with `reports.finance`. */
@@ -22,8 +23,13 @@ export async function loadReports({ params, searchParams }: { params: Promise<{ 
   const perSpace = utilisation(rows.spaces, rows.occurrences, window);
   const bucketRanges = buckets.map((bucket) => ({ from: bucket.from.getTime(), to: bucket.to.getTime() }));
   const revenue = finance ? bucketRanges.map((bucket) => rows.payments.reduce((sum, payment, index) => sum + (payment.currency === calendar.currency && rows.paidAt[index] >= bucket.from && rows.paidAt[index] < bucket.to ? payment.amountMinor : 0), 0)) : [];
+  // Per space: booking income (less refunds) against repair payouts, from the ledger (finance only).
+  const ledger = finance ? await prisma.financeEntry.findMany({ where: { makerspaceId, occurredAt: { gte: period.from, lt: period.to }, spaceId: { not: null } }, select: { direction: true, category: true, amountMinor: true, currency: true, method: true, occurredAt: true, spaceId: true } }) : [];
+  const costs = spaceRepairCosts(ledger, calendar.currency);
+  const spaceRepairs = finance ? perSpace.map((row) => ({ spaceId: row.spaceId, name: row.name, ...(costs.get(row.spaceId) ?? { revenue: 0, repairs: 0 }) })) : [];
   return {
     makerspace: await makerspaceSummary(makerspaceId),
+    spaceRepairs,
     currency: calendar.currency,
     finance,
     period: { preset: period.preset, label: period.label, from: period.from.toISOString(), to: period.to.toISOString(), firstDay: query.from ?? null, lastDay: query.to ?? null },

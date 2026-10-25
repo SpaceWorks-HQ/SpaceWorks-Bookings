@@ -7,6 +7,9 @@ import { recordExternalRefunds } from "@/lib/bookings/money/external";
 import { sendPendingBookingRefunds } from "@/lib/bookings/money/send";
 import { relayWebhookEvents } from "@/lib/integrations/webhooks/relay";
 import { deliverDueWebhooks } from "@/lib/integrations/webhooks/deliver";
+import { relayRepairWebhooks } from "@/lib/integrations/webhooks/relayRepairs";
+import { expireRepairRequests } from "@/lib/repairs/requests";
+import { auditFinanceLedger } from "@/lib/finance/consistency";
 
 /** Booking upkeep (docs/BOOKINGS.md "Jobs"). Each run is idempotent; several workers may run it at once. */
 export const BOOKING_JOBS: JobDefinition[] = [
@@ -25,5 +28,9 @@ export const BOOKING_JOBS: JobDefinition[] = [
   { area: "booking-money-check", schedule: { every: 60 * 60_000 }, run: async () => { await checkBookingMoney(); } },
   // Outbound webhooks (docs/API.md): the booking timeline is relayed into deliveries, sent with backoff.
   { area: "webhooks-relay", schedule: { every: 15_000 }, run: async (now) => { await relayWebhookEvents(now); } },
+  { area: "webhooks-relay-repairs", schedule: { every: 15_000 }, run: async (now) => { await relayRepairWebhooks(now); } },
+  // Repairs and the finance ledger (docs/DECISIONS.md): unanswered requests expire; the ledger is checked hourly.
+  { area: "repairs-expire-requests", schedule: { every: 5 * 60_000 }, run: async (now) => { await expireRepairRequests(now); } },
+  { area: "finance-ledger-check", schedule: { every: 60 * 60_000 }, run: async () => { await auditFinanceLedger(); } },
   { area: "webhooks-deliver", schedule: { every: 10_000 }, run: async (now) => { await deliverDueWebhooks(now); } },
 ];

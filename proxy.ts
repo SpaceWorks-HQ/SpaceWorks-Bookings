@@ -30,6 +30,9 @@ export async function proxy(request: NextRequest) {
     if (!(await checkRateLimit(request, "action"))) return tooMany();
   }
 
+  // Technician repair links: a per-address ceiling on reads as well as on their actions.
+  if (pathname.startsWith("/repair/") && !(await checkRateLimit(request, "action"))) return tooMany();
+
   // Payment gateway webhooks: one generous bucket of their own, never the per-IP global limit, so
   // gateway retries are not refused while money is being confirmed.
   if (pathname.startsWith("/api/webhooks/")) {

@@ -25,6 +25,7 @@ export function asChatPayload(value: Prisma.JsonValue): ChatPayload | null {
   const refs = (p.refs && typeof p.refs === "object" && !Array.isArray(p.refs) ? p.refs : {}) as Record<string, unknown>;
   const clean: ChatRefs = {};
   if (isId(refs.paymentId)) clean.paymentId = refs.paymentId;
+  if (isId(refs.issueId)) clean.issueId = refs.issueId;
   return { channelId: p.channelId, makerspaceId: p.makerspaceId, event: p.event as ChatEvent, refs: clean };
 }
 

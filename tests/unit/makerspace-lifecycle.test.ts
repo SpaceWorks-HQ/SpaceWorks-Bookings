@@ -62,7 +62,7 @@ describe("what a makerspace's status allows", () => {
   it("keeps only finance and viewing open while suspended or archived", () => {
     for (const status of ["SUSPENDED", "ARCHIVED"] as const) {
       expect(capabilities.filter((capability) => makerspaceAllows(status, capability)).sort()).toEqual(
-        ["audit.view", "bookings.view", "makerspace.view", "payments.record", "payments.view", "refunds.manage", "reports.finance"],
+        ["audit.view", "bookings.view", "finance.view", "makerspace.view", "payments.record", "payments.view", "refunds.manage", "reports.finance"],
       );
     }
   });

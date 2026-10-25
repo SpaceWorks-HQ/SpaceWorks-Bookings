@@ -62,7 +62,7 @@ export async function loadMakerspaceMembersView({ params, searchParams }: Props)
       const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
       return `${proto}://${host}`;
     })();
-  const roleCounts: RoleCounts = { BOOKINGS_MANAGER: 0, FRONT_DESK: 0, VIEWER: 0 };
+  const roleCounts: RoleCounts = { BOOKINGS_MANAGER: 0, FRONT_DESK: 0, VIEWER: 0, TECHNICIAN: 0 };
   for (const group of roleGroups) roleCounts[group.role as TeamRole] = group._count._all;
   const latestName =
     latestJoiner == null

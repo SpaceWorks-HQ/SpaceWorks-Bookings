@@ -102,11 +102,17 @@ export async function requireMakerspaceDashboardAccess(makerspaceSlug: string): 
   return requireMakerspaceMembership(makerspaceSlug);
 }
 
+const FINANCE_PAGES: ReadonlySet<Capability> = new Set<Capability>(["payments.view", "finance.view", "reports.finance", "repairs.pay"]);
+
 /** Team access for one capability, honouring the makerspace's status (suspended keeps finance). */
 export async function requireMakerspaceCapability(makerspaceSlug: string, capability: Capability): Promise<MakerspaceAccessContext> {
   const access = await requireMakerspaceTeam(makerspaceSlug);
   if (!makerspaceAllows(access.makerspace.status, capability)) redirect(`/dashboard/${makerspaceSlug}/application`);
-  if (!can(access.membership.role, capability)) redirect(`/dashboard/${makerspaceSlug}`);
+  if (!can(access.membership.role, capability)) {
+    // Money pages answer like pages that don't exist for everyone but the bookings manager (owner decision, 2026-10-24).
+    if (FINANCE_PAGES.has(capability)) notFound();
+    redirect(roleHome(makerspaceSlug, access.membership.role));
+  }
   return access;
 }
 
@@ -136,4 +142,4 @@ export async function makerspaceActionAccess(makerspaceSlug: unknown, capability
 
 export { can, hasRoleAtLeast, isMakerspaceAdmin, canManageTeam, canManageTeamMember, canDeleteMakerspace, makerspaceAllows, STAFF_AUTHENTICATOR_MESSAGE, STAFF_AUTHENTICATOR_SETUP } from "@/lib/permissionRoles";
 
-import { can, hasRoleAtLeast, makerspaceAllows, STAFF_AUTHENTICATOR_MESSAGE, STAFF_AUTHENTICATOR_SETUP, type Capability } from "./permissionRoles";
+import { can, hasRoleAtLeast, makerspaceAllows, roleHome, STAFF_AUTHENTICATOR_MESSAGE, STAFF_AUTHENTICATOR_SETUP, type Capability } from "./permissionRoles";

@@ -5,7 +5,7 @@ import { Chip } from "@/components/ui/display";
 import { ROLE_LABELS } from "@/components/team/memberSummary";
 import { ROLE_DESCRIPTIONS } from "@/lib/permissionRoles";
 
-const DOT_TONES: Record<TeamRole, string> = { BOOKINGS_MANAGER: "bg-primary", FRONT_DESK: "bg-ink-muted", VIEWER: "bg-line-strong" };
+const DOT_TONES: Record<TeamRole, string> = { BOOKINGS_MANAGER: "bg-primary", FRONT_DESK: "bg-ink-muted", VIEWER: "bg-line-strong", TECHNICIAN: "bg-info-solid" };
 
 /* ---------- Stats ---------- */
 
@@ -34,6 +34,7 @@ const ROLE_SUMMARIES: Array<{ role: TeamRole; tone: "ink" | "warning" | "success
   { role: "BOOKINGS_MANAGER", tone: "ink", body: ROLE_DESCRIPTIONS.BOOKINGS_MANAGER },
   { role: "FRONT_DESK", tone: "neutral", body: ROLE_DESCRIPTIONS.FRONT_DESK },
   { role: "VIEWER", tone: "neutral", body: ROLE_DESCRIPTIONS.VIEWER },
+  { role: "TECHNICIAN", tone: "info", body: ROLE_DESCRIPTIONS.TECHNICIAN },
 ];
 
 export function RolesCard() {

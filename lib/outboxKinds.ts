@@ -8,6 +8,7 @@ import { asAdminPayload, asInvitePayload, asNoticePayload, deliverAdminApplicati
 import { asPaymentNoticePayload, deliverPaymentNotice } from "@/lib/email/payments";
 import { asBookingNoticePayload, deliverBookingNotice } from "@/lib/email/bookings";
 import { asChatPayload, deliverChatNotice } from "@/lib/chat/notify";
+import { asRepairNoticePayload, asRepairRequestPayload, deliverRepairNotice, deliverRepairRequest } from "@/lib/email/repairs";
 import { asLoginAlertPayload, asLoginCodePayload, deliverLoginAlert, deliverLoginCode } from "@/lib/email/loginSecurity";
 
 /** What a handler reports after a delivery attempt. Throw to retry; throw PermanentOutboxError to give up. */
@@ -180,6 +181,25 @@ const chatNotice: OutboxKindHandler = {
   },
 };
 
+/** A repair request or assignment to a technician (email or chat): may carry their link, so a capability. */
+const repairRequest: OutboxKindHandler = {
+  capability: true,
+  async deliver(value, messageId) {
+    const payload = asRepairRequestPayload(value);
+    if (!payload) throw new PermanentOutboxError();
+    return deliverRepairRequest(payload, messageId);
+  },
+};
+
+const repairNotice: OutboxKindHandler = {
+  capability: false,
+  async deliver(value, messageId) {
+    const payload = asRepairNoticePayload(value);
+    if (!payload) throw new PermanentOutboxError();
+    return deliverRepairNotice(payload, messageId);
+  },
+};
+
 /** Every email the platform can send. Add a kind here when a feature needs a new message. */
 export const OUTBOX_KINDS = {
   "password-reset": passwordReset,
@@ -192,6 +212,9 @@ export const OUTBOX_KINDS = {
   "booking-notice": bookingNotice,
   "booking-link": bookingLink,
   "chat-notice": chatNotice,
+  "repair-request": repairRequest,
+  "repair-dm": repairRequest,
+  "repair-notice": repairNotice,
   "login-code": loginCode,
   "login-alert": loginAlert,
 } satisfies Record<string, OutboxKindHandler>;

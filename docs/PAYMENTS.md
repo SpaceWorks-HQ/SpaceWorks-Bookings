@@ -140,6 +140,15 @@ search by customer name, email, UTR or document number, and a page per payment w
 refunds and the actions the role allows (confirm, reject, cancel, release a held document, clear a flag,
 refund).
 
+## Finance ledger
+
+Every money movement is also a row in `FinanceEntry` (append-only by trigger; `lib/finance/*`): a payment when it
+becomes PAID (the amount captured), a refund when it is PROCESSED, and every repair payout, each posted by a trigger
+in the same transaction (`0006_repairs_finance`, which also backfilled history). A bookings manager posts other income
+and expenses by hand and corrects them only with a reversing entry. The Finance page shows money in, out and net by
+period, category, way of paying and space; `/api/exports/finance` and `/api/exports/repairs` give CSV or Excel
+(`?format=xlsx`). The hourly `finance-ledger-check` job audits any source without exactly one matching entry.
+
 ## Booking money
 
 `lib/bookings/money/*`, on the obligation model of `lib/bookings/obligation.ts` (build plan, v2 amendments).

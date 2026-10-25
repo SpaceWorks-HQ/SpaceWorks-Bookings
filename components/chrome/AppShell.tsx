@@ -24,7 +24,11 @@ const MAKERSPACE_NAV: Array<{ path: string; label: string; capability: Capabilit
   { path: "/calendar", label: "Calendar", capability: "bookings.view" },
   { path: "/spaces", label: "Spaces", capability: "spaces.manage" },
   { path: "/members", label: "Members", capability: "members.manage" },
+  { path: "/issues", label: "Issues", capability: "issues.view" },
+  { path: "/issues", label: "My repairs", capability: "repairs.work" },
+  { path: "/technicians", label: "Technicians", capability: "repairs.manage" },
   { path: "/payments", label: "Payments", capability: "payments.view" },
+  { path: "/finance", label: "Finance", capability: "finance.view" },
   { path: "/reports", label: "Reports", capability: "reports.view" },
   { path: "/team", label: "Team", capability: "makerspace.view" },
   { path: "/audit", label: "Audit log", capability: "audit.view" },
@@ -159,7 +163,7 @@ function SidebarContents({ user, makerspaces, onNavigate }: { user: ShellUser; m
               const href = `${base}${item.path}`;
               const isActive = item.exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
               return (
-                <NavItem key={item.path} href={href} active={isActive} onNavigate={onNavigate}>
+                <NavItem key={`${item.path}-${item.label}`} href={href} active={isActive} onNavigate={onNavigate}>
                   {item.label}
                 </NavItem>
               );

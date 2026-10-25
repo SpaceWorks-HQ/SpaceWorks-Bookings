@@ -33,6 +33,9 @@ const SCREENS = [
   ["reports", true, `${staff}/reports?period=30d`],
   ["reconciliation", true, `${staff}/payments/reconciliation`],
   ["integrations", true, `${staff}/settings/integrations`],
+  ["issue", true, async (page) => firstLink(page, `${staff}/issues?status=CLOSED`, `${staff}/issues/`)],
+  ["technicians", true, `${staff}/technicians`],
+  ["finance", true, `${staff}/finance?period=30d`],
   ["space-booking-phone", false, "/m/tinkerspace/spaces/meeting-room", { width: 390, height: 844 }],
 ];
 

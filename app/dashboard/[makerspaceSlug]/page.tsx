@@ -6,14 +6,16 @@ import { roleWithArticle } from "@/lib/permissionRoles";
 import { STATUS_EXPLANATIONS } from "@/lib/makerspaceLifecycle";
 import { MakerspacePageHeader } from "@/components/dashboard/makerspace/MakerspacePageHeader";
 import { buttonClasses } from "@/components/ui/button";
-import { Callout, Card, CardHeader, StatTile } from "@/components/ui/display";
+import { Callout, StatTile } from "@/components/ui/display";
+import { CollapsibleSection } from "@/components/ui/collapsible";
 import { cn } from "@/lib/cn";
 import { money } from "@/lib/money/currencies";
 
 export const metadata: Metadata = { title: "Overview", robots: { index: false, follow: false } };
 
 export default async function MakerspaceOverviewPage({ params }: { params: Promise<{ makerspaceSlug: string }> }) {
-  const { makerspace, role, teamCount, openInvites, steps, stats } = await loadMakerspaceOverviewView({ params });
+  const view = await loadMakerspaceOverviewView({ params });
+  const { makerspace, role, teamCount, openInvites, steps, stats } = view;
   const remaining = steps.filter((step) => !step.done).length;
   const base = `/dashboard/${makerspace.slug}`;
   return (
@@ -36,12 +38,13 @@ export default async function MakerspaceOverviewPage({ params }: { params: Promi
         <StatTile className="rounded-xl" label="This week" value={stats.weekBookings.toLocaleString("en-IN")} hint={stats.weekUtilisation === null ? "Bookings" : `Bookings · ${Math.round(stats.weekUtilisation * 100)}% of open time used`} href={`${base}/calendar`} />
         <StatTile className="rounded-xl" label="Payments overdue" value={stats.overdue.toLocaleString("en-IN")} hint={stats.overdue ? "Past their due date" : "None overdue"} href={`${base}/bookings?status=CONFIRMED`} />
         {stats.received.length ? <StatTile className="rounded-xl" label="Received this month" value={stats.received.map((row) => money(row.amountMinor, row.currency)).join(" · ")} href={`${base}/payments`} /> : null}
+        {view.openIssues !== null ? <StatTile className="rounded-xl" label="Open issues" value={view.openIssues.toLocaleString("en-IN")} hint={view.openIssues ? "Spaces waiting for a repair" : "Nothing broken"} href={`${base}/issues`} /> : null}
+        {view.finance ? <StatTile className="rounded-xl" label="Net this month" value={money(view.finance.net, view.finance.currency)} hint={`In ${money(view.finance.income, view.finance.currency)} · out ${money(view.finance.expenses, view.finance.currency)}`} href={`${base}/finance`} /> : null}
         <StatTile className="rounded-xl" label="Team" value={teamCount.toLocaleString("en-IN")} hint={openInvites ? `${openInvites} open invite${openInvites === 1 ? "" : "s"}` : "No open invites"} href={`${base}/team`} />
       </div>
 
       {steps.length > 0 ? (
-        <Card as="section" className="rounded-xl">
-          <CardHeader title="Get set up" description={remaining ? `${remaining} of ${steps.length} left` : "All done. Nice work."} />
+        <CollapsibleSection id="overview-setup" title="Get set up" count={remaining} empty={remaining === 0} description={remaining ? `${remaining} of ${steps.length} left` : "All done. Nice work."}>
           <ol className="flex flex-col divide-y divide-line">
             {steps.map((step) => (
               <li key={step.id}>
@@ -67,7 +70,7 @@ export default async function MakerspaceOverviewPage({ params }: { params: Promi
               </li>
             ))}
           </ol>
-        </Card>
+        </CollapsibleSection>
       ) : null}
     </div>
   );

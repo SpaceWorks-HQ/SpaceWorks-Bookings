@@ -62,6 +62,9 @@ describe("the bookings job registry", () => {
       ["registry-booking-refunds-external", "scheduled"],
       ["registry-booking-money-check", "scheduled"],
       ["registry-webhooks-relay", "scheduled"],
+      ["registry-webhooks-relay-repairs", "scheduled"],
+      ["registry-repairs-expire-requests", "scheduled"],
+      ["registry-finance-ledger-check", "scheduled"],
       ["registry-webhooks-deliver", "scheduled"],
     ]);
     // Refunds opened by webhooks reach the gateway within a minute.

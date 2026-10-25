@@ -34,7 +34,8 @@ type FieldProps = {
 /** Label above, control, then helper or error text, all wired with ids and ARIA. */
 export function Field({ label, optional, helperText, error, hideLabel, className, id, required, children }: FieldProps) {
   const generatedId = useId();
-  const controlId = id ?? (children.props.id as string | undefined) ?? generatedId;
+  // A child rendered on the server can arrive as a lazy reference (development), which has no props to read.
+  const controlId = id ?? (isValidElement(children) ? (children.props.id as string | undefined) : undefined) ?? generatedId;
   const describedBy = error || helperText ? `${controlId}-description` : undefined;
   const control = isValidElement(children)
     ? cloneElement(children, {

@@ -58,7 +58,10 @@ the API when you need the customer.
 
 Events: `booking.requested`, `booking.confirmed`, `booking.declined`, `booking.expired`, `booking.cancelled`,
 `booking.rescheduled`, `booking.moved`, `booking.checked_in`, `booking.no_show`, `booking.completed`,
-`payment.received`, `refund.created`, `booking.written_off`, and `ping` (the test button).
+`payment.received`, `refund.created`, `booking.written_off`, `issue.reported`, `issue.resolved`, `repair.paid`,
+`finance.entry_posted`, and `ping` (the test button). The issue events come from the issue timeline and carry the
+issue's id, reference, status, severity and space (plus the payout id and amount for `repair.paid`); `finance.entry_posted`
+carries one ledger entry's ids, direction, category, amount, currency and way of paying.
 
 Headers: `X-SpaceWorks-Event`, `X-SpaceWorks-Delivery` (unique per delivery; deliveries can repeat after a timeout, so
 de-duplicate on the body's `id`), and `X-SpaceWorks-Signature: t=<unix seconds>,v1=<hex>` where `v1` is

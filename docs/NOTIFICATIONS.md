@@ -8,6 +8,7 @@ Two kinds of email go out, through two routes.
 |---|---|---|
 | Account emails | password reset, email verification, sign-in links, sign-in codes, new-device alerts, first-manager invites, makerspace review notices | the platform's SMTP (Super admin → Settings, or `SMTP_*`) |
 | Customer emails | payment received (with the receipt), offline payment not confirmed, refund processed (with the credit note); Phase 1 adds the booking emails | the makerspace's own SMTP when set up and on; otherwise the platform's |
+| Repair emails | a repair request or assignment to a technician (`repair-request`, carrying an outside technician's link, so deleted once sent), "someone else took it", and new or fixed issues to bookings managers (`repair-notice`) | the makerspace's route, like customer emails |
 
 **A makerspace's own email** lives in Settings → Email (bookings managers): sender name and address,
 reply-to, SMTP host, port (587 or 2525 STARTTLS, 465 TLS, 25), login and password. The password is stored
@@ -28,6 +29,10 @@ enqueues due rows by id every five seconds), retries with backoff and records th
 bearer link (password reset, verification, sign-in link, invites) are deleted once sent. Failed rows show in
 Super admin → Operations and failed queue jobs in Super admin → Jobs.
 
+Repair requests also go to a technician directly on WhatsApp or Telegram (`repair-dm`) when the makerspace has an
+enabled channel of that kind and the technician has a number or chat ID: the message uses that channel's bot or
+WhatsApp number and template, sent to the technician instead of the channel. Without either it is skipped.
+
 ## Chat alerts
 
 Settings → Notifications (bookings managers) holds up to ten chat channels per makerspace. Each picks
@@ -37,6 +42,10 @@ its alerts:
 |---|---|
 | Payment received | a gateway or offline payment settles |
 | Payment waiting to be confirmed | a recorded offline payment needs a second person |
+| Issue with a space reported | staff or a customer reports a problem |
+| Repair taken by a technician | a technician accepts, or a manager assigns one |
+| Repair verified and closed | a bookings manager closes a fixed issue |
+| Technician paid for a repair | a payout is recorded (no amount in the alert) |
 
 Phase 1 adds booking alerts. Alerts are team-only and short: what happened, the amount and a link to the
 dashboard. Customer names appear only when the channel turns on **Show customer names**. A channel the provider

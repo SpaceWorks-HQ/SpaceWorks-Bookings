@@ -12,6 +12,7 @@ export const WEBHOOK_EVENTS = [
   "booking.requested", "booking.confirmed", "booking.declined", "booking.expired", "booking.cancelled",
   "booking.rescheduled", "booking.moved", "booking.checked_in", "booking.no_show", "booking.completed",
   "payment.received", "refund.created", "booking.written_off",
+  "issue.reported", "issue.resolved", "repair.paid", "finance.entry_posted",
 ] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 

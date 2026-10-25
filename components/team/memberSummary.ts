@@ -18,7 +18,7 @@ export type RoleCounts = Record<TeamRole, number>;
 export { ROLE_LABELS } from "@/lib/permissionRoles";
 import { isMakerspaceAdmin } from "@/lib/permissionRoles";
 
-const ROLE_ORDER: TeamRole[] = ["BOOKINGS_MANAGER", "FRONT_DESK", "VIEWER"];
+const ROLE_ORDER: TeamRole[] = ["BOOKINGS_MANAGER", "FRONT_DESK", "VIEWER", "TECHNICIAN"];
 
 function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
@@ -28,6 +28,7 @@ const ROLE_NOUNS: Record<TeamRole, [string, string]> = {
   BOOKINGS_MANAGER: ["bookings manager", "bookings managers"],
   FRONT_DESK: ["front desk", "front desk"],
   VIEWER: ["viewer", "viewers"],
+  TECHNICIAN: ["technician", "technicians"],
 };
 
 /** "2 bookings managers · 1 front desk · 3 viewers", skipping roles nobody holds. */

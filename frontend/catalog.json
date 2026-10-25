@@ -66,6 +66,21 @@
       "id": "app__dashboard__makerspaceSlug__calendar__page:loadCalendar"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__finance__page",
+      "name": "loadFinance",
+      "id": "app__dashboard__makerspaceSlug__finance__page:loadFinance"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__issues__issueId__page",
+      "name": "loadIssue",
+      "id": "app__dashboard__makerspaceSlug__issues__issueId__page:loadIssue"
+    },
+    {
+      "module": "lib/views/app__dashboard__makerspaceSlug__issues__page",
+      "name": "loadIssues",
+      "id": "app__dashboard__makerspaceSlug__issues__page:loadIssues"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__layout",
       "name": "loadMakerspaceSlugShell",
       "id": "app__dashboard__makerspaceSlug__layout:loadMakerspaceSlugShell"
@@ -161,6 +176,11 @@
       "id": "app__dashboard__makerspaceSlug__team__page:loadMakerspaceMembersView"
     },
     {
+      "module": "lib/views/app__dashboard__makerspaceSlug__technicians__page",
+      "name": "loadTechnicians",
+      "id": "app__dashboard__makerspaceSlug__technicians__page:loadTechnicians"
+    },
+    {
       "module": "lib/views/app__dashboard__makerspaceSlug__today__page",
       "name": "loadToday",
       "id": "app__dashboard__makerspaceSlug__today__page:loadToday"
@@ -204,6 +224,11 @@
       "module": "lib/views/app__makerspaces__page",
       "name": "loadMakerspacesDirectory",
       "id": "app__makerspaces__page:loadMakerspacesDirectory"
+    },
+    {
+      "module": "lib/views/app__repair__token__page",
+      "name": "loadRepairLink",
+      "id": "app__repair__token__page:loadRepairLink"
     },
     {
       "module": "lib/views/app__sitemap",
@@ -523,6 +548,16 @@
       "id": "chat-channels:testChatChannel"
     },
     {
+      "module": "app/actions/finance",
+      "name": "postFinanceEntry",
+      "id": "finance:postFinanceEntry"
+    },
+    {
+      "module": "app/actions/finance",
+      "name": "reverseFinanceEntry",
+      "id": "finance:reverseFinanceEntry"
+    },
+    {
       "module": "app/actions/instance-settings",
       "name": "setNewUserRegistrationEnabled",
       "id": "instance-settings:setNewUserRegistrationEnabled"
@@ -743,6 +778,81 @@
       "id": "refunds:refundPayment"
     },
     {
+      "module": "app/actions/repairs-public",
+      "name": "reportIssueFromBooking",
+      "id": "repairs-public:reportIssueFromBooking"
+    },
+    {
+      "module": "app/actions/repairs-public",
+      "name": "answerRepairLink",
+      "id": "repairs-public:answerRepairLink"
+    },
+    {
+      "module": "app/actions/repairs-public",
+      "name": "recordFixByLink",
+      "id": "repairs-public:recordFixByLink"
+    },
+    {
+      "module": "app/actions/repairs-public",
+      "name": "addPhotoByLink",
+      "id": "repairs-public:addPhotoByLink"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "reportIssue",
+      "id": "repairs:reportIssue"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "sendRepairRequests",
+      "id": "repairs:sendRepairRequests"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "assignTechnician",
+      "id": "repairs:assignTechnician"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "answerRepairRequest",
+      "id": "repairs:answerRepairRequest"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "recordRepairFix",
+      "id": "repairs:recordRepairFix"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "closeIssue",
+      "id": "repairs:closeIssue"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "reopenIssue",
+      "id": "repairs:reopenIssue"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "setOutOfService",
+      "id": "repairs:setOutOfService"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "approveRepairAmount",
+      "id": "repairs:approveRepairAmount"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "recordRepairPayout",
+      "id": "repairs:recordRepairPayout"
+    },
+    {
+      "module": "app/actions/repairs",
+      "name": "addIssuePhoto",
+      "id": "repairs:addIssuePhoto"
+    },
+    {
       "module": "app/actions/security",
       "name": "beginMfaEnrollment",
       "id": "security:beginMfaEnrollment"
@@ -881,6 +991,21 @@
       "module": "app/actions/team",
       "name": "deleteMakerspace",
       "id": "team:deleteMakerspace"
+    },
+    {
+      "module": "app/actions/technicians",
+      "name": "addExternalTechnician",
+      "id": "technicians:addExternalTechnician"
+    },
+    {
+      "module": "app/actions/technicians",
+      "name": "addStaffTechnician",
+      "id": "technicians:addStaffTechnician"
+    },
+    {
+      "module": "app/actions/technicians",
+      "name": "updateTechnician",
+      "id": "technicians:updateTechnician"
     }
   ]
 }

@@ -27,6 +27,7 @@ export default async function ReportsPage(props: Parameters<typeof loadReports>[
       actions={<div className="flex flex-wrap gap-3">
         <a className={buttonClasses({ variant: "secondary" })} href={`/api/exports/bookings/${view.makerspace.slug}${exportSuffix}`}>Export bookings (CSV)</a>
         {view.finance ? <a className={buttonClasses({ variant: "secondary" })} href={`/api/exports/payments/${view.makerspace.slug}${exportSuffix}`}>Export payments (CSV)</a> : null}
+        {view.finance ? <a className={buttonClasses({ variant: "secondary" })} href={`/api/exports/repairs/${view.makerspace.slug}${exportSuffix}`}>Export repairs (CSV)</a> : null}
       </div>} />
     <NavTabs label="Period" items={view.presets.map((preset) => ({ href: `${base}?period=${preset}`, label: PRESET_LABELS[preset] ?? preset, active: view.period.preset === preset }))} />
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -35,21 +36,24 @@ export default async function ReportsPage(props: Parameters<typeof loadReports>[
       <KpiTile label="No-show rate" value={view.noShows.rate} format="percent" hint={`${view.noShows.noShows} of ${view.noShows.noShows + view.noShows.attended} visits`} />
       {view.finance ? <KpiTile label="Received" value={view.revenueSeries.reduce((sum, value) => sum + value, 0)} format={`money:${view.currency}`} /> : <KpiTile label="Cancelled" value={view.statuses.CANCELLED ?? 0} />}
     </div>
-    <ChartFrame title="Utilisation by space" description="Booked hours over open hours (every unit of a space counts).">
+    <ChartFrame collapse={{ id: "reports-utilisation", empty: view.perSpace.length === 0 }} title="Utilisation by space" description="Booked hours over open hours (every unit of a space counts).">
       <BarList label="Utilisation by space" max={100} items={view.perSpace.map((row) => ({ key: row.spaceId, label: row.name, value: Math.round((row.ratio ?? 0) * 100), display: `${percent(row.ratio)} · ${hours(row.bookedMinutes)} of ${hours(row.openMinutes)}` }))} />
     </ChartFrame>
-    <ChartFrame title="New bookings" description="Bookings made in each part of the period.">
+    <ChartFrame collapse={{ id: "reports-new-bookings", empty: total === 0 }} title="New bookings" description="Bookings made in each part of the period.">
       <ColumnChart ariaLabel="New bookings" labels={view.buckets} series={[{ key: "bookings", label: "Bookings", slot: 1, values: view.bookingsSeries }]} />
     </ChartFrame>
-    <ChartFrame title="Bookings by status">
+    <ChartFrame collapse={{ id: "reports-statuses", empty: total === 0 }} title="Bookings by status">
       <BarList label="Bookings by status" items={Object.entries(view.statuses).map(([status, count]) => ({ key: status, label: words(status), value: count }))} />
     </ChartFrame>
     {view.finance ? <>
-      <ChartFrame title="Money received" description={`Payments in ${view.currency}, by when they were paid.`}>
+      <ChartFrame collapse={{ id: "reports-money", empty: view.revenueSeries.every((value) => value === 0) }} title="Money received" description={`Payments in ${view.currency}, by when they were paid.`}>
         <ColumnChart ariaLabel="Money received" format={`money:${view.currency}`} labels={view.buckets} series={[{ key: "received", label: "Received", slot: 2, values: view.revenueSeries }]} />
       </ChartFrame>
-      <ChartFrame title="Ways of paying"><BarList label="Ways of paying" items={view.received.map((row) => ({ key: `${row.method}-${row.currency}`, label: words(row.method), value: row.amountMinor, display: `${money(row.amountMinor, row.currency)} · ${row.count}` }))} /></ChartFrame>
-      <ChartFrame title="Refunds by reason"><BarList label="Refunds by reason" items={view.refunds.map((row) => ({ key: `${row.kind}-${row.currency}`, label: words(row.kind), value: row.amountMinor, display: `${money(row.amountMinor, row.currency)} · ${row.count}` }))} empty="No refunds in this period." /></ChartFrame>
+      <ChartFrame collapse={{ id: "reports-ways", empty: view.received.length === 0 }} title="Ways of paying"><BarList label="Ways of paying" items={view.received.map((row) => ({ key: `${row.method}-${row.currency}`, label: words(row.method), value: row.amountMinor, display: `${money(row.amountMinor, row.currency)} · ${row.count}` }))} /></ChartFrame>
+      <ChartFrame collapse={{ id: "reports-repairs", empty: view.spaceRepairs.every((row) => !row.revenue && !row.repairs) }} title="Repairs against revenue" description="For each space: booking income less refunds, and what its repairs cost.">
+        <BarList label="Repairs against revenue" items={view.spaceRepairs.map((row) => ({ key: row.spaceId, label: row.name, value: Math.max(0, row.revenue), display: `revenue ${money(row.revenue, view.currency)} · repairs ${money(row.repairs, view.currency)}` }))} empty="No space earned or cost anything in this period." />
+      </ChartFrame>
+      <ChartFrame collapse={{ id: "reports-refunds", empty: view.refunds.length === 0 }} title="Refunds by reason"><BarList label="Refunds by reason" items={view.refunds.map((row) => ({ key: `${row.kind}-${row.currency}`, label: words(row.kind), value: row.amountMinor, display: `${money(row.amountMinor, row.currency)} · ${row.count}` }))} empty="No refunds in this period." /></ChartFrame>
       <p className="text-ink-secondary">Receipts, credit notes and GST figures are on <Link className="underline underline-offset-4" href={`/dashboard/${view.makerspace.slug}/payments`}>Payments</Link>.</p>
     </> : null}
   </div>;

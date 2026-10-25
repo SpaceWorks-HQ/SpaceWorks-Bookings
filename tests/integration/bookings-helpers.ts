@@ -49,7 +49,7 @@ export async function setupMakerspace(rules: Partial<BookingRules> = {}, options
       // Money rows are immutable by trigger: remove this makerspace's with triggers off (test cleanup only).
       await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(`SET LOCAL session_replication_role = replica`);
-        for (const table of ["TaxDocument", "Refund", "PaymentLine", "Payment", "ProcessedWebhookEvent", "GatewayRefundNotice"]) {
+        for (const table of ["FinanceEntry", "RepairPayout", "TaxDocument", "Refund", "PaymentLine", "Payment", "ProcessedWebhookEvent", "GatewayRefundNotice"]) {
           await tx.$executeRawUnsafe(`DELETE FROM "${table}" WHERE "makerspaceId" = $1`, makerspace.id);
         }
       });

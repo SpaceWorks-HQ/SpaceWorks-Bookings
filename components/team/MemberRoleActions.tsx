@@ -12,7 +12,7 @@ import { Dropdown } from "@/components/ui/field";
 import { ROLE_LABELS } from "@/components/team/memberSummary";
 import { assignableRoles, canManageTeamMember } from "@/lib/permissionRoles";
 
-const ROLE_TONES = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
+const ROLE_TONES = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral", TECHNICIAN: "info" } as const satisfies Record<TeamRole, string>;
 
 export function MemberRoleActions(props: {
   makerspaceSlug: string;

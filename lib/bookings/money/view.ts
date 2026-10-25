@@ -9,11 +9,12 @@ import { paymentPlan } from "./start";
 export async function bookingMoneyView(access: MakerspaceAccessContext, bookingId: string) {
   const makerspaceId = access.makerspace.id;
   const allowed = (capability: Capability) => makerspaceAllows(access.makerspace.status, capability) && can(access.membership.role, capability);
-  const canView = allowed("payments.view");
+  // Front desk records desk payments, so it sees this booking's own payments, never the Payments pages.
+  const canView = allowed("payments.view") || allowed("payments.record");
   const booking = await prisma.booking.findFirstOrThrow({ where: { id: bookingId, makerspaceId } });
   const payments = canView ? await prisma.payment.findMany({
     where: { makerspaceId, bookingId }, orderBy: { createdAt: "asc" },
-    select: { id: true, status: true, provider: true, method: true, purpose: true, amountMinor: true, capturedMinor: true, paidAt: true, createdAt: true, flagReason: true, flaggedAt: true, documents: { select: { id: true, number: true, kind: true } } },
+    select: { id: true, status: true, provider: true, method: true, purpose: true, amountMinor: true, capturedMinor: true, paidAt: true, createdAt: true, flagReason: true, flaggedAt: true, documents: { where: allowed("payments.view") ? {} : { id: "-" }, select: { id: true, number: true, kind: true } } },
   }) : [];
   const refunds = canView ? await prisma.refund.findMany({
     where: { makerspaceId, payment: { bookingId } }, orderBy: { createdAt: "asc" },

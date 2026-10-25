@@ -33,6 +33,7 @@ export async function people(count: number) {
 export async function removePaymentsMakerspace(makerspaceId: string, userIds: string[] = []) {
   await prisma.$transaction(async (tx) => {
     await tx.$executeRawUnsafe(`SET LOCAL session_replication_role = replica`);
+    await tx.$executeRaw`DELETE FROM "FinanceEntry" WHERE "makerspaceId" = ${makerspaceId}`;
     await tx.$executeRaw`DELETE FROM "TaxDocument" WHERE "makerspaceId" = ${makerspaceId}`;
     await tx.$executeRaw`DELETE FROM "Refund" WHERE "makerspaceId" = ${makerspaceId}`;
     await tx.$executeRaw`DELETE FROM "PaymentLine" WHERE "makerspaceId" = ${makerspaceId}`;

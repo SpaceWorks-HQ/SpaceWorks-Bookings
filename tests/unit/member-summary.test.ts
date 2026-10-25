@@ -11,7 +11,7 @@ const row = (overrides: Partial<TeamMemberRow>): TeamMemberRow => ({
   ...overrides,
 });
 
-const counts = (BOOKINGS_MANAGER: number, FRONT_DESK: number, VIEWER: number) => ({ BOOKINGS_MANAGER, FRONT_DESK, VIEWER });
+const counts = (BOOKINGS_MANAGER: number, FRONT_DESK: number, VIEWER: number, TECHNICIAN = 0) => ({ BOOKINGS_MANAGER, FRONT_DESK, VIEWER, TECHNICIAN });
 
 describe("team summary helpers", () => {
   it("describes the role mix, skipping empty roles", () => {

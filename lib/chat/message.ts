@@ -5,7 +5,7 @@ import { money } from "@/lib/money/currencies";
 import { absoluteUrl } from "@/lib/email/message";
 import type { ChatEvent } from "./events";
 
-export type ChatRefs = { paymentId?: string };
+export type ChatRefs = { paymentId?: string; issueId?: string };
 
 /**
  * The plain-text alert for one event, built when it is sent from ids only, so nothing personal sits in the
@@ -24,6 +24,16 @@ export async function chatMessage(makerspaceId: string, event: ChatEvent, refs: 
     return event === "payment"
       ? line(`payment received: ${what}.`, `${base}/payments/${refs.paymentId}`)
       : line(`payment waiting to be confirmed: ${what}. Confirm it:`, `${base}/payments/${refs.paymentId}`);
+  }
+  if (refs.issueId) {
+    const issue = await prisma.spaceIssue.findFirst({ where: { id: refs.issueId, makerspaceId }, select: { reference: true, title: true, severity: true, space: { select: { name: true } }, technician: { select: { name: true } } } });
+    if (!issue) return null;
+    const what = `${issue.reference} ${issue.space.name}: ${issue.title}`;
+    const path = `${base}/issues/${refs.issueId}`;
+    if (event === "issue-reported") return line(`new ${issue.severity.toLowerCase()} issue ${what}.`, path);
+    if (event === "issue-assigned") return line(`${includeNames && issue.technician ? issue.technician.name : "A technician"} took ${what}.`, path);
+    if (event === "issue-resolved") return line(`repair verified and closed: ${what}.`, path);
+    if (event === "repair-payment") return line(`technician paid for ${what}.`, path);
   }
   return null;
 }

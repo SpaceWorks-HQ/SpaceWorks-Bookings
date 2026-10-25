@@ -11,6 +11,7 @@ import { PrismaClient } from "@prisma/client";
 import { seedBookingCatalogue } from "./seed/booking-catalogue.mjs";
 import { seedBookings } from "./seed/bookings.mjs";
 import { seedMoney } from "./seed/money.mjs";
+import { seedRepairs } from "./seed/repairs.mjs";
 
 if (process.env.NODE_ENV === "production") throw new Error("seed-demo never runs in production.");
 const password = process.env.DEMO_PASSWORD ?? "";
@@ -40,6 +41,11 @@ const front = await prisma.user.upsert({
   create: { email: "front@demo.test", name: "Diya Nair", ...credentials },
   update: { name: "Diya Nair", ...credentials, isSuperAdmin: false },
 });
+const technician = await prisma.user.upsert({
+  where: { email: "tech@demo.test" },
+  create: { email: "tech@demo.test", name: "Arjun Pillai", ...credentials },
+  update: { name: "Arjun Pillai", ...credentials, isSuperAdmin: false },
+});
 const customer = await prisma.user.upsert({
   where: { email: "customer@demo.test" },
   create: { email: "customer@demo.test", name: "Asha Menon", emailVerified: now, passwordHash: credentials.passwordHash },
@@ -64,6 +70,11 @@ await prisma.teamMember.upsert({
   create: { userId: front.id, makerspaceId: makerspace.id, role: "FRONT_DESK" },
   update: { role: "FRONT_DESK" },
 });
+await prisma.teamMember.upsert({
+  where: { userId_makerspaceId: { userId: technician.id, makerspaceId: makerspace.id } },
+  create: { userId: technician.id, makerspaceId: makerspace.id, role: "TECHNICIAN" },
+  update: { role: "TECHNICIAN" },
+});
 if (!(await prisma.makerspaceReview.count({ where: { makerspaceId: makerspace.id } }))) {
   await prisma.makerspaceReview.create({ data: { makerspaceId: makerspace.id, action: "CREATED", actorUserId: null } });
 }
@@ -72,7 +83,8 @@ try {
   const spaces = await seedBookingCatalogue(prisma, makerspace.id);
   await seedBookings(prisma, { makerspaceId: makerspace.id, spaces, owner, front, customer, now });
   await seedMoney(prisma, { makerspaceId: makerspace.id, owner, now });
+  await seedRepairs(prisma, { makerspaceId: makerspace.id, spaces, owner, technician, now });
 } finally {
   await prisma.$disconnect();
 }
-console.log("Seeded Tinkerspace (/m/tinkerspace), spaces and bookings; manager@demo.test, front@demo.test and customer@demo.test.");
+console.log("Seeded Tinkerspace (/m/tinkerspace), spaces and bookings; manager@demo.test, front@demo.test, tech@demo.test and customer@demo.test.");

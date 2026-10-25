@@ -62,23 +62,34 @@ and branding, and your customers' data stays in your own database.
   late payments, refunds made in the provider's dashboard, failed refunds you retry or hand back by hand.
 - A reconciliation page for open checkouts, payments to review and refunds still to finish.
 
+### Keep the spaces working
+
+- Staff, and customers from their booking page, report problems with a space: what is wrong, how urgent, photos.
+- A directory of your team's technicians and outside ones, with skills. Ask several at once by email, WhatsApp or
+  Telegram; the first to accept takes it. Outside technicians work through a private link, no account needed.
+- Fix notes, parts and the amount asked; verify, close or reopen; block a space's bookings while it is out of
+  service; approve and pay out by cash, bank transfer or UPI.
+
 ### Know how it's going
 
 - An overview of today's arrivals, requests, overdue payments and the week's bookings.
-- Reports on utilisation per space, bookings, no-shows, money received and refunds, with audited CSV exports.
+- Reports on utilisation per space, bookings, no-shows, money received and refunds, and repairs against each space's
+  revenue, with audited CSV exports.
+- A finance ledger that records every payment, refund, repair payout and expense as it happens, with money in, out
+  and net by financial year, category, way of paying and space, exported to CSV or Excel. Only bookings managers see it.
 - An audit log of every settings, team, money and integration change.
 
 ### Connect your other tools
 
 - A REST API with read and write keys, documented in OpenAPI.
-- Signed webhooks for bookings, payments and refunds, with retries and a delivery log.
+- Signed webhooks for bookings, payments, refunds, repairs and the finance ledger, with retries and a delivery log.
 
 ### Run it safely
 
 - Email and password or a one-time sign-in link, authenticator codes for every member of staff, known devices,
   IP blocking and breached-password checks. No third-party sign-in and no trackers.
-- Three roles: the bookings manager runs everything (and a makerspace always keeps one), front desk takes bookings
-  and desk payments, viewers read. Every settings change is audited.
+- Four roles: the bookings manager runs everything, money included (and a makerspace always keeps one), front desk
+  takes bookings and desk payments, viewers read, technicians see only their repairs. Every settings change is audited.
 
 ## A look around
 
@@ -111,6 +122,16 @@ and branding, and your customers' data stays in your own database.
     <td width="50%" valign="top">
       <img src="docs/screenshots/reports.webp" alt="Reports with utilisation per space, new bookings and money received" />
       <p><strong>Reports.</strong> Utilisation, no-shows and money, with CSV exports.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/issue.webp" alt="A repaired issue with its technician, work notes, approved amount and timeline" />
+      <p><strong>Repairs.</strong> From the report to the technician, the fix and the payout.</p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/finance.webp" alt="The finance page with money in, money out and net, by category and by space" />
+      <p><strong>Finance.</strong> Every payment, refund, repair and expense in one ledger.</p>
     </td>
   </tr>
   <tr>
@@ -194,7 +215,7 @@ npm run dev                     # http://localhost:3000
 ```
 
 The demo makerspace is Tinkerspace (`/m/tinkerspace`) with four spaces, bookings and payments. Sign in as
-`manager@demo.test` or `front@demo.test` with `DEMO_PASSWORD` and an authenticator code from `DEMO_MFA_SECRET`.
+`manager@demo.test`, `front@demo.test` or `tech@demo.test` with `DEMO_PASSWORD` and an authenticator code from `DEMO_MFA_SECRET`.
 Without Redis, set `JOBS_INPROCESS=true` and leave `REDIS_URL` unset to run the background jobs inside `npm run dev`.
 
 ## Design system

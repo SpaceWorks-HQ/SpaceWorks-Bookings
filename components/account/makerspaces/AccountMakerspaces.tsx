@@ -9,7 +9,7 @@ import { Chip, EmptyState, MakerspaceLogo } from "@/components/ui/display";
 import { LeaveMakerspaceButton } from "./LeaveMakerspaceButton";
 import type { AccountMembershipRow, AccountMakerspacesData } from "./data";
 
-const ROLE_TONES = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral" } as const satisfies Record<TeamRole, string>;
+const ROLE_TONES = { BOOKINGS_MANAGER: "ink", FRONT_DESK: "neutral", VIEWER: "neutral", TECHNICIAN: "info" } as const satisfies Record<TeamRole, string>;
 
 const rowClasses = "flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between";
 
