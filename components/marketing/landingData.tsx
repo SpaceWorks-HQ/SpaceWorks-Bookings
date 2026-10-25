@@ -1,5 +1,5 @@
 /** Content for the landing page: what the product does and the questions people ask. */
-export const GITHUB = "https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings";
+export const GITHUB = "https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings";
 
 export const FEATURES = [
   { title: "Rooms, studios, desks and halls", body: "Each space has its own hours, capacity, rates and rules, with sensible defaults for the whole makerspace." },

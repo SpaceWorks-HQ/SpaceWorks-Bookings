@@ -73,7 +73,7 @@ is the Redis the queue tests use, each run under its own key prefix. `DEMO_PASSW
 
 | Variable | Default | Description |
 |---|---|---|
-| `SWB_REPOSITORY` | `SpaceWorks-HQ/SpaceWorks-Bookings` | Repository the installer, updater and runner follow (a fork works). |
+| `SWB_REPOSITORY` | `SpaceWorks-Labs/SpaceWorks-Bookings` | Repository the installer, updater and runner follow (a fork works). |
 | `SWB_BACKEND_IMAGE`, `SWB_FRONTEND_IMAGE` | `ghcr.io/<owner>/spaceworks-bookings-backend` / `-frontend` | Image names, derived from the repository owner. |
 | `SWB_IMAGE_TAG` | `.spaceworks-version`, else `latest` | The release the stack runs. |
 | `SWB_LAYER` | `none` | `none` plain HTTP through Caddy, `tls` automatic HTTPS, `proxy` your own proxy on `127.0.0.1:8080`. |

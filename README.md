@@ -157,15 +157,15 @@ scheduler, PostgreSQL, Redis and private file storage, behind Caddy with automat
 ### Install in one line
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
 ```
 
 While the repository is private, export a token (`repo`, `read:packages`) and pass it to curl, or use the GitHub
 CLI:
 
 ```bash
-curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
-gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-HQ/SpaceWorks-Bookings/contents/install.sh | bash
+curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
+gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-Labs/SpaceWorks-Bookings/contents/install.sh | bash
 ```
 
 The installer checks the machine, asks its questions before changing anything, and installs Docker if needed. Until
@@ -193,7 +193,7 @@ mail or storage credentials; background jobs always stay on the backend. See
 
 ## Run it in the cloud
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings)
 
 [`render.yaml`](render.yaml) creates a managed PostgreSQL database, the website and the background worker and
 scheduler; bring a TLS Redis (for example Upstash), an S3-compatible bucket (for example Cloudflare R2) and SMTP.
@@ -220,7 +220,7 @@ Without Redis, set `JOBS_INPROCESS=true` and leave `REDIS_URL` unset to run the 
 
 ## Design system
 
-Space Works Bookings follows [SpaceWorks-Design](https://spaceworks-hq.github.io/SpaceWorks-Design/): Gilroy,
+Space Works Bookings follows [SpaceWorks-Design](https://spaceworks-labs.github.io/SpaceWorks-Design/): Gilroy,
 pill-shaped controls, flat cards with 1px lines, light and dark mode for everything, and Patch, the Space Works
 wolf, on a few staff screens and the 404 page ([docs/DESIGN.md](docs/DESIGN.md), including its easter eggs).
 
@@ -276,10 +276,10 @@ roles, money, the 300-line file limit and the copy style. Write copy in British 
 Space Works Bookings is built by the Space Works team. Its platform (accounts, multi-tenancy, payments, receipts,
 outbox and operations) is forked from the
 Space Works membership platform, its background worker comes from
-[SpaceWorks-Workspace](https://github.com/SpaceWorks-HQ/SpaceWorks-Workspace), and parts of the platform from
-[SpaceWorks-Events](https://github.com/SpaceWorks-HQ/SpaceWorks-Events). The booking and payment rules are ported from
-the original [SpaceWorks](https://github.com/SpaceWorks-HQ/SpaceWorks) app. The name, logo, colours, fonts and Patch
-come from [SpaceWorks-Design](https://spaceworks-hq.github.io/SpaceWorks-Design/). See [NOTICE](NOTICE).
+[SpaceWorks-Workspace](https://github.com/SpaceWorks-Labs/SpaceWorks-Workspace), and parts of the platform from
+[SpaceWorks-Events](https://github.com/SpaceWorks-Labs/SpaceWorks-Events). The booking and payment rules are ported from
+the original [SpaceWorks](https://github.com/SpaceWorks-Labs/SpaceWorks) app. The name, logo, colours, fonts and Patch
+come from [SpaceWorks-Design](https://spaceworks-labs.github.io/SpaceWorks-Design/). See [NOTICE](NOTICE).
 
 ## Licence
 

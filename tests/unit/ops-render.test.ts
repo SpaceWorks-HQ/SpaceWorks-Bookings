@@ -135,7 +135,7 @@ describe("render.yaml", () => {
   });
 
   it("links the Deploy to Render button", () => {
-    const button = "https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings";
+    const button = "https://render.com/deploy?repo=https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings";
     expect(read("render.yaml")).toContain(button);
     expect(read("docs/DEPLOYMENT_CLOUD.md")).toContain(button);
   });

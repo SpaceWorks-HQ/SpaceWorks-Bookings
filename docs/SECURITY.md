@@ -2,7 +2,7 @@
 
 How Space Works Bookings protects an installation, and what an operator must do. Report a vulnerability
 privately through GitHub's **Security → Report a vulnerability** on
-[SpaceWorks-HQ/SpaceWorks-Bookings](https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings), not in a
+[SpaceWorks-Labs/SpaceWorks-Bookings](https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings), not in a
 public issue.
 
 ## Data in transit

@@ -30,7 +30,7 @@ SpaceWorks' `docker-compose.cloud.yml` and `scripts/spaceworks-compose.sh cloud`
 ## Docker host with Compose
 
 ```bash
-git clone https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings.git /opt/spaceworks-bookings
+git clone https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings.git /opt/spaceworks-bookings
 cd /opt/spaceworks-bookings
 sudo install -D -m 600 .env.production.example /etc/spaceworks-bookings/cloud.env
 sudoedit /etc/spaceworks-bookings/cloud.env      # fill every value; see docs/CONFIGURATION.md
@@ -60,7 +60,7 @@ Block `/api/internal/*` at your edge; those endpoints also refuse any request wi
 
 ## Render
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings)
 
 The button opens [`render.yaml`](../render.yaml), a Blueprint that creates, in one region (Singapore; change
 `region` in every block to move it):
@@ -108,7 +108,7 @@ is not optional: it delivers every email, sign-in links included, and runs the t
 own is not enough. For a short trial without `preDeployCommand`, `MIGRATE_ON_START=1` on the web service applies
 migrations at start instead.
 
-**Private repository:** while `SpaceWorks-HQ/SpaceWorks-Bookings` is private, give Render's GitHub app access to it
+**Private repository:** while `SpaceWorks-Labs/SpaceWorks-Bookings` is private, give Render's GitHub app access to it
 (Render → Account settings → GitHub) before using the button.
 
 ## DigitalOcean App Platform
@@ -125,7 +125,7 @@ packages are private, add `registry_credentials` to each image block.
 
 Any container platform works with the published image:
 
-- web: `ghcr.io/spaceworks-hq/spaceworks-bookings-backend:<version>` with the default command
+- web: `ghcr.io/spaceworks-labs/spaceworks-bookings-backend:<version>` with the default command
   (`--role backend node server.js`) and the variables in [CONFIGURATION.md](CONFIGURATION.md). Where the
   platform replaces the image's entrypoint with your command, prefix it: `docker-entrypoint.sh --role …`;
 - a release or pre-deploy job: the same image with `--role migrate`;

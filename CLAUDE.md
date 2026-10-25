@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> **Start here:** `docs/DECISIONS.md` explains what this repo is (a standalone app split out of SpaceWorks, part of the SpaceWorks-HQ family) and every decision already made: the original ones, the owner's, the defaults chosen conservatively and the checks only the owner can run.
+> **Start here:** `docs/DECISIONS.md` explains what this repo is (a standalone app split out of SpaceWorks, part of the SpaceWorks-Labs family) and every decision already made: the original ones, the owner's, the defaults chosen conservatively and the checks only the owner can run.
 
 Guidance for Claude Code (and other agents, via `AGENTS.md`) in this repository. `AGENTS.md` must stay
 byte-identical to this file (CI checks it).
@@ -75,7 +75,7 @@ registered job once a minute in the web process.
 Operations (bash; see `docs/DEPLOYMENT_VPS.md`, `docs/DEPLOYMENT_CLOUD.md`, `docs/CONFIGURATION.md`):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash   # install, or the menu when installed
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash   # install, or the menu when installed
 bash install.sh --help                                   # --ref REF, --release TAG, --action ACTION, --non-interactive, --dry-run
 bash scripts/status.sh                                   # release, services, worker/beat health, newest backup, ops checks
 bash setup.sh [--build]                                  # guided install from a checkout (setup.ps1 on Windows)

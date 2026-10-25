@@ -30,7 +30,7 @@ payment checks and the timed jobs never run on Netlify.
 
 ## 2. Create the Netlify site
 
-1. In Netlify, add a new site from the GitHub repository `SpaceWorks-HQ/SpaceWorks-Bookings` (while it is
+1. In Netlify, add a new site from the GitHub repository `SpaceWorks-Labs/SpaceWorks-Bookings` (while it is
    private, grant Netlify's GitHub app access to it first).
 2. **Base directory:** leave empty (the repository root). **Package directory:** `frontend`.
 3. The build command and publish directory come from `frontend/netlify.toml`.
@@ -57,7 +57,7 @@ payment checks and the timed jobs never run on Netlify.
 
 ## The website as a container instead of Netlify
 
-The same build is published as `ghcr.io/spaceworks-hq/spaceworks-bookings-frontend`. Run it with the
+The same build is published as `ghcr.io/spaceworks-labs/spaceworks-bookings-frontend`. Run it with the
 variables in the table above and `FRONTEND_TRUSTED_IP_HEADER=x-real-ip` behind a proxy that overwrites
 `X-Real-IP`; the public origins are applied when the container starts, so one image serves any domain.
 

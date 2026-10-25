@@ -24,7 +24,7 @@ services:
   - name: web
     image:
       registry_type: GHCR
-      registry: spaceworks-hq
+      registry: spaceworks-labs
       repository: spaceworks-bookings-backend
       tag: REPLACE_WITH_IMMUTABLE_RELEASE
     run_command: docker-entrypoint.sh --role backend node server.js
@@ -42,7 +42,7 @@ jobs:
     kind: PRE_DEPLOY
     image:
       registry_type: GHCR
-      registry: spaceworks-hq
+      registry: spaceworks-labs
       repository: spaceworks-bookings-backend
       tag: REPLACE_WITH_IMMUTABLE_RELEASE
     instance_size_slug: apps-s-1vcpu-1gb
@@ -54,7 +54,7 @@ workers:
   - name: worker
     image:
       registry_type: GHCR
-      registry: spaceworks-hq
+      registry: spaceworks-labs
       repository: spaceworks-bookings-backend
       tag: REPLACE_WITH_IMMUTABLE_RELEASE
     instance_size_slug: apps-s-1vcpu-1gb
@@ -63,7 +63,7 @@ workers:
   - name: beat
     image:
       registry_type: GHCR
-      registry: spaceworks-hq
+      registry: spaceworks-labs
       repository: spaceworks-bookings-backend
       tag: REPLACE_WITH_IMMUTABLE_RELEASE
     instance_size_slug: apps-s-1vcpu-1gb

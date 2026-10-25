@@ -9,14 +9,14 @@ file disagree, this file wins). Money detail lives in `docs/PAYMENTS.md` and `do
 ## Where this repo fits
 
 Space Works is a family of self-hosted, open-source (AGPL-3.0-or-later) tools for makerspaces and communities, in
-the [SpaceWorks-HQ](https://github.com/SpaceWorks-HQ) GitHub org. On 2026-10-23 three areas of the original
-[SpaceWorks](https://github.com/SpaceWorks-HQ/SpaceWorks) (Django + React) were split into standalone apps:
-[SpaceWorks-Inventory](https://github.com/SpaceWorks-HQ/SpaceWorks-Inventory),
-[SpaceWorks-Machines](https://github.com/SpaceWorks-HQ/SpaceWorks-Machines) and this one, space booking (rooms,
+the [SpaceWorks-Labs](https://github.com/SpaceWorks-Labs) GitHub org. On 2026-10-23 three areas of the original
+[SpaceWorks](https://github.com/SpaceWorks-Labs/SpaceWorks) (Django + React) were split into standalone apps:
+[SpaceWorks-Inventory](https://github.com/SpaceWorks-Labs/SpaceWorks-Inventory),
+[SpaceWorks-Machines](https://github.com/SpaceWorks-Labs/SpaceWorks-Machines) and this one, space booking (rooms,
 studios, desks, halls) with every payment and refund scenario. Siblings on the same stack, used as the reference for
-structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks-HQ/SpaceWorks-Events),
-[SpaceWorks-Workspace](https://github.com/SpaceWorks-HQ/SpaceWorks-Workspace) and the Space Works membership platform
-(see `NOTICE`). Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-hq.github.io/SpaceWorks-Design/).
+structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks-Labs/SpaceWorks-Events),
+[SpaceWorks-Workspace](https://github.com/SpaceWorks-Labs/SpaceWorks-Workspace) and the Space Works membership platform
+(see `NOTICE`). Brand and UI rules come only from [SpaceWorks-Design](https://spaceworks-labs.github.io/SpaceWorks-Design/).
 
 ## Owner decisions (2026-10-24)
 

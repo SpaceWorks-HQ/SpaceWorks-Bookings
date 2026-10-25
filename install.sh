@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Space Works Bookings installer and maintenance menu:
-#   curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
 # While the repository is private, fetch it with a token or the GitHub CLI (install.sh --help,
 # "Private repository"). It is fetched alone (curl | bash), so it is one self-contained file
 # and may exceed the ~300-line ceiling for that reason.
 set -euo pipefail
-DEFAULT_REPOSITORY=SpaceWorks-HQ/SpaceWorks-Bookings
+DEFAULT_REPOSITORY=SpaceWorks-Labs/SpaceWorks-Bookings
 ACTIONS=(update status backup backup-settings restore rollback reconfigure harden recover-admin support runner runner-remove uninstall cancel)
 show_guide() {
   cat <<'EOF'
@@ -40,7 +40,7 @@ roll back, change settings, server security, recover super-admin access, support
 automatic deploys (runner) and uninstall.
 
 Options
-  --repo OWNER/NAME   install from a fork (default SpaceWorks-HQ/SpaceWorks-Bookings)
+  --repo OWNER/NAME   install from a fork (default SpaceWorks-Labs/SpaceWorks-Bookings)
   --dir PATH          install directory (default /opt/spaceworks-bookings; env SWB_DIR)
   --release TAG       install this published release instead of the latest
   --ref REF           build this branch, tag or commit from source on this server
@@ -66,11 +66,11 @@ Private repository
   The raw URL needs a GitHub token while the repository is private. Use one of:
     export GITHUB_TOKEN=<token with repo and read:packages>
     curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" \
-      https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+      https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
   or, signed in with the GitHub CLI (gh auth login):
     gh api -H 'Accept: application/vnd.github.raw' \
-      repos/SpaceWorks-HQ/SpaceWorks-Bookings/contents/install.sh | bash
-  or: gh repo clone SpaceWorks-HQ/SpaceWorks-Bookings && bash SpaceWorks-Bookings/install.sh
+      repos/SpaceWorks-Labs/SpaceWorks-Bookings/contents/install.sh | bash
+  or: gh repo clone SpaceWorks-Labs/SpaceWorks-Bookings && bash SpaceWorks-Bookings/install.sh
   The installer then uses SWB_GITHUB_TOKEN, GITHUB_TOKEN or GH_TOKEN (else `gh auth token`)
   for the release download and the GHCR image pull. The token is never written to disk;
   Docker keeps its own ghcr.io login for later pulls.

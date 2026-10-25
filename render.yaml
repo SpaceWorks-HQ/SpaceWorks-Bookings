@@ -1,5 +1,5 @@
 # Render Blueprint for Space Works Bookings (docs/DEPLOYMENT_CLOUD.md, "Render").
-# Deploy to Render: https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings
+# Deploy to Render: https://render.com/deploy?repo=https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings
 # (a private repository needs Render's GitHub app to have access to it).
 #
 # What it creates, all in one region so they share Render's private network:

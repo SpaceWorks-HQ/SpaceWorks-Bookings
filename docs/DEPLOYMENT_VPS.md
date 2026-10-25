@@ -7,7 +7,7 @@ standalone SpaceWorks install: the curl installer, `setup.sh`, `scripts/update.s
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
 ```
 
 The installer checks the host (architecture, distribution, Docker, disk space, an existing install), asks which
@@ -47,12 +47,12 @@ While the repository is private, `raw.githubusercontent.com` needs a token. Any 
 ```bash
 export GITHUB_TOKEN=<token with repo and read:packages>
 curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" \
-  https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+  https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
 
 gh auth login        # once, then:
-gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-HQ/SpaceWorks-Bookings/contents/install.sh | bash
+gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-Labs/SpaceWorks-Bookings/contents/install.sh | bash
 
-gh repo clone SpaceWorks-HQ/SpaceWorks-Bookings && bash SpaceWorks-Bookings/install.sh
+gh repo clone SpaceWorks-Labs/SpaceWorks-Bookings && bash SpaceWorks-Bookings/install.sh
 ```
 
 The installer then uses `SWB_GITHUB_TOKEN`, `GITHUB_TOKEN` or `GH_TOKEN` (or, failing those, `gh auth token`) for

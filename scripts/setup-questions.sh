@@ -73,7 +73,7 @@ ask_setup_questions() {
   if [[ "${SWB_INSTALL_REPOSITORY_PINNED:-0}" == 1 ]]; then
     echo "GitHub repository to follow [$SWB_REPOSITORY] (selected before download)."
   else
-    question SWB_REPOSITORY 'GitHub repository to follow' "${SWB_REPOSITORY:-SpaceWorks-HQ/SpaceWorks-Bookings}" repository || return 1
+    question SWB_REPOSITORY 'GitHub repository to follow' "${SWB_REPOSITORY:-SpaceWorks-Labs/SpaceWorks-Bookings}" repository || return 1
   fi
   INSTALL_RUNNER=N
   if [[ "$(uname -s)" == Linux ]] && command -v systemctl >/dev/null 2>&1 \

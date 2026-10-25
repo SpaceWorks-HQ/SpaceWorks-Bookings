@@ -29,7 +29,7 @@ not be verified on this machine, and the lines README.md and CLAUDE.md should ca
   worker|beat`), env group `swbook-shared` with `generateValue` secrets (incl. the three base64 keys), operator
   values asked once on the web service and shared to the workers with `fromService.envVarKey`, public origin
   defaulting to `RENDER_EXTERNAL_URL`. Deploy button:
-  `https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings`.
+  `https://render.com/deploy?repo=https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings`.
 - **`.do/app.yaml`** (DigitalOcean App Platform, the only other host a sibling ships: W) ported with explicit
   roles. Railway and Fly appear in W only as monitoring integrations, not as deploy targets, so nothing to port.
 - **Compose:** `DATABASE_URL_SSLMODE` in both `x-app-env` blocks; the smoke now checks `/api/health` (body),
@@ -93,13 +93,13 @@ README, "Install" section:
 ```markdown
 ### One-line install (VPS)
 
-    curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
 
 While the repository is private, export a token (`repo`, `read:packages`) and pass it to curl, or use the
 GitHub CLI:
 
-    curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash
-    gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-HQ/SpaceWorks-Bookings/contents/install.sh | bash
+    curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash
+    gh api -H 'Accept: application/vnd.github.raw' repos/SpaceWorks-Labs/SpaceWorks-Bookings/contents/install.sh | bash
 
 Run it again for the maintenance menu: update, status, backups, restore, rollback, settings, server security,
 super-admin recovery, support bundle and uninstall. `--ref main` builds from source before the first release;
@@ -107,7 +107,7 @@ super-admin recovery, support bundle and uninstall. `--ref main` builds from sou
 
 ### Hosting
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-HQ/SpaceWorks-Bookings)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SpaceWorks-Labs/SpaceWorks-Bookings)
 
 - One server (VPS): the installer above, docs/DEPLOYMENT_VPS.md.
 - Render: render.yaml (managed PostgreSQL, web, BullMQ worker and beat; bring a TLS Redis, a bucket and SMTP),
@@ -120,7 +120,7 @@ super-admin recovery, support bundle and uninstall. `--ref main` builds from sou
 CLAUDE.md, "Commands" → Operations block, replace/add:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash   # install, or the menu when installed
+curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash   # install, or the menu when installed
 bash install.sh --help                                   # --ref REF, --release TAG, --action ACTION, --non-interactive, --dry-run
 bash scripts/status.sh                                   # release, services, worker/beat health, newest backup, ops checks
 bash scripts/update.sh --force [--version V | --rollback | --source REF]

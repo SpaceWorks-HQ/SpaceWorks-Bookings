@@ -4,8 +4,8 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { Check } from "lucide-react";
 import { CopyCommand } from "./CopyCommand";
 
-const IMAGE = "ghcr.io/spaceworks-hq/spaceworks-bookings";
-const INSTALL = "curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash";
+const IMAGE = "ghcr.io/spaceworks-labs/spaceworks-bookings";
+const INSTALL = "curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash";
 
 /** The ways to run it, each with what it sets up and the command that starts it. */
 const OPTIONS = [
@@ -23,7 +23,7 @@ const OPTIONS = [
     terminal: [
       ["$ ", "curl -fsSL \\"],
       ["", "  https://raw.githubusercontent.com/\\"],
-      ["", "SpaceWorks-HQ/SpaceWorks-Bookings/\\"],
+      ["", "SpaceWorks-Labs/SpaceWorks-Bookings/\\"],
       ["", "main/install.sh | bash"],
       ["", ""],
       ["# ", "Deployment summary"],

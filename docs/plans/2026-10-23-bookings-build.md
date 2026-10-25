@@ -14,11 +14,11 @@ Research notes (read them, they are the porting basis):
 - `docs/plans/research/survey-django.md`: the Django booking + payments domain (what to port, bugs not to repeat).
 - `docs/plans/research/survey-ops.md`: ops, BullMQ, auth and tests across Organization (O), Workspace (W), Events (E).
 
-Reference repositories (read only): [SpaceWorks](https://github.com/SpaceWorks-HQ/SpaceWorks),
-[SpaceWorks-Organization](https://github.com/SpaceWorks-HQ/SpaceWorks-Organization),
-[SpaceWorks-Workspace](https://github.com/SpaceWorks-HQ/SpaceWorks-Workspace),
-[SpaceWorks-Events](https://github.com/SpaceWorks-HQ/SpaceWorks-Events) and
-[SpaceWorks-Design](https://github.com/SpaceWorks-HQ/SpaceWorks-Design); clone them beside this one.
+Reference repositories (read only): [SpaceWorks](https://github.com/SpaceWorks-Labs/SpaceWorks),
+[SpaceWorks-Organization](https://github.com/SpaceWorks-Labs/SpaceWorks-Organization),
+[SpaceWorks-Workspace](https://github.com/SpaceWorks-Labs/SpaceWorks-Workspace),
+[SpaceWorks-Events](https://github.com/SpaceWorks-Labs/SpaceWorks-Events) and
+[SpaceWorks-Design](https://github.com/SpaceWorks-Labs/SpaceWorks-Design); clone them beside this one.
 
 ## Product
 
@@ -43,7 +43,7 @@ HALL, OTHER). Never call the tenant a "space" in code.
 3. Refunds for every scenario (see "Money").
 4. README in the Events/Workspace style with hero art, a feature overview and **real Playwright screenshots**
    (light and dark) under `docs/screenshots/`; a one-line VPS install
-   (`curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Bookings/main/install.sh | bash`,
+   (`curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Bookings/main/install.sh | bash`,
    plus a `gh`/token fallback because the repo is private); a working `render.yaml` with a Deploy to Render
    button, plus the other hosts the siblings document.
 5. Design follows SpaceWorks-Design strictly, the same way Organization applies it (tokens, Gilroy, pills,

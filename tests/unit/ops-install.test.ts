@@ -67,7 +67,7 @@ describe.skipIf(process.platform === "win32")("install.sh", { timeout: 180_000 }
     for (const action of [...Object.keys(ACTION_SCRIPTS), "update", "rollback", "cancel"]) expect(out).toContain(action);
     expect(out).toContain('curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN"');
     expect(out).toContain("gh api -H 'Accept: application/vnd.github.raw'");
-    expect(out).toContain("gh repo clone SpaceWorks-HQ/SpaceWorks-Bookings");
+    expect(out).toContain("gh repo clone SpaceWorks-Labs/SpaceWorks-Bookings");
     expect(out).toMatch(/PAYMENT_SECRETS_KEY.*\n?.*MFA_ENCRYPTION_KEY|MFA_ENCRYPTION_KEY[\s\S]*PAYMENT_SECRETS_KEY/);
   });
 
@@ -110,7 +110,7 @@ describe.skipIf(process.platform === "win32")("install.sh", { timeout: 180_000 }
     const dir = join(work, "fresh");
     const { status, out } = install(["--dir", dir, "--ref", "main", "--dry-run"], answers);
     expect(status, out).toBe(0);
-    expect(out).toContain("would install SpaceWorks-HQ/SpaceWorks-Bookings at main, built from source");
+    expect(out).toContain("would install SpaceWorks-Labs/SpaceWorks-Bookings at main, built from source");
     expect(out).toContain("HTTPS: automatic Caddy HTTPS; storage: bundled Silo");
     expect(out).toContain("Server: https://book.example.org");
     expect(out).toContain("Dry run complete; nothing was changed.");

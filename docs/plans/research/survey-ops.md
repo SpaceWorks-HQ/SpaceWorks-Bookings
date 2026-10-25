@@ -146,7 +146,7 @@ Caddy in W: `caddy:2-alpine`, ports 80/443/443-udp, `./docker/vps/${SWW_CADDYFIL
 | File | Purpose |
 |---|---|
 | `docker-compose.yml` | Dev only: postgres (5432, user `sworg`) and redis (6379). **No Silo and no mailpit in dev.** |
-| `docker-compose.prod.yml` | "Bundled" topology. Services: `db, redis, minio (Silo image, ${SILO_IMAGE_TAG}), createbuckets, migrate, backend, scheduler, caddy, backup, backup-storage, ops[tools]`. All env is inline in an `x-app-env` anchor interpolated from the install's `./.env`, with `?` guards. Image `${SWO_BACKEND_IMAGE:-ghcr.io/spaceworks-hq/spaceworks-organization-backend}:${SWO_IMAGE_TAG:-latest}`. Separate owner and app DB roles (`sworg` / `sworg_app`). Built-in scheduled `backup` (postgres image) and `backup-storage` (silo image) services. **No frontend service and no worker/beat.** |
+| `docker-compose.prod.yml` | "Bundled" topology. Services: `db, redis, minio (Silo image, ${SILO_IMAGE_TAG}), createbuckets, migrate, backend, scheduler, caddy, backup, backup-storage, ops[tools]`. All env is inline in an `x-app-env` anchor interpolated from the install's `./.env`, with `?` guards. Image `${SWO_BACKEND_IMAGE:-ghcr.io/spaceworks-labs/spaceworks-organization-backend}:${SWO_IMAGE_TAG:-latest}`. Separate owner and app DB roles (`sworg` / `sworg_app`). Built-in scheduled `backup` (postgres image) and `backup-storage` (silo image) services. **No frontend service and no worker/beat.** |
 | `docker-compose.cloud.yml` | "Cloud" topology: `migrate`, `backend` (127.0.0.1:8080), `scheduler`, `ops`, with managed PG, Redis and S3. Env from `/etc/spaceworks-organization/cloud.env`. |
 | `docker/compose.tls.yml` | Caddy Let's Encrypt (443 tcp/udp, `TLS_EMAIL`). |
 | `docker/compose.proxy.yml` | Existing reverse proxy: disables caddy, backend on 127.0.0.1:8080. |
@@ -162,7 +162,7 @@ O's "Website" setup question: `1` = on this server (monolith), `2` = Netlify. Th
 
 | | W (E identical except branding and no GitHub token) | O |
 |---|---|---|
-| One-liner | `curl -fsSL https://raw.githubusercontent.com/SpaceWorks-HQ/SpaceWorks-Workspace/main/install.sh \| bash` | `…/SpaceWorks-Organization/main/install.sh \| bash` |
+| One-liner | `curl -fsSL https://raw.githubusercontent.com/SpaceWorks-Labs/SpaceWorks-Workspace/main/install.sh \| bash` | `…/SpaceWorks-Organization/main/install.sh \| bash` |
 | Flags | `--release TAG`, `--ref REF` (build from source), `--repo O/N`, `--dir`, `--update`, `--help`; env `SWW_GITHUB_TOKEN` for private repos | `--repo`, `--help` (env `SWO_DIR`, `SWO_REPOSITORY`) |
 | Hosts | Linux only (x86_64/arm64), root or sudo | Linux, macOS and Windows Git Bash/WSL (Docker Desktop); installs Docker/Compose per distro family, with a checksum-verified Compose plugin fallback |
 | Layout | `/opt/spaceworks-workspace/releases/<sha>` + `current` symlink + `install.conf`; secrets in `/etc/spaceworks-workspace` (`SWW_CONFIG_DIR`) | Flat copy in `/opt/spaceworks-organization`, `.env` and `tls/` inside it, `.spaceworks-version` marker |
@@ -260,10 +260,10 @@ Note: pushing changes under `.github/workflows/` needs the `workflow` gh scope, 
 
 Suggested target: `spaceworks-bookings`, prefix `SWB_`, short name `swbook` (avoid `swb` if it collides with anything else of yours).
 
-- **Product/display:** `Space Works Organization` (around 92 hits, including the MFA issuer `ISSUER` in `lib/mfa.ts`, email branding, README, installer messages), `Space Works installer`, `SpaceWorks-Organization`, `SpaceWorks-HQ/SpaceWorks-Organization` (install.sh one-liner, default repo, docs).
+- **Product/display:** `Space Works Organization` (around 92 hits, including the MFA issuer `ISSUER` in `lib/mfa.ts`, email branding, README, installer messages), `Space Works installer`, `SpaceWorks-Organization`, `SpaceWorks-Labs/SpaceWorks-Organization` (install.sh one-liner, default repo, docs).
 - **Package/images:**
   - `spaceworks-organization` (package.json name), `spaceworks-organization-frontend` (frontend/package.json)
-  - `ghcr.io/spaceworks-hq/spaceworks-organization-backend` / `-frontend` (compose defaults, `scripts/spaceworks-repository.sh:27`, `verify-release-images.sh`, release.yml)
+  - `ghcr.io/spaceworks-labs/spaceworks-organization-backend` / `-frontend` (compose defaults, `scripts/spaceworks-repository.sh:27`, `verify-release-images.sh`, release.yml)
 - **Placeholders:** `spaceworks-organization-origin.invalid` and `spaceworks-organization-backend.invalid` (Dockerfile build args, entrypoint, `docker/compose.build.yml`, release.yml).
 - **Paths:**
   - `/opt/spaceworks-organization` (`SWO_DIR` default)

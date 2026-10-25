@@ -35,7 +35,7 @@ const bundled = load("docker-compose.prod.yml");
 const cloud = load("docker-compose.cloud.yml");
 const overlays = ["docker/compose.build.yml", "docker/compose.external-storage.yml", "docker/compose.proxy.yml", "docker/compose.tls.yml"];
 const FILES = ["docker-compose.prod.yml", "docker-compose.cloud.yml", "docker-compose.yml", ...overlays];
-const backendImage = "${SWB_BACKEND_IMAGE:-ghcr.io/spaceworks-hq/spaceworks-bookings-backend}:${SWB_IMAGE_TAG:-latest}";
+const backendImage = "${SWB_BACKEND_IMAGE:-ghcr.io/spaceworks-labs/spaceworks-bookings-backend}:${SWB_IMAGE_TAG:-latest}";
 
 describe("compose stacks", () => {
   it("runs exactly the bundled and cloud services", () => {
