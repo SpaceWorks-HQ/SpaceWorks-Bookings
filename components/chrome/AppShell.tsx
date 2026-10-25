@@ -8,50 +8,14 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ArrowUpRight, ChevronsUpDown, Home, LogOut, Menu as MenuIcon, Moon, Plus, Sun, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ShellMakerspace, ShellUser } from "@/lib/appShell";
-import { can, makerspaceAllows, ROLE_LABELS, type Capability } from "@/lib/permissionRoles";
+import { ROLE_LABELS } from "@/lib/permissionRoles";
 import { SpaceWorksProductLogo } from "@/components/brand/SpaceWorksLogo";
 import { useAppColorMode } from "@/components/providers";
 import { Avatar, MakerspaceLogo } from "@/components/ui/display";
 import { IconButton } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { BrandHomeLink } from "./SiteHeader";
-
-/** Makerspace navigation, in order. Each entry shows only when the role has the capability. */
-const MAKERSPACE_NAV: Array<{ path: string; label: string; capability: Capability; exact?: boolean }> = [
-  { path: "", label: "Overview", capability: "makerspace.view", exact: true },
-  { path: "/bookings", label: "Bookings", capability: "bookings.view" },
-  { path: "/today", label: "Today", capability: "bookings.view" },
-  { path: "/calendar", label: "Calendar", capability: "bookings.view" },
-  { path: "/spaces", label: "Spaces", capability: "spaces.manage" },
-  { path: "/members", label: "Members", capability: "members.manage" },
-  { path: "/issues", label: "Issues", capability: "issues.view" },
-  { path: "/issues", label: "My repairs", capability: "repairs.work" },
-  { path: "/technicians", label: "Technicians", capability: "repairs.manage" },
-  { path: "/payments", label: "Payments", capability: "payments.view" },
-  { path: "/finance", label: "Finance", capability: "finance.view" },
-  { path: "/reports", label: "Reports", capability: "reports.view" },
-  { path: "/team", label: "Team", capability: "makerspace.view" },
-  { path: "/audit", label: "Audit log", capability: "audit.view" },
-  { path: "/settings", label: "Settings", capability: "makerspace.settings" },
-];
-
-function NavItem({ href, children, active, onNavigate, badge }: { href: string; children: string; active: boolean; onNavigate?: () => void; badge?: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      onClick={onNavigate}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        // Text-only navigation (brand D9); 44px targets; pills (owner decision J1).
-        "relative flex min-h-11 items-center gap-2.5 rounded-control px-4 text-[15px] text-ink transition-colors duration-[120ms] hover:bg-sidebar-hover",
-        active && "bg-sidebar-active font-semibold text-on-sidebar-active hover:bg-sidebar-active",
-      )}
-    >
-      <span className="min-w-0 flex-1 truncate">{children}</span>
-      {badge}
-    </Link>
-  );
-}
+import { MakerspaceNav, NavItem } from "./MakerspaceNav";
 
 function currentMakerspaceSlug(pathname: string | null) {
   const match = /^\/dashboard\/([^/]+)/.exec(pathname ?? "");
@@ -90,7 +54,9 @@ function AccountMenu({ user, onNavigate }: { user: ShellUser; onNavigate?: () =>
           icon={mode === "dark" ? <Sun /> : <Moon />}
           onSelect={() => {
             const rect = triggerRef.current?.getBoundingClientRect();
-            toggleColorMode(rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : undefined);
+            const origin = rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : undefined;
+            // Let the menu close first, so the snapshot of the old mode has no menu left in it.
+            requestAnimationFrame(() => requestAnimationFrame(() => toggleColorMode(origin)));
           }}
         >
           {mode === "dark" ? "Light mode" : "Dark mode"}
@@ -159,15 +125,7 @@ function SidebarContents({ user, makerspaces, onNavigate }: { user: ShellUser; m
         <>
           <MakerspaceSwitcher current={current} makerspaces={makerspaces} onNavigate={onNavigate} />
           <nav aria-label="Makerspace" className="flex flex-col gap-1">
-            {MAKERSPACE_NAV.filter((item) => makerspaceAllows(current.status, item.capability) && can(current.role, item.capability)).map((item) => {
-              const href = `${base}${item.path}`;
-              const isActive = item.exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
-              return (
-                <NavItem key={`${item.path}-${item.label}`} href={href} active={isActive} onNavigate={onNavigate}>
-                  {item.label}
-                </NavItem>
-              );
-            })}
+            <MakerspaceNav current={current} pathname={pathname} onNavigate={onNavigate} />
             {active ? null : (
               // Under review, declined, suspended or archived: the status page explains what is open.
               <NavItem href={`${base}/application`} active={pathname.startsWith(`${base}/application`)} onNavigate={onNavigate}>

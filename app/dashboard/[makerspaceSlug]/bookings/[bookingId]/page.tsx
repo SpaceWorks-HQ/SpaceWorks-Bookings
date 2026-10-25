@@ -3,7 +3,8 @@ import { MakerspacePageHeader } from "@/components/dashboard/makerspace/Makerspa
 import { BookingActions } from "@/components/bookings/BookingActions";
 import { OccurrenceCard } from "@/components/bookings/OccurrenceCard";
 import { StaffMoneyPanel } from "@/components/bookings/money/StaffMoneyPanel";
-import { Card, CardHeader, Chip, DetailList } from "@/components/ui/display";
+import { Card, Chip, DetailList } from "@/components/ui/display";
+import { CollapsibleSection } from "@/components/ui/collapsible";
 import { words } from "@/lib/bookings/ui";
 import { money } from "@/lib/money/currencies";
 import { formatDayTime } from "@/lib/format/datetime";
@@ -26,19 +27,19 @@ export default async function Page(props: Parameters<typeof loadBooking>[0]) {
     <section className="flex flex-col gap-4"><h2 className="text-h3 text-ink">Occurrences</h2>{booking.occurrences.map((row, index, rows) => <OccurrenceCard key={row.id}
       slug={makerspace.slug} bookingId={booking.id} bookingStatus={booking.status} row={row} timezone={zone} currency={booking.currency} canManage={data.canManage} canOverride={data.canOverride}
       firstUnit={rows.findIndex((item) => item.slotIndex === row.slotIndex) === index} />)}</section>
-    <Card><CardHeader title="Price snapshot" description="Prices and tax recorded when this booking was priced." />
+    <CollapsibleSection id="booking-price" defaultOpen={false} title="Price snapshot" description="Prices and tax recorded when this booking was priced.">
       {booking.lines.length ? booking.lines.map((line, index) => <div className="flex justify-between gap-4 border-b border-line py-3" key={index}>
         <div className="text-ink"><p>{line.description}</p><p className="text-ink-muted">{line.detail}</p></div><p className="text-ink">{money(line.totalMinor, booking.currency)}</p>
       </div>) : <p className="text-ink-muted">No price lines yet. This booking may still be held.</p>}
       <p className="mt-4 font-semibold text-ink">Snapshot total: {money(booking.totalMinor, booking.currency)}</p>
-    </Card>
+    </CollapsibleSection>
     <StaffMoneyPanel slug={makerspace.slug} bookingId={booking.id} reference={booking.reference} currency={booking.currency} timezone={zone} status={booking.status} paymentDueAt={booking.paymentDueAt} view={data.money} />
     <BookingActions slug={makerspace.slug} booking={booking} spaces={data.spaces} canManage={data.canManage} canApprove={data.canApprove} canOverride={data.canOverride} timezone={zone} />
-    <Card><CardHeader title="Booking timeline" />
+    <CollapsibleSection id="booking-timeline" defaultOpen={false} title="Booking timeline" count={booking.events.length}>
       <ol className="flex flex-col gap-4">{booking.events.map((event) => <li key={event.id} className="border-l-2 border-line pl-4 text-ink">
         <p className="font-semibold">{words(event.kind.replace(/-/g, "_"))}</p><p className="text-ink-muted">{formatDayTime(event.createdAt, zone)} · {words(event.actorKind)}</p>
         {event.reason ? <p className="mt-1 text-ink-secondary">{event.reason}</p> : null}
       </li>)}</ol>
-    </Card>
+    </CollapsibleSection>
   </div>;
 }
