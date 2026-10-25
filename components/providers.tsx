@@ -70,15 +70,20 @@ function transitionColorMode(commit: () => void, origin?: ColorModeOrigin) {
   const feathered = strategy === "feathered";
   root.style.setProperty("--sw-reveal-x", `${x}px`);
   root.style.setProperty("--sw-reveal-y", `${y}px`);
-  // The new mode is captured with its final colours: element colour transitions would otherwise still be running
-  // inside the growing circle (seen with document.getAnimations()), so it looked half-switched.
-  root.classList.add(feathered ? "sw-theme-reveal-soft" : "sw-theme-reveal", "sw-theme-switching");
+  root.classList.add(feathered ? "sw-theme-reveal-soft" : "sw-theme-reveal");
   const cleanUp = () => {
     root.classList.remove("sw-theme-reveal", "sw-theme-reveal-soft", "sw-theme-switching");
     root.style.removeProperty("--sw-reveal-x");
     root.style.removeProperty("--sw-reveal-y");
   };
-  const transition = doc.startViewTransition(commit);
+  const transition = doc.startViewTransition(() => {
+    // The new mode is captured with its final colours: element colour transitions would otherwise still be running
+    // inside the growing circle (seen with document.getAnimations()), so it looked half-switched. Added here, in
+    // the update, after the old mode has been captured as it was: added before the call, a production build
+    // captured a blank old snapshot.
+    root.classList.add("sw-theme-switching");
+    commit();
+  });
   // Hold the final frame: without fill the mask snaps back to 0 for a frame
   // before the transition tears down, flashing the old mode.
   const timing: KeyframeAnimationOptions = { duration: REVEAL.durationMs, easing: REVEAL.easing, fill: "forwards", pseudoElement: "::view-transition-new(root)" };
