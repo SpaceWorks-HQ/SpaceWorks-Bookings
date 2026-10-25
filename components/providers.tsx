@@ -70,9 +70,11 @@ function transitionColorMode(commit: () => void, origin?: ColorModeOrigin) {
   const feathered = strategy === "feathered";
   root.style.setProperty("--sw-reveal-x", `${x}px`);
   root.style.setProperty("--sw-reveal-y", `${y}px`);
-  root.classList.add(feathered ? "sw-theme-reveal-soft" : "sw-theme-reveal");
+  // The new mode is captured with its final colours: element colour transitions would otherwise still be running
+  // inside the growing circle (seen with document.getAnimations()), so it looked half-switched.
+  root.classList.add(feathered ? "sw-theme-reveal-soft" : "sw-theme-reveal", "sw-theme-switching");
   const cleanUp = () => {
-    root.classList.remove("sw-theme-reveal", "sw-theme-reveal-soft");
+    root.classList.remove("sw-theme-reveal", "sw-theme-reveal-soft", "sw-theme-switching");
     root.style.removeProperty("--sw-reveal-x");
     root.style.removeProperty("--sw-reveal-y");
   };
