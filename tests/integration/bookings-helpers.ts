@@ -46,15 +46,17 @@ export async function setupMakerspace(rules: Partial<BookingRules> = {}, options
     staff,
     person,
     async cleanup() {
-      // Money rows are immutable by trigger: remove this makerspace's with triggers off (test cleanup only).
+      // Explicitly remove every tenant table with triggers off in this disposable test DB only.
+      // Replica mode also disables FK cascades, so deleting only the parent would leak test rows.
       await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(`SET LOCAL session_replication_role = replica`);
-        for (const table of ["FinanceEntry", "RepairPayout", "TaxDocument", "Refund", "PaymentLine", "Payment", "ProcessedWebhookEvent", "GatewayRefundNotice"]) {
-          await tx.$executeRawUnsafe(`DELETE FROM "${table}" WHERE "makerspaceId" = $1`, makerspace.id);
+        const tables = await tx.$queryRaw<Array<{ table_name: string }>>`SELECT table_name FROM information_schema.columns WHERE table_schema = current_schema() AND column_name = 'makerspaceId'`;
+        for (const { table_name: table } of tables) {
+          await tx.$executeRawUnsafe(`DELETE FROM "${table.replaceAll('"', '""')}" WHERE "makerspaceId" = $1`, makerspace.id);
         }
+        await tx.$executeRaw`DELETE FROM "OutboxMessage" WHERE "payload"->>'makerspaceId' = ${makerspace.id}`;
+        await tx.makerspace.deleteMany({ where: { id: makerspace.id } });
       });
-      await prisma.$executeRaw`DELETE FROM "OutboxMessage" WHERE "payload"->>'makerspaceId' = ${makerspace.id}`;
-      await prisma.makerspace.delete({ where: { id: makerspace.id } }).catch(() => undefined);
       await prisma.auditEvent.deleteMany({ where: { actorUserId: { in: users } } });
       await prisma.user.deleteMany({ where: { id: { in: users } } });
     },

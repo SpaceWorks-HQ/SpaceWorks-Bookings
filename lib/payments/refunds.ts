@@ -34,6 +34,9 @@ export async function createRefund(tx: Tx, args: { makerspace: MakerspaceForPaym
 }
 
 async function lockRefund(tx: Tx, makerspaceId: string, refundId: string) {
+  const source = await tx.refund.findFirst({ where: { id: refundId, makerspaceId }, select: { paymentId: true } });
+  if (!source) throw new PaymentError("Refund not found.");
+  await lockPayment(tx, makerspaceId, source.paymentId);
   const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "Refund" WHERE "id" = ${refundId} AND "makerspaceId" = ${makerspaceId} FOR UPDATE`;
   if (rows.length === 0) throw new PaymentError("Refund not found.");
   return tx.refund.findUniqueOrThrow({ where: { id: refundId } });

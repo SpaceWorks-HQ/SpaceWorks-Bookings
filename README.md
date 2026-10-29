@@ -203,16 +203,25 @@ DigitalOcean App Platform with [`.do/app.yaml`](.do/app.yaml). Details in
 
 ## Quick start (local)
 
-You need Node 22.9 or newer, Docker for PostgreSQL and Redis, and a terminal.
+You need Node 22.9 or newer, Docker, and a terminal. The local stack includes PostgreSQL, Redis, private Silo
+storage and Mailpit for inspecting email without sending it to real recipients.
 
 ```bash
 cp .env.example .env            # then fill in the secrets it asks for
-docker compose up -d            # PostgreSQL and Redis for development
+docker compose up -d --wait     # PostgreSQL, Redis, Silo, private bucket and Mailpit
 npm ci
 npm run db:migrate
 DEMO_PASSWORD=<12+ characters> DEMO_MFA_SECRET=<base32 seed> npm run db:seed-demo
-npm run dev                     # http://localhost:3000
+npm run dev:stack               # web + BullMQ worker + beat on http://localhost:3000
 ```
+
+`dev:stack` builds and supervises the web app, worker and beat together, with separate loopback health ports
+3460 and 3461 (`SWB_DEV_WORKER_PORT`, `SWB_DEV_BEAT_PORT`). It stops siblings on failure and drains workers on
+shutdown, including Windows. It refuses remote database, Redis, storage and SMTP targets before local startup.
+The worker delivers queued email and chat notifications; beat schedules the outbox relay, reminders and reconciliation.
+Inspect captured email at [localhost:8025](http://localhost:8025) and storage at
+[localhost:9001](http://localhost:9001). The development credentials in `.env.example` are local fixtures;
+the production one-line installer generates separate secrets and requires a real SMTP relay.
 
 The demo makerspace is Tinkerspace (`/m/tinkerspace`) with four spaces, bookings and payments. Sign in as
 `manager@demo.test`, `front@demo.test` or `tech@demo.test` with `DEMO_PASSWORD` and an authenticator code from `DEMO_MFA_SECRET`.

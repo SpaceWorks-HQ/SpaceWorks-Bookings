@@ -106,6 +106,9 @@ structure, install and deploy: [SpaceWorks-Events](https://github.com/SpaceWorks
 
 ## Defaults chosen conservatively (the owner may revisit)
 
+- **Tenant history retention (production audit, 2026-10-29).** A makerspace with booking or repair history,
+  including free bookings, receives archive guidance rather than physical deletion. Unused makerspaces remain
+  deletable by a recently authenticated bookings manager. The instance deletion audit record shares its transaction.
 - **GST documents for advances.** Booking payments get the existing tax invoice or receipt and refunds a credit
   note. Rule 50/51 receipt and refund vouchers for advances are not built (`docs/GST.md`); confirm with an
   accountant before going live under GST.

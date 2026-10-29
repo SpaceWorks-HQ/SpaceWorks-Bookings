@@ -82,8 +82,9 @@ export async function lockPaymentBooking(tx: Tx, makerspaceId: string, paymentId
   return row.bookingId;
 }
 
-/** Lock one payment of the makerspace for an update. */
+/** Lock the booking first, then its payment. Status triggers write the booking even for failed attempts. */
 export async function lockPayment(tx: Tx, makerspaceId: string, paymentId: string) {
+  await lockPaymentBooking(tx, makerspaceId, paymentId);
   const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "Payment" WHERE "id" = ${paymentId} AND "makerspaceId" = ${makerspaceId} FOR UPDATE`;
   if (rows.length === 0) throw new PaymentError("Payment not found.");
   return tx.payment.findUniqueOrThrow({ where: { id: paymentId } });

@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { recordAuditEvent } from "@/lib/audit";
-import { assertPublicHost } from "@/lib/net/publicHost";
+import { postPublicJson } from "@/lib/net/postJson";
 import { decryptMakerspaceSecret } from "@/lib/makerspaceSecrets";
 import { nextAttemptAfter, signWebhook } from "./events";
 
@@ -30,14 +30,9 @@ async function post(url: string, secret: string, delivery: { id: string; event: 
   try {
     const target = new URL(url);
     if (target.protocol !== "https:" && target.protocol !== "http:") return { status: null, error: "Only http and https URLs can receive webhooks." };
-    await assertPublicHost(target.hostname);
     const body = JSON.stringify(delivery.payload);
-    const response = await fetch(target, {
-      method: "POST", redirect: "error", cache: "no-store", signal: AbortSignal.timeout(10_000), body,
-      headers: { "content-type": "application/json", "user-agent": "SpaceWorks-Bookings-Webhooks/1", "x-spaceworks-event": delivery.event, "x-spaceworks-delivery": delivery.id, "x-spaceworks-signature": signWebhook(secret, body, Math.floor(now.getTime() / 1000)) },
-    });
-    await response.body?.cancel().catch(() => undefined);
-    return { status: response.status, error: response.ok ? "" : `The endpoint answered ${response.status}.` };
+    const status = await postPublicJson(target, body, { "user-agent": "SpaceWorks-Bookings-Webhooks/1", "x-spaceworks-event": delivery.event, "x-spaceworks-delivery": delivery.id, "x-spaceworks-signature": signWebhook(secret, body, Math.floor(now.getTime() / 1000)) });
+    return { status, error: status >= 200 && status < 300 ? "" : `The endpoint answered ${status}.` };
   } catch (error) {
     const name = error instanceof Error ? error.name : "";
     return { status: null, error: name === "PrivateHostError" ? "The URL points at a private address." : name === "TimeoutError" ? "The endpoint didn't answer within 10 seconds." : "The endpoint couldn't be reached." };

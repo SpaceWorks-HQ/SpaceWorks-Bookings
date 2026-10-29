@@ -47,7 +47,10 @@ GOOGLE_CLIENT_ID='' GITHUB_CLIENT_ID='' ANSWERS_CONFIRMED=yes
 write_setup_environment
 repository_env_set HTTP_PORT "$port"
 mkdir -p "$work/tls" "$work/backups"
-if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then "${COMPOSE[@]}" build backend; fi
+if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
+  "${COMPOSE[@]}" build backend || die 'The backend image build failed.'
+fi
+build_web_edge || die 'The bundled web edge build failed.'
 MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --entrypoint sh \
   -v "$SWB_TLS_DIR:/tls" -v "$(host_path "$ROOT/deploy/certificates.sh"):/certificates.sh:ro" \
   "$SWB_BACKEND_IMAGE:$SWB_IMAGE_TAG" /certificates.sh
@@ -98,4 +101,7 @@ dump="$(find "$work/backups" -maxdepth 1 -name 'smoke-*.sql.gz' -exec basename {
 [[ -n "$dump" ]] || die 'No database dump was written.'
 SWB_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/restore.sh" "backups/$dump" --yes
 "${COMPOSE[@]}" run --rm ops
+if [[ "${SWB_SMOKE_RECOVERY:-0}" == 1 ]]; then
+  CI=true bash "$SCRIPT_DIR/test-vps-recovery.sh"
+fi
 say 'Bundled stack smoke test passed.'

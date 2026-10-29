@@ -173,25 +173,31 @@ export async function deleteMakerspace(input: unknown): Promise<ActionResult> {
     return { ok: false, error: "For security, sign in again before deleting a makerspace." };
   }
 
-  // Money records are kept for audit (8 years); a makerspace that has taken payments is archived instead.
-  if (await prisma.payment.count({ where: { makerspaceId: makerspace.id, status: { in: ["PAID", "WAIVED"] } } }) || await prisma.financeEntry.count({ where: { makerspaceId: makerspace.id } })) {
-    return { ok: false, error: "This makerspace has taken payments, so its records must be kept. Ask a platform admin to archive it instead." };
-  }
-
   const slug = makerspace.slug;
-  // Deliberately omit makerspaceId: deleting the makerspace cascades its
-  // scoped records, while this audit record must survive at the instance level.
-  await recordAuditEvent({
-    action: "MAKERSPACE_DELETED",
-    actorUserId: session.user.id,
-    targetType: "makerspace",
-    targetId: makerspace.id,
+  const actorUserId = session.user.id;
+  const outcome = await prisma.$transaction(async (tx) => {
+    // Serialise deletion with team changes and block new tenant rows through their foreign keys.
+    await tx.$queryRaw`SELECT "id" FROM "Makerspace" WHERE "id" = ${makerspace.id} FOR UPDATE`;
+    const current = await tx.makerspace.findUnique({ where: { id: makerspace.id }, select: { status: true } });
+    if (!current) return "Makerspace not found.";
+    if (!canDeleteInStatus(current.status)) return "A suspended or archived makerspace keeps its records and can't be deleted.";
+    const actor = await tx.teamMember.findUnique({ where: { userId_makerspaceId: { userId: actorUserId, makerspaceId: makerspace.id } } });
+    if (!canDeleteMakerspace(actor)) return "Only a bookings manager can delete the makerspace.";
+    // Free bookings and repair timelines are history too. Archive them instead of bypassing their guards.
+    if (await tx.booking.count({ where: { makerspaceId: makerspace.id } }) || await tx.spaceIssue.count({ where: { makerspaceId: makerspace.id } })) {
+      return "This makerspace has booking or repair history, so its records must be kept. Ask a platform admin to archive it instead.";
+    }
+    if (await tx.payment.count({ where: { makerspaceId: makerspace.id, status: { in: ["PAID", "WAIVED"] } } }) || await tx.financeEntry.count({ where: { makerspaceId: makerspace.id } })) {
+      return "This makerspace has taken payments, so its records must be kept. Ask a platform admin to archive it instead.";
+    }
+    await tx.paymentLine.deleteMany({ where: { makerspaceId: makerspace.id } });
+    await tx.payment.deleteMany({ where: { makerspaceId: makerspace.id } });
+    await tx.makerspace.delete({ where: { id: makerspace.id } });
+    // The instance-level record survives deletion, and exists only if the deletion commits.
+    await recordAuditEvent({ action: "MAKERSPACE_DELETED", actorUserId, targetType: "makerspace", targetId: makerspace.id, client: tx });
+    return null;
   });
-  await prisma.$transaction([
-    prisma.paymentLine.deleteMany({ where: { makerspaceId: makerspace.id } }),
-    prisma.payment.deleteMany({ where: { makerspaceId: makerspace.id } }),
-    prisma.makerspace.delete({ where: { id: makerspace.id } }),
-  ]);
+  if (outcome) return { ok: false, error: outcome };
 
   revalidatePath("/dashboard");
   revalidatePath(`/m/${slug}`);

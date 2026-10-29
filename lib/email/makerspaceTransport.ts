@@ -1,9 +1,10 @@
 import "server-only";
 
 import nodemailer, { type Transporter } from "nodemailer";
+import { isIP } from "node:net";
 import { prisma } from "@/lib/db";
 import { decryptMakerspaceSecret } from "@/lib/makerspaceSecrets";
-import { assertPublicHost } from "@/lib/net/publicHost";
+import { resolvePublicHost } from "@/lib/net/publicHost";
 import { getEmailTransport } from "./transporter";
 
 type Address = { name: string; address: string };
@@ -15,13 +16,14 @@ export function senderAddress(from: string) {
 
 /** A transport for the makerspace's own SMTP settings. Throws when the host isn't public. */
 export async function makerspaceSmtpTransport(settings: { smtpHost: string; smtpPort: number; smtpSecure: boolean; smtpUser: string | null; password: string | null }) {
-  await assertPublicHost(settings.smtpHost);
+  const hostname = settings.smtpHost.replace(/^\[|\]$/g, "");
+  const [address] = await resolvePublicHost(hostname);
   const production = process.env.NODE_ENV === "production";
   return nodemailer.createTransport({
-    host: settings.smtpHost, port: settings.smtpPort, secure: settings.smtpSecure,
+    host: address.address, port: settings.smtpPort, secure: settings.smtpSecure,
     auth: settings.smtpUser && settings.password ? { user: settings.smtpUser, pass: settings.password } : undefined,
     requireTLS: production && !settings.smtpSecure,
-    tls: production ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : undefined,
+    tls: { ...(production ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : {}), ...(!isIP(hostname) ? { servername: hostname } : {}) },
     disableFileAccess: true, disableUrlAccess: true,
     connectionTimeout: 30_000, greetingTimeout: 30_000, socketTimeout: 60_000,
   });

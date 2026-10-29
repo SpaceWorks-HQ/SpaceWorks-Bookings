@@ -31,7 +31,10 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
 FROM node:22-alpine AS prisma-cli
 WORKDIR /opt/prisma-cli
 COPY --from=deps /app/node_modules/prisma/package.json /tmp/prisma-package.json
-RUN npm install --omit=dev --no-save --no-audit --no-fund \
+COPY --from=deps /app/package.json /tmp/app-package.json
+# The isolated migration CLI must retain security overrides from the application's lockfile policy.
+RUN node -e 'const {overrides} = require("/tmp/app-package.json"); require("fs").writeFileSync("package.json", JSON.stringify({private: true, overrides}));' \
+    && npm install --omit=dev --no-save --no-audit --no-fund \
       "prisma@$(node -p "require('/tmp/prisma-package.json').version")" \
     && npm cache clean --force
 
@@ -114,6 +117,8 @@ COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/.next/static ./
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN rm -f frontend/.env frontend/.env.local frontend/.env.production .env
+# Runtime roles call Node directly; keep package-manager tooling in build stages.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
@@ -164,6 +169,8 @@ COPY --from=ops-modules /opt/ops/node_modules ./docker/ops/node_modules
 # from a developer checkout. Secrets belong only in the runtime environment.
 RUN rm -f .env .env.local .env.production .env.development
 
+# Migrations use the isolated Prisma CLI through Node, without global npm/npx.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER nextjs
 
 EXPOSE 3000

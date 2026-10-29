@@ -2,6 +2,7 @@ import "server-only";
 
 import { recordAuditEvent } from "@/lib/audit";
 import { prisma } from "@/lib/db";
+import { lockPayment } from "@/lib/payments/charges";
 import { loadRules } from "@/lib/availability/context";
 import { SYSTEM } from "../actor";
 import { cancelBooking } from "../cancel";
@@ -90,10 +91,15 @@ export async function sendPaymentReminders(now = new Date()): Promise<number> {
 export async function closeEndedCheckouts(): Promise<number> {
   const open = await prisma.payment.findMany({
     where: { status: "PENDING", provider: { in: ["RAZORPAY", "STRIPE"] }, booking: { status: { in: ["EXPIRED", "CANCELLED", "DECLINED"] } } },
-    take: BATCH, select: { id: true, makerspaceId: true, provider: true, gatewayOrderId: true },
+    take: BATCH, select: { id: true, bookingId: true, makerspaceId: true, provider: true, gatewayOrderId: true },
   });
   for (const payment of open) {
-    const closed = await prisma.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "CANCELLED", note: "Closed: the booking ended." } });
+    const closed = await prisma.$transaction(async (tx) => {
+      await lockPayment(tx, payment.makerspaceId, payment.id);
+      const booking = await tx.booking.findUnique({ where: { id: payment.bookingId! }, select: { status: true } });
+      if (!booking || !["EXPIRED", "CANCELLED", "DECLINED"].includes(booking.status)) return { count: 0 };
+      return tx.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "CANCELLED", note: "Closed: the booking ended." } });
+    });
     if (closed.count === 1) await expireClosedCheckouts(payment.makerspaceId, [payment]);
   }
   return open.length;
