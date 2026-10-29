@@ -161,12 +161,6 @@ in 58 seconds; its JSON and log are `linux-integration-results.json` and `linux-
 
 ### Configuration recovery permissions and runtime images
 
-The first real source installation passed TLS PostgreSQL/Redis/Silo, least-privilege database access, migrations,
-worker/beat health, private storage, administrator creation and edge checks. Production worker SMTP delivered
-through verified STARTTLS and deleted its bearer-bearing outbox row. Initial harness failures from an incorrect
-Buildx configuration path, Windows-lost Git executable bits and Node fetch ignoring a custom Host header were
-corrected without changing application guards; the original logs remain available.
-
 The subsequent encrypted fresh-volume drill found a real backup defect: staging TLS with `cp -R` under umask 077
 changed the public CA from 644 to 600. Restored non-root Redis could not read it. Staging now preserves original
 permissions with `cp -p` / `cp -Rp`, while the outer archive remains 600. Both real copy/tar regressions passed,
@@ -290,3 +284,15 @@ Follow-up checks passed: full native TypeScript, changed-file ESLint, all three 
 **13 focused unit cases** (one POSIX-mode case skipped on Windows) and a separate actual Linux700/600 guard/
 cleanup probe. Privilege/archive cases exercise both root and delegated paths without opening backup modes.
 Final 0.6.0 image and complete CI results remain pending, including the new restrictive-public image probe.
+
+The next CI passed all 184 integrations and full container recovery, then exposed a real payout date bug after
+18:30 UTC: Kolkata's next calendar day was parsed as future UTC midnight. Repair/manual-finance actions now
+resolve date-only inputs at tenant-local day start; timestamp compatibility and domain future guards remain.
+All **20 focused tests passed**, including east/west/DST, actual action wiring and real future rejection; old
+controllers fail three deterministic regressions. Exact Paid browser assertions are unchanged. Evidence:
+`060-financial-date-{red-results,results}.json` and `pr3-060-playwright/` (the screenshot/error alert confirms it).
+
+PostgreSQL had the same private-source ownership boundary: its root wrapper now stages read-only HBA/init
+inputs under the postgres UID before dropping privileges. CI restricts only a disposable source copy to600/700.
+Actual PostgreSQL16 testing passed source-mode preservation, UID reads/init, application-role TLS and plaintext
+rejection (`v060/pg-private-probe.log`); its exact disposable container/volume were removed. ShellCheck passed.

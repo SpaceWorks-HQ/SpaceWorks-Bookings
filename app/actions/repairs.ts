@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { isActionRateLimited } from "@/lib/actionRateLimit";
 import { staffAction } from "@/lib/actions/bookingContext";
 import * as inputs from "@/lib/actions/repairInputs";
+import { resolveFinancialDate } from "@/lib/actions/financialDate";
 import { forbidden, notFound } from "@/lib/bookings/errors";
 import { bookingDate } from "@/lib/bookings/publicUi";
 import * as issues from "@/lib/repairs/issues";
@@ -61,7 +62,10 @@ export async function approveRepairAmount(input: unknown) {
 }
 
 export async function recordRepairPayout(input: unknown) {
-  return staffAction(inputs.payoutSchema, input, "repairs.pay", (data, ctx) => payouts.recordRepairPayout({ ...ctx, ...data }));
+  return staffAction(inputs.payoutSchema, input, "repairs.pay", async (data, ctx) => {
+    const { timezone } = await slugOf(ctx.makerspaceId);
+    return payouts.recordRepairPayout({ ...ctx, ...data, paidAt: resolveFinancialDate(data.paidAt, timezone) });
+  });
 }
 
 /** Staff add photos to an issue they can see: the reporter side, a manager, or the technician holding it. */

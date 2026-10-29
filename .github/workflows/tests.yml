@@ -156,4 +156,12 @@ jobs:
             --build-arg NEXT_PUBLIC_BACKEND_ORIGIN=https://spaceworks-bookings-backend.invalid \
             --tag swbook-frontend:ci .
       - name: Build the backend image and run the compose smoke test
-        run: SWB_SMOKE_RECOVERY=1 SWB_COMPOSE_BUILD_LAYER=1 SWB_IMAGE_TAG=ci bash scripts/compose-smoke.sh
+        run: |
+          # Only this disposable source copy gets restrictive fixture permissions.
+          work=$(mktemp -d "$RUNNER_TEMP/swb-compose.XXXXXX")
+          trap 'sudo rm -rf -- "$work"' EXIT
+          git archive HEAD | tar -xf - -C "$work"
+          chmod 600 "$work/deploy/pg_hba.conf"
+          chmod 700 "$work/deploy/init-database.sh"
+          cd "$work"
+          SWB_SMOKE_RECOVERY=1 SWB_COMPOSE_BUILD_LAYER=1 SWB_IMAGE_TAG=ci bash scripts/compose-smoke.sh

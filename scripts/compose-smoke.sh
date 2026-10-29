@@ -63,6 +63,12 @@ MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --e
 say 'Starting the bundled stack.'
 # A cold start on a busy machine is slow; production uses 300 seconds.
 "${COMPOSE[@]}" up -d --wait --wait-timeout 600
+"${COMPOSE[@]}" exec -T --user postgres db sh -ec '
+  test -r /var/lib/postgresql/bootstrap/pg_hba.conf
+  test -x /docker-entrypoint-initdb.d/10-app-role.sh
+  test "$(stat -c %a /var/lib/postgresql/bootstrap/pg_hba.conf)" = 600
+  test "$(stat -c %a /docker-entrypoint-initdb.d/10-app-role.sh)" = 700
+  printf "Non-root PostgreSQL private bootstrap probe passed.\n"'
 say 'Migrations ran:'
 "${COMPOSE[@]}" logs migrate | grep -E 'migrations|No pending' | tail -n 3
 "${COMPOSE[@]}" run --rm ops
