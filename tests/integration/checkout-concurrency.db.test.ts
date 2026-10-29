@@ -1,6 +1,13 @@
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/publicUrl", async (importOriginal) => ({ ...(await importOriginal<object>()), getRequestOrigin: async () => "http://127.0.0.1:3011" }));
+// A reservation must never need a second pool connection while its transaction holds the first.
+vi.mock("@/lib/db", async () => {
+  const { PrismaClient } = await import("@prisma/client");
+  const url = new URL(process.env.TEST_DATABASE_URL!);
+  url.searchParams.set("connection_limit", "1");
+  return { prisma: new PrismaClient({ datasourceUrl: url.toString() }) };
+});
 
 const { setupMoney, moneyBooking, prisma, NOW } = await import("./money-helpers");
 const { GATEWAYS } = await import("@/lib/payments/config");

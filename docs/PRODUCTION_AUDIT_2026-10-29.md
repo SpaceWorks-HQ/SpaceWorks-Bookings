@@ -55,7 +55,7 @@ or a published release artifact that does not yet contain these working-tree cha
 
 ### Linux quality and database gates completed
 
-The isolated Node 22.23.4 / npm 10.9.9 runner completed these gates against the current 0.5.1 source:
+The isolated Node 22.23.4 / npm 10.9.9 runner completed these gates against the then-current 0.5.1 audit source (historical acceptance):
 
 | Gate | Recorded result |
 | --- | --- |
@@ -264,3 +264,29 @@ Email delivery remains **at least once**: a relay can accept SMTP before a worke
 update, so a retry can duplicate mail. Stable Message-ID values help correlation and relay deduplication but do
 not guarantee exactly-once delivery. Outbox success means relay acceptance, not inbox delivery; provider bounce,
 complaint and suppression monitoring remain necessary. The existing SMTP stack is retained.
+
+## Release follow-up - 0.6.0
+
+The owner selected **0.6.0** for publication; VERSION, root/frontend manifests and lockfile workspace versions
+now agree. The functional/image/install/recovery results above belong to the preceding 0.5.1 audit candidate,
+not an already validated 0.6.0 release. Final 0.6.0 CI and image acceptance remain pending.
+
+Independent native-image validation found that backend public assets copied as root can retain private 700/600
+modes from a restrictive checkout umask, causing non-root Next.js startup to fail. The backend COPY now assigns
+nextjs:nodejs ownership, matching the frontend. Source-build CI creates one isolated 700/600 public fixture,
+checks default-user image ownership/read access directly, and then runs the full stack/recovery smoke. Existing
+checkout assets are never chmodded; non-CI/published-image runs do not create this fixture, and cleanup removes
+only its unique generated directory. Focused permission/helper checks are recorded separately below.
+
+The first remote PR CI exposed real connection-pool starvation: five reservation transactions held all five
+connections while gateway settings used the global client and needed a sixth. Gateway reads now reuse the
+reservation transaction. A deliberately one-connection regression fails with the original code and passes all
+three checkout cases with the fix, retaining the five-attempt/one-open/four-cancelled assertions and timeouts.
+Evidence: `060-checkout-pool-red.json` and `060-checkout-pool-green.json`. The same CI found its non-root runner
+could not archive root-owned private container backups. Scoped `as_root` file operations now preserve private
+modes through archive/extraction/comparison/cleanup. The failed CI logs remain in `pr3-first-ci-failed.log`.
+
+Follow-up checks passed: full native TypeScript, changed-file ESLint, all three changed-script ShellChecks,
+**13 focused unit cases** (one POSIX-mode case skipped on Windows) and a separate actual Linux700/600 guard/
+cleanup probe. Privilege/archive cases exercise both root and delegated paths without opening backup modes.
+Final 0.6.0 image and complete CI results remain pending, including the new restrictive-public image probe.

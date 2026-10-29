@@ -17,6 +17,7 @@ if ! command -v age >/dev/null || ! command -v age-keygen >/dev/null; then
 fi
 work="$(mktemp -d)"
 umask 077
+as_root() { if [[ "$(id -u)" == 0 ]]; then "$@"; else sudo -n -- "$@"; fi; }
 cleanup() {
   local status=$?
   if [[ "$SWB_COMPOSE_PROJECT" != "$original_project" ]]; then
@@ -27,20 +28,22 @@ cleanup() {
     fi
     scripts/spaceworks-compose.sh bundled down --volumes --remove-orphans >/dev/null 2>&1 || true
   fi
-  rm -rf -- "$work"
+  as_root rm -rf -- "$work"
   exit "$status"
 }
 trap cleanup EXIT
 COMPOSE=("$root/scripts/spaceworks-compose.sh" bundled)
 "${COMPOSE[@]}" run --rm --no-deps -T -e SWB_RECOVERY_SMOKE=1 ops --role ops node dist/recovery-smoke.js seed
 bash scripts/backup.sh
-dump="$(find "$original_backups" -maxdepth 1 -name 'manual-*.sql.gz' | sort | tail -n 1)"
-config="$(find "$original_backups" -maxdepth 1 -name 'config-*.tar.gz' | sort | tail -n 1)"
-[[ -s "$dump" && -s "$config" && -d "$original_backups/storage" ]]
+dump="$(as_root find "$original_backups" -maxdepth 1 -name 'manual-*.sql.gz' | sort | tail -n 1)"
+config="$(as_root find "$original_backups" -maxdepth 1 -name 'config-*.tar.gz' | sort | tail -n 1)"
+as_root test -s "$dump"
+as_root test -s "$config"
+as_root test -d "$original_backups/storage"
 age-keygen -o "$work/identity" 2>/dev/null
 recipient="$(age-keygen -y "$work/identity")"
 mkdir -m 700 "$work/off-host"
-tar -cf - -C "$original_backups" "$(basename "$dump")" "$(basename "$config")" storage \
+as_root tar -cf - -C "$original_backups" "$(basename "$dump")" "$(basename "$config")" storage \
   | age --recipient "$recipient" -o "$work/off-host/backup.tar.age"
 test -s "$work/off-host/backup.tar.age"
 echo 'Database, object mirror and private configuration copied into an age-encrypted off-host bundle.'
@@ -49,10 +52,10 @@ echo 'Database, object mirror and private configuration copied into an age-encry
 export SWB_COMPOSE_PROJECT="${original_project}-recovered"
 recovered="$work/recovered"
 mkdir -m 700 "$recovered" "$recovered/backups"
-age --decrypt --identity "$work/identity" "$work/off-host/backup.tar.age" | tar -xf - -C "$recovered/backups"
-tar -xzf "$recovered/backups/$(basename "$config")" -C "$recovered"
-cmp "$original_env" "$recovered/.env"
-diff -qr "$original_tls" "$recovered/tls"
+age --decrypt --identity "$work/identity" "$work/off-host/backup.tar.age" | as_root tar -xf - -C "$recovered/backups"
+as_root tar -xzf "$recovered/backups/$(basename "$config")" -C "$recovered"
+as_root cmp "$original_env" "$recovered/.env"
+as_root diff -qr "$original_tls" "$recovered/tls"
 export SWB_STATIC_ENV_FILE="$recovered/.env" SWB_TLS_DIR="$recovered/tls" SWB_BACKUP_DIR="$recovered/backups"
 # Keep serving and backup schedulers off. In particular, backup-storage uses
 # --remove and would erase the recovered mirror if it saw the empty new bucket.

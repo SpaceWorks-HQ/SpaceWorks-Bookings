@@ -1,7 +1,7 @@
 import "server-only";
 
 import crypto from "crypto";
-import type { GatewayProvider, MakerspacePaymentSettings, PaymentProvider } from "@prisma/client";
+import type { GatewayProvider, MakerspacePaymentSettings, PaymentProvider, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { GatewayCredentials, PaymentGateway } from "./gateway";
 import { razorpay } from "./razorpay";
@@ -40,8 +40,8 @@ export function credentialsOf(settings: MakerspacePaymentSettings): GatewayCrede
 }
 
 /** The makerspace's live gateway, or null when online payments are off or keys are missing. */
-export async function loadGateway(makerspaceId: string) {
-  const settings = await prisma.makerspacePaymentSettings.findUnique({ where: { makerspaceId } });
+export async function loadGateway(makerspaceId: string, client: Pick<Prisma.TransactionClient, "makerspacePaymentSettings"> = prisma) {
+  const settings = await client.makerspacePaymentSettings.findUnique({ where: { makerspaceId } });
   if (!settings || settings.provider === "NONE") return null;
   const credentials = credentialsOf(settings);
   if (!credentials) return null;

@@ -20,7 +20,8 @@ export type CheckoutInput = { makerspaceId: string; customer: PaymentCustomer; c
 export async function reserveCheckout(tx: Prisma.TransactionClient, args: CheckoutInput) {
   const makerspace = await tx.makerspace.findUniqueOrThrow({ where: { id: args.makerspaceId }, select: MAKERSPACE_FOR_PAYMENTS });
   if (makerspace.status !== "ACTIVE") throw new PaymentError(`${makerspace.name} isn't taking online payments right now.`);
-  const live = await loadGateway(makerspace.id);
+  // Reuse the reservation connection: a global-client read can exhaust a small pool under concurrent locks.
+  const live = await loadGateway(makerspace.id, tx);
   if (!live) throw new PaymentError("Online payment isn't set up here. Use the other ways to pay.");
   if (!gatewayTakes(live.provider, args.currency)) throw new PaymentError(`Online payment doesn't take ${args.currency}. Use the other ways to pay.`);
 

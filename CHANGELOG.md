@@ -4,8 +4,11 @@ Releases are published from `main` and titled **`Space Works Bookings <version>`
 file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
 to. Pushes to `dev` publish staging images tagged `dev` without a release.
 
-## 0.5.1 - 2026-10-29
+## 0.6.0 - 2026-10-30
 
+- Preserve non-root ownership of backend public assets, including restrictive 700 directories and 600 files.
+- Reuse the reservation transaction for gateway settings so concurrent checkout cannot starve a small database pool.
+- Archive and recover private container-owned backups with explicit CI privileges, preserving restrictive modes.
 - Reserve checkout attempts transactionally and close delayed provider orders after cancellation.
 - Enforce reviewed net payment thresholds and consistent booking/payment/refund lock order.
 - Preserve booking, repair and financial history when removing a makerspace.

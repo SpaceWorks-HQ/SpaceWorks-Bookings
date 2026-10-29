@@ -28,10 +28,13 @@ cleanup() {
   "${COMPOSE[@]}" down --volumes --remove-orphans >/dev/null 2>&1 || true
   # Files written by root inside containers are removed by a container too.
   MSYS_NO_PATHCONV=1 docker run --rm -v "$(host_path "$work"):/work" alpine:3 sh -c 'rm -rf /work/* /work/.env' >/dev/null 2>&1 || true
+  remove_public_permission_probe || true
   rm -rf -- "$work"
   exit "$status"
 }
 trap cleanup EXIT
+# shellcheck source=scripts/smoke-public-permissions.sh
+source "$SCRIPT_DIR/smoke-public-permissions.sh"
 
 # The answers setup.sh would collect, written by its own environment writer.
 # shellcheck source=scripts/setup-question-input.sh
@@ -48,7 +51,9 @@ write_setup_environment
 repository_env_set HTTP_PORT "$port"
 mkdir -p "$work/tls" "$work/backups"
 if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
+  prepare_public_permission_probe
   "${COMPOSE[@]}" build backend || die 'The backend image build failed.'
+  check_public_permission_probe
 fi
 build_web_edge || die 'The bundled web edge build failed.'
 MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --entrypoint sh \
