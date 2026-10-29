@@ -8,6 +8,9 @@
 .next
 node_modules
 backups/
+# Private keys and installer answer transport must never enter source-build layers or caches.
+tls/
+.spaceworks-*
 coverage
 playwright-report
 test-results

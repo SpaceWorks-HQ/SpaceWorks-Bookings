@@ -9,8 +9,8 @@ import type { StaffActor } from "@/lib/bookings/actor";
 /**
  * The REST API (`/api/v1`, docs/API.md). Every call: a bearer API key of an ACTIVE makerspace, the scope the route
  * needs, a per-key rate limit (reads 600/min, writes 60/min), JSON in and out, errors as
- * `{ "error": { "code", "message", "fields"? } }`. Writes act as the key's creator with the bookings manager's
- * booking capabilities but never rule overrides (the API offers no override field).
+ * `{ "error": { "code", "message", "fields"? } }`. Keys have independent scoped service authority; writes are
+ * attributed to their creator with manager booking capabilities, never rule overrides (docs/API.md).
  */
 
 export type ApiContext = ApiKeyContext & { actor: StaffActor };
@@ -52,8 +52,24 @@ export async function apiHandler(request: Request, scope: ApiScope, operation: (
 
 /** Read a JSON body (max 64 KB); invalid JSON answers 400 through `failure` as INVALID_INPUT. */
 export async function jsonBody(request: Request): Promise<unknown> {
-  const text = await request.text();
-  if (text.length > 65_536) throw new BookingError("INVALID_INPUT", "The request body is too large.");
+  const chunks: Uint8Array[] = [];
+  const reader = request.body?.getReader();
+  let size = 0;
+  if (reader) {
+    try {
+      for (;;) {
+        const part = await reader.read();
+        if (part.done) break;
+        size += part.value.byteLength;
+        if (size > 65_536) {
+          await reader.cancel();
+          throw new BookingError("INVALID_INPUT", "The request body is too large.");
+        }
+        chunks.push(part.value);
+      }
+    } finally { reader.releaseLock(); }
+  }
+  const text = Buffer.concat(chunks).toString("utf8");
   try {
     return text ? JSON.parse(text) : {};
   } catch {

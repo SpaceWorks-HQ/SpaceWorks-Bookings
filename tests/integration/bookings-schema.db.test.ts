@@ -101,7 +101,7 @@ describe.sequential("bookings schema", () => {
     const shadow = new URL(base);
     shadow.pathname = `/${shadowName}`;
     try {
-      const { stdout } = await run("npx", ["prisma", "migrate", "diff", "--from-migrations", "prisma/migrations", "--to-schema-datamodel", "prisma/schema.prisma", "--shadow-database-url", shadow.toString(), "--exit-code"], { env: { ...process.env, DATABASE_URL: base, DIRECT_URL: base } });
+      const { stdout } = await run(process.execPath, ["scripts/prisma.mjs", "migrate", "diff", "--from-migrations", "prisma/migrations", "--to-schema-datamodel", "prisma/schema.prisma", "--shadow-database-url", shadow.toString(), "--exit-code"], { env: { ...process.env, DATABASE_URL: base, DIRECT_URL: base } });
       // --exit-code exits 2 (a rejected promise) on any difference; the raw constraints are invisible to Prisma.
       expect(stdout).toMatch(/No difference detected|empty migration/i);
     } finally {

@@ -57,23 +57,53 @@ if [[ "$assume_yes" == 0 ]]; then
   IFS= read -r answer </dev/tty || answer=''
   [[ "${answer%$'\r'}" == RESTORE ]] || { say 'Cancelled. Nothing was changed.'; exit 2; }
 fi
-bash "$SCRIPT_DIR/backup.sh" --prefix pre-restore --no-storage
 stopped=0
+database_committed=0
+serving_services
+backup_services=(backup)
+[[ "$(repository_env_value SWB_STORAGE)" == external ]] || backup_services+=(backup-storage)
+restore_services=("${SERVING_SERVICES[@]}" "${backup_services[@]}")
 restart_on_failure() {
   local status=$?
+  trap - EXIT
   [[ $status != 0 && $stopped == 1 ]] || return 0
-  warn 'The restore failed; starting the services again.'
-  "${COMPOSE[@]}" up -d >/dev/null 2>&1 || warn 'Start them with scripts/spaceworks-compose.sh bundled up -d.'
+  if [[ $database_committed == 0 ]]; then
+    warn 'The database restore failed before commit; starting the services again.'
+    "${COMPOSE[@]}" up -d --wait --wait-timeout 300 --no-deps "${SERVING_SERVICES[@]}" >/dev/null 2>&1 \
+      || warn 'Start the serving services after checking the restore failure.'
+    warn 'Backup schedules remain paused to preserve the recovery source until a successful restore.'
+  else
+    warn 'The database was restored, but files or startup checks failed. Keeping the site offline; fix the failure and retry the restore.'
+    # Compose up may already have started some services before migration or
+    # readiness failed. Stop them again rather than serving a partial restore.
+    "${COMPOSE[@]}" stop "${restore_services[@]}" >/dev/null 2>&1 \
+      || warn 'Some services could not be stopped. Stop them before retrying the restore.'
+  fi
   exit "$status"
 }
 trap restart_on_failure EXIT
 stopped=1
-serving_services
-"${COMPOSE[@]}" stop "${SERVING_SERVICES[@]}" backup
+"${COMPOSE[@]}" stop "${restore_services[@]}"
+# Freeze the mirror source before taking the safety dump, including on retries.
+bash "$SCRIPT_DIR/backup.sh" --prefix pre-restore --no-storage
+data_services=(db redis)
+[[ "$(repository_env_value SWB_STORAGE)" == external ]] || data_services+=(minio)
+"${COMPOSE[@]}" up -d --wait --wait-timeout 300 "${data_services[@]}"
+if [[ "$(repository_env_value SWB_STORAGE)" != external ]]; then
+  "${COMPOSE[@]}" run --rm --no-deps -T createbuckets
+fi
 "${COMPOSE[@]}" run --rm --no-deps -T backup restore "$name"
+database_committed=1
 if [[ "$with_storage" == 1 ]]; then
   "${COMPOSE[@]}" run --rm --no-deps -T backup-storage restore-storage
 fi
-"${COMPOSE[@]}" up -d --wait --wait-timeout 300
+# An existing completed migration container must not substitute for applying
+# this release's migrations to the newly restored, potentially older database.
+"${COMPOSE[@]}" run --rm --no-deps -T migrate
+"${COMPOSE[@]}" up -d --wait --wait-timeout 300 --no-deps "${SERVING_SERVICES[@]}"
+"${COMPOSE[@]}" run --rm --no-deps -T ops
+# A storage scheduler mirrors with --remove: never start it against an empty
+# recovery bucket or before the complete database/files/app checks succeed.
+"${COMPOSE[@]}" up -d --wait --wait-timeout 300 --no-deps "${backup_services[@]}"
 stopped=0
 say 'Restore finished. Sign in and check recent payments and uploads.'

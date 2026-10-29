@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { refreshGatewayPayment } from "./checkout";
+import { lockPayment } from "./charges";
 
 const MINUTE = 60_000;
 /** Give webhooks a head start before polling, and keep asking for a week (late captures still settle). */
@@ -9,9 +10,12 @@ const POLL_AFTER_MS = 5 * MINUTE;
 const POLL_FOR_MS = 7 * 24 * 60 * MINUTE;
 const BATCH = 50;
 
-async function closeIfStale(payment: { id: string; createdAt: Date }, now: Date) {
+async function closeIfStale(payment: { id: string; makerspaceId: string; createdAt: Date }, now: Date) {
   if (now.getTime() - payment.createdAt.getTime() <= POLL_FOR_MS) return;
-  await prisma.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "FAILED", note: "Closed: no payment arrived within a week." } });
+  await prisma.$transaction(async (tx) => {
+    await lockPayment(tx, payment.makerspaceId, payment.id);
+    await tx.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "FAILED", note: "Closed: no payment arrived within a week." } });
+  });
 }
 
 /**

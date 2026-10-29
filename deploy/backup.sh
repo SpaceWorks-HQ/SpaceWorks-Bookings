@@ -1,7 +1,7 @@
 #!/bin/sh
 # Backups for the bundled stack, written to backups/ on the host. One script, two images:
 #   postgres:16-alpine (service backup):   schedule | database PREFIX | restore FILE
-#   pgsty/silo (service backup-storage):   schedule-storage | storage | restore-storage
+#   pgsty/mc (service backup-storage):     schedule-storage | storage | restore-storage
 # The database runs over TLS as the owner role; storage is a mirror of the private
 # bucket (the bucket itself is versioned). Run on demand through scripts/backup.sh
 # and scripts/restore.sh; the two services run the schedules.
@@ -12,14 +12,21 @@ retention_days=${BACKUP_RETENTION_DAYS:-14}
 bucket=local/spaceworks-bookings
 
 database() {
-  stamp=$(date -u +%Y%m%dT%H%M%SZ)
+  stamp=$(date -u +%Y%m%dT%H%M%SZ) || return 1
   target="/backups/$1-$stamp.sql.gz"
+  sql=$(mktemp "/backups/.$1-$stamp.XXXXXX") || return 1
+  compressed="$sql.gz"
   # Write the dump first: a pipeline would hide a failed pg_dump behind gzip.
-  pg_dump --no-password > "/backups/.$1-$stamp.sql"
-  test -s "/backups/.$1-$stamp.sql"
-  gzip -c "/backups/.$1-$stamp.sql" > "$target.partial"
-  rm -f "/backups/.$1-$stamp.sql"
-  mv "$target.partial" "$target"
+  # Every failure needs an explicit return: the scheduler calls this function
+  # conditionally, which disables errexit even inside the function body.
+  if ! pg_dump --no-password > "$sql" || ! test -s "$sql" || ! gzip -c "$sql" > "$compressed"; then
+    rm -f -- "$sql" "$compressed"
+    return 1
+  fi
+  if ! rm -f -- "$sql" || ! mv -- "$compressed" "$target"; then
+    rm -f -- "$sql" "$compressed"
+    return 1
+  fi
   echo "Database backup: backups/$(basename "$target")"
 }
 
@@ -34,13 +41,20 @@ case "${1:-}" in
   database) database "${2:-manual}" ;;
   schedule)
     while :; do
-      database scheduled || echo 'Scheduled database backup failed; retrying next interval.' >&2
-      find /backups -maxdepth 1 -name 'scheduled-*.sql.gz' -mtime +"$retention_days" -delete
+      if database scheduled; then
+        find /backups -maxdepth 1 -name 'scheduled-*.sql.gz' -mtime +"$retention_days" -delete
+      else
+        echo 'Scheduled database backup failed; retrying next interval.' >&2
+      fi
       sleep $((interval_hours * 3600))
     done ;;
   restore)
     file="/backups/$(basename "${2:?usage: backup.sh restore FILE}")"
     test -s "$file"
+    # Complete decompression before any SQL runs: a truncated gzip can emit
+    # valid SQL and then fail its checksum, after a piped psql has committed.
+    restore_sql=$(mktemp)
+    trap 'rm -f -- "$restore_sql"' EXIT
     # Replace the schema in one transaction; grants for the runtime role come back
     # with the dump, and default privileges are restored for future migrations.
     { printf 'DROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\nGRANT USAGE ON SCHEMA public TO swbook_app;\n'
@@ -48,7 +62,8 @@ case "${1:-}" in
       printf 'ALTER DEFAULT PRIVILEGES FOR ROLE swbook IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO swbook_app;\n'
       printf 'ALTER DEFAULT PRIVILEGES FOR ROLE swbook IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO swbook_app;\n'
       printf 'ALTER DEFAULT PRIVILEGES FOR ROLE swbook IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO swbook_app;\n'
-    } | psql --no-password -v ON_ERROR_STOP=1 --single-transaction --quiet >/dev/null
+    } > "$restore_sql"
+    psql --no-password -X -v ON_ERROR_STOP=1 --single-transaction --quiet < "$restore_sql" >/dev/null
     echo "Database restored from backups/$(basename "$file")." ;;
   storage)
     mc_alias

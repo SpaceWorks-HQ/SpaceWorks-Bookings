@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/net/publicHost", async (importOriginal) => ({ ...(await importOriginal<object>()), assertPublicHost: vi.fn(async (host: string) => { if (host === "10.0.0.5") throw Object.assign(new Error("private"), { name: "PrivateHostError" }); }) }));
+vi.mock("@/lib/net/postJson", () => ({ postPublicJson: vi.fn() }));
 
 const { prisma } = await import("@/lib/db");
 const { addSpace, setupMakerspace, book, NOW } = await import("./bookings-helpers");
@@ -9,6 +10,7 @@ const { createApiKey, revokeApiKey } = await import("@/lib/integrations/apiKeys"
 const endpoints = await import("@/lib/integrations/webhooks/endpoints");
 const { relayWebhookEvents } = await import("@/lib/integrations/webhooks/relay");
 const { deliverDueWebhooks, DISABLE_AFTER } = await import("@/lib/integrations/webhooks/deliver");
+const { postPublicJson } = await import("@/lib/net/postJson");
 const spacesRoute = await import("@/app/api/v1/spaces/route");
 const bookingsRoute = await import("@/app/api/v1/bookings/route");
 const bookingRoute = await import("@/app/api/v1/bookings/[reference]/route");
@@ -36,6 +38,14 @@ afterAll(async () => {
 });
 
 describe("REST API", () => {
+  it.each(["PENDING_REVIEW", "CHANGES_REQUESTED", "REJECTED", "SUSPENDED", "ARCHIVED"] as const)("denies read and write service keys for a %s makerspace", async (status) => {
+    const f = await fixture();
+    const key = await createApiKey({ makerspaceId: f.makerspaceId, name: "Service", scopes: ["read", "write"], actorUserId: f.owner.userId });
+    await prisma.makerspace.update({ where: { id: f.makerspaceId }, data: { status } });
+    expect((await call(spacesRoute.GET, key.token)).status).toBe(401);
+    expect((await call(bookingsRoute.POST, key.token, { method: "POST", body: {} })).status).toBe(401);
+  });
+
   it("authenticates keys, enforces scopes and keeps makerspaces apart", async () => {
     const f = await fixture();
     const other = await fixture();
@@ -90,9 +100,9 @@ describe("webhooks", () => {
     expect(deliveries.map((delivery) => delivery.event)).toEqual(["booking.confirmed"]);
 
     const sent: Array<{ body: string; signature: string }> = [];
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
-      sent.push({ body: String(init?.body), signature: new Headers(init?.headers).get("x-spaceworks-signature") ?? "" });
-      return new Response(null, { status: sent.length === 1 ? 500 : 204 });
+    vi.mocked(postPublicJson).mockImplementation(async (_url, body, headers) => {
+      sent.push({ body, signature: headers?.["x-spaceworks-signature"] ?? "" });
+      return sent.length === 1 ? 500 : 204;
     });
     await deliverDueWebhooks(later);
     let delivery = await prisma.webhookDelivery.findUniqueOrThrow({ where: { id: deliveries[0].id } });
@@ -112,7 +122,7 @@ describe("webhooks", () => {
   it("switches an endpoint off after repeated failures and pings on demand", async () => {
     const f = await fixture();
     const created = await endpoints.createEndpoint({ makerspaceId: f.makerspaceId, actorUserId: f.owner.userId, endpoint: { url: "https://down.example.test/", events: ["booking.confirmed"] } });
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 503 }));
+    vi.mocked(postPublicJson).mockResolvedValue(503);
     await prisma.webhookEndpoint.update({ where: { id: created.id }, data: { consecutiveFailures: DISABLE_AFTER - 2 } });
     expect((await endpoints.pingEndpoint({ makerspaceId: f.makerspaceId, endpointId: created.id }))).toMatchObject({ ok: false, status: 503 });
     expect(await endpoints.pingEndpoint({ makerspaceId: f.makerspaceId, endpointId: created.id })).toMatchObject({ ok: false });

@@ -4,6 +4,26 @@ Releases are published from `main` and titled **`Space Works Bookings <version>`
 file selects the series; each build is tagged `v<series>-main.<run>.<sha>`, which is what a deployment pins
 to. Pushes to `dev` publish staging images tagged `dev` without a release.
 
+## 0.6.0 - 2026-10-30
+
+- Preserve non-root ownership of backend public assets, including restrictive 700 directories and 600 files.
+- Preserve private operator-source ownership and prove non-root access before starting source-built stacks.
+- Resolve repair and manual-finance calendar dates in the makerspace timezone while retaining future-payment guards.
+- Stage private PostgreSQL bootstrap inputs for the server UID without loosening source file permissions.
+- Reuse the reservation transaction for gateway settings so concurrent checkout cannot starve a small database pool.
+- Archive and recover private container-owned backups with explicit CI privileges, preserving restrictive modes.
+- Reserve checkout attempts transactionally and close delayed provider orders after cancellation.
+- Enforce reviewed net payment thresholds and consistent booking/payment/refund lock order.
+- Preserve booking, repair and financial history when removing a makerspace.
+- Pin validated outbound addresses and bound streamed API request bodies.
+- Provide the complete supervised local PostgreSQL, Redis, Silo and Mailpit stack.
+- Reject failed scheduled database dumps/compression before publication or retention, and keep partial restores offline.
+- Recover data services before serving traffic and resume backup schedules only after restored app checks pass.
+- Preserve TLS certificate permissions in configuration backups so recovered non-root services can read their public CA.
+- Remove global npm/npx tooling from final runtime images while retaining isolated Node-based migration and operator tools.
+- Pin Silo and its standalone storage client to the October 26, 2026 release and immutable multiarch digests.
+- Build the security-patched Caddy edge locally during setup and upgrades, including published-app installs; existing proxies skip it.
+
 ## 0.5.0
 
 The first public release: bookings, money, integrations, repairs, the finance ledger and the ship work (Phases 1 to 4

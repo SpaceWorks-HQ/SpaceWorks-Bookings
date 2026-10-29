@@ -56,12 +56,13 @@ chmod 700 "$ROOT/backups"
 
 if [[ "$BUILD_FROM_SOURCE" == 1 ]]; then
   say "Building the backend image from source (first run can take several minutes)..."
-  ${COMPOSE[@]+"${COMPOSE[@]}"} build backend
+  ${COMPOSE[@]+"${COMPOSE[@]}"} build backend || die 'The backend image build failed.'
 else
   say "Pulling release images (first run can take a few minutes)..."
   ghcr_login || die 'Could not sign in to ghcr.io; set SWB_GITHUB_TOKEN (read:packages) for a private repository.'
-  ${COMPOSE[@]+"${COMPOSE[@]}"} pull --quiet
+  ${COMPOSE[@]+"${COMPOSE[@]}"} pull --quiet --ignore-buildable || die 'Pulling the release images failed.'
 fi
+build_web_edge || die 'The bundled web edge build failed.'
 
 # 2. Private CA and TLS certificates for PostgreSQL, Redis and Silo, made with the
 # app image's openssl so the host needs none.

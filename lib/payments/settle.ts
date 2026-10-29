@@ -63,10 +63,12 @@ export async function settlePayment(tx: Tx, args: { makerspace: MakerspaceForPay
 
 /** After reviewing a mismatched capture, issue the held document on the amount actually received. */
 export async function releaseHeldDocument(tx: Tx, args: { makerspace: MakerspaceForPayments; paymentId: string; actorUserId: string; now?: Date }) {
+  await lockPaymentBooking(tx, args.makerspace.id, args.paymentId);
   const payment = await lockPayment(tx, args.makerspace.id, args.paymentId);
   if (payment.status !== "PAID" || !payment.documentHeld) throw new Error("This payment has no held document.");
   const document = await issuePaymentDocument(tx, args.makerspace, payment.id, await documentPrefix(tx, args.makerspace.id), args.now, payment.capturedMinor ?? payment.amountMinor);
   await tx.payment.update({ where: { id: payment.id }, data: { documentHeld: false } });
+  await onBookingPaymentSettled(tx, payment, args.now ?? new Date(), { recordPaymentEvent: false });
   await recordAuditEvent({ action: "PAYMENT_DOCUMENT_RELEASED", actorUserId: args.actorUserId, makerspaceId: args.makerspace.id, targetType: "Payment", targetId: payment.id, client: tx });
   return document;
 }

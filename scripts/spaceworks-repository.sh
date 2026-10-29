@@ -38,6 +38,12 @@ serving_services() {
   [[ "$(repository_env_value SWB_LAYER)" == proxy ]] || SERVING_SERVICES+=(caddy)
 }
 
+# The security-patched edge is built locally even when app images are published.
+# An installation behind its own proxy has no bundled edge to build.
+build_web_edge() {
+  [[ "$(repository_env_value SWB_LAYER)" == proxy ]] || "${COMPOSE[@]}" build caddy
+}
+
 # Replace (or append) one named value in the private .env, keeping it owner-only.
 # Single quotes keep the value literal for Compose, as setup-write-environment.sh writes it.
 repository_env_set() {

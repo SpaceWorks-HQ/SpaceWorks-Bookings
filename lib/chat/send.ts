@@ -1,6 +1,6 @@
 import "server-only";
 
-import { assertPublicHost } from "@/lib/net/publicHost";
+import { postPublicJson } from "@/lib/net/postJson";
 import type { ChatConfig } from "./config";
 import type { ChatKind } from "./events";
 
@@ -25,6 +25,7 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
   } catch {
     throw new ChatSendError("The chat service could not be reached.", true);
   }
+  await response.body?.cancel();
   if (response.ok) return;
   if (goneStatuses.includes(response.status)) throw new ChatGoneError(`The chat service refused the message (${response.status}). Check the channel's settings.`);
   throw new ChatSendError(`The chat service answered ${response.status}.`, response.status === 429 || response.status >= 500);
@@ -48,8 +49,12 @@ export async function sendChatMessage(kind: ChatKind, config: ChatConfig[ChatKin
     }
     case "MATTERMOST": {
       const { webhookUrl } = config as ChatConfig["MATTERMOST"];
-      await assertPublicHost(new URL(webhookUrl).hostname);
-      return post(webhookUrl, { text });
+      let status: number;
+      try { status = await postPublicJson(new URL(webhookUrl), JSON.stringify({ text })); }
+      catch { throw new ChatSendError("The chat service could not be reached.", true); }
+      if (status >= 200 && status < 300) return;
+      if ([401, 403, 404, 410].includes(status)) throw new ChatGoneError(`The chat service refused the message (${status}). Check the channel's settings.`);
+      throw new ChatSendError(`The chat service answered ${status}.`, status === 429 || status >= 500);
     }
     case "TELEGRAM": {
       const { botToken, chatId } = config as ChatConfig["TELEGRAM"];

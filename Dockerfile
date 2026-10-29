@@ -31,7 +31,10 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
 FROM node:22-alpine AS prisma-cli
 WORKDIR /opt/prisma-cli
 COPY --from=deps /app/node_modules/prisma/package.json /tmp/prisma-package.json
-RUN npm install --omit=dev --no-save --no-audit --no-fund \
+COPY --from=deps /app/package.json /tmp/app-package.json
+# The isolated migration CLI must retain security overrides from the application's lockfile policy.
+RUN node -e 'const {overrides} = require("/tmp/app-package.json"); require("fs").writeFileSync("package.json", JSON.stringify({private: true, overrides}));' \
+    && npm install --omit=dev --no-save --no-audit --no-fund \
       "prisma@$(node -p "require('/tmp/prisma-package.json').version")" \
     && npm cache clean --force
 
@@ -114,6 +117,8 @@ COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/.next/static ./
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN rm -f frontend/.env frontend/.env.local frontend/.env.production .env
+# Runtime roles call Node directly; keep package-manager tooling in build stages.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
@@ -141,7 +146,7 @@ RUN apk add --no-cache font-dejavu openssl && fc-cache -f
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
@@ -156,14 +161,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 # Prisma CLI for the migrate role and MIGRATE_ON_START=1 (root-owned, read-only).
 COPY --from=prisma-cli /opt/prisma-cli/node_modules /opt/prisma-cli/node_modules
 COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-# Operator tools (docker/ops: checks and super-admin accounts), root-owned.
-COPY docker/ops ./docker/ops
+# Operator source may retain private checkout modes; its runtime owner must read it.
+COPY --chown=nextjs:nodejs docker/ops ./docker/ops
 COPY --from=ops-modules /opt/ops/node_modules ./docker/ops/node_modules
 
 # Next's standalone trace may include dotenv files when a build is performed
 # from a developer checkout. Secrets belong only in the runtime environment.
 RUN rm -f .env .env.local .env.production .env.development
 
+# Migrations use the isolated Prisma CLI through Node, without global npm/npx.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER nextjs
 
 EXPOSE 3000

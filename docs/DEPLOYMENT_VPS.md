@@ -19,7 +19,8 @@ which:
 1. writes the owner-only `.env` with every generated secret (`scripts/setup-write-environment.sh`):
    `AUTH_SECRET`, `CRON_SECRET`, `HEALTHCHECK_SECRET`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY`,
    `PAYMENT_SECRETS_KEY`, and the PostgreSQL, Redis and Silo passwords;
-2. pulls the release images (or builds them with `bash setup.sh --build`);
+2. pulls application/data images (or builds the app with `bash setup.sh --build`) and builds the bundled
+   security-patched Caddy edge locally from `docker/caddy` in both modes; an existing proxy skips that build;
 3. creates a private CA and service certificates for PostgreSQL, Redis and Silo in `tls/`
    (`deploy/certificates.sh`, run inside the backend image so the host needs no openssl);
 4. starts the stack with `up --wait` and runs the operator checks (`--role ops`), worker and beat included;
@@ -39,6 +40,14 @@ the SMTP relay; and the optional runner.
 | `--action ACTION`, `--update` | `SWB_ACTION` | Run one menu entry on an existing install (below). |
 | `--non-interactive`, `--yes` | `SWB_NONINTERACTIVE=1` | Never ask: the questions take `SWB_ANSWER_<KEY>` values (listed in [CONFIGURATION.md](CONFIGURATION.md#installer-installsh)). |
 | `--dry-run` | `SWB_DRY_RUN=1` | Check the host and print the plan; from a checkout it also asks (or reads) the questions. Changes nothing. |
+
+The bundled Caddy edge is compiled locally for published-app installs and upgrades too. A 4 GiB RAM host with
+swap is recommended, retaining headroom for running data/application services during upgrades. The measured
+two-worker edge build peaked at 2.21 GiB; an existing-proxy install using published app images skips this build.
+Source app builds need about 4 GiB of available memory. The shared Next.js configuration sets
+`experimental.cpus: 2` to bound page-generation workers for both the backend and separate frontend; Docker
+builders can otherwise detect the host's full CPU count. Run source builds sequentially on small hosts and
+keep enough free memory for PostgreSQL, Redis and Silo alongside the build.
 
 ### Private repository
 
@@ -111,12 +120,12 @@ project name `swbook`, and the overlays the settings select:
 | `db` | `postgres:16-alpine` | TLS only (`hostnossl … reject`), owner role `swbook`, runtime role `swbook_app` with data rights only |
 | `redis` | `redis:7-alpine` | TLS only, password, append-only file, no eviction (it holds the job queues) |
 | `minio` | `pgsty/silo` | TLS only, private bucket `spaceworks-bookings`, versioning on |
-| `createbuckets` | `pgsty/silo` | Creates the bucket and the `swbook-app` identity limited to it, then exits |
+| `createbuckets` | `pgsty/mc` | Creates the bucket and the `swbook-app` identity limited to it, then exits |
 | `migrate` | backend, `--role migrate` | `prisma migrate deploy` as the owner role, then exits |
 | `backend` | backend, `--role backend` | The app and API (Next.js) as `swbook_app` |
 | `worker` | backend, `--role worker` | BullMQ worker: email delivery, payment and refund checks, retention (`lib/scheduled/index.ts`); `/health` on 3460, ten minutes to finish on stop |
 | `beat` | backend, `--role beat` | BullMQ beat: keeps the job schedules in Redis; `/health` on 3460 |
-| `backup`, `backup-storage` | `postgres:16-alpine`, `pgsty/silo` | Scheduled database dumps and bucket mirror into `backups/` |
+| `backup`, `backup-storage` | `postgres:16-alpine`, `pgsty/mc` | Scheduled database dumps and bucket mirror into `backups/` |
 | `caddy` | `caddy:2-alpine` | The web edge; blocks `/api/internal/*`; overwrites `X-Real-IP` |
 | `ops` (profile `tools`) | backend, `--role ops` | Operator checks, run on demand |
 
@@ -157,13 +166,30 @@ bash scripts/restore.sh backups/scheduled-20261020T020000Z.sql.gz               
 bash scripts/restore.sh backups/manual-20261020T090000Z.sql.gz --with-storage     # and the files
 ```
 
-Restore asks you to type `RESTORE`, takes a fresh `pre-restore` dump, stops the app, worker, beat and edge,
-replaces the schema in one transaction, optionally copies the files back, and starts everything again;
-migrations bring an older dump up to the running release.
+Restore asks you to type `RESTORE`, takes a fresh `pre-restore` dump, pauses the app, worker, beat, edge and
+backup schedulers, then replaces the schema in one transaction and optionally copies the files back.
+Migrations and app readiness/operator checks must succeed before backup schedules resume. A failed SQL
+transaction restarts the original app while preserving the recovery source with backup schedules paused.
+Failure after the database commits leaves the app and schedules stopped; fix the error and retry the restore.
 
-**Restore on a new server:** install with the same answers, stop the stack, put the old `.env` and `tls/` back
-from the settings archive (or from the `<install>.uninstalled-<time>` folder an uninstall leaves), start it, then
-restore the dump (and `backups/storage` with `--with-storage`).
+**Restore on a new server:** install with the same answers, stop the stack, and put the old `.env` and `tls/`
+back from the settings archive (or from the `<install>.uninstalled-<time>` folder an uninstall leaves).
+Recover the dump and `backups/storage` from the encrypted off-host copy. Start only the data services and
+migrations, then restore:
+
+```bash
+scripts/spaceworks-compose.sh bundled up -d --wait db redis minio
+scripts/spaceworks-compose.sh bundled run --rm --no-deps -T createbuckets
+scripts/spaceworks-compose.sh bundled run --rm --no-deps -T migrate
+bash scripts/restore.sh backups/manual-20261020T090000Z.sql.gz --with-storage
+```
+
+Keep backup schedulers stopped until restore completes: `backup-storage` mirrors with `--remove` and an empty
+new bucket could erase the recovered `backups/storage` source. The `--wait` command selects only persistent
+services; bucket initialization and migrations are explicit one-shot commands. For external object storage,
+start only `db redis`, run the migration command, restore the bucket through its provider, and omit `--with-storage`.
+Keep the original encrypted bundle
+off this server until the restored app, files and keys have been checked.
 
 ## Super admins
 

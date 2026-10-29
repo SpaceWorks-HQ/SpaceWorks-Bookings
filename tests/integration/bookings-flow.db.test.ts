@@ -5,6 +5,8 @@ import { expireRequests } from "@/lib/bookings/expiry";
 import { onBookingConfirmed } from "@/lib/bookings/hooks";
 import { findBookingByManageToken } from "@/lib/bookings/links";
 import { submitBooking } from "@/lib/bookings/submit";
+import { createPayment, MAKERSPACE_FOR_PAYMENTS } from "@/lib/payments/charges";
+import { settlePayment } from "@/lib/payments/settle";
 import { addSpace, at, book, bookingOf, contact, eventsOf, hold, HOUR, NOW, noticesOf, rowsOf, setupMakerspace, type Fixture } from "./bookings-helpers";
 
 let fixture: Fixture;
@@ -71,7 +73,13 @@ describe.sequential("booking flows", () => {
     const { submitted } = await book(gateway, space.id, [100, 102]);
     expect(submitted).toMatchObject({ status: "HELD", awaitingPayment: true, payLater: false });
     expect(await noticesOf(submitted.bookingId)).toEqual(["booking-link:received"]);
-    const confirmed = await prisma.$transaction((tx) => confirmPaidBooking(tx, { makerspaceId: gateway.makerspaceId, bookingId: submitted.bookingId, now: at(0.1) }));
+    await expect(prisma.$transaction((tx) => confirmPaidBooking(tx, { makerspaceId: gateway.makerspaceId, bookingId: submitted.bookingId, now: at(0.1) }))).rejects.toThrow(/upfront payment/);
+    const makerspace = await prisma.makerspace.findUniqueOrThrow({ where: { id: gateway.makerspaceId }, select: MAKERSPACE_FOR_PAYMENTS });
+    await prisma.$transaction(async (tx) => {
+      const payment = await createPayment(tx, { makerspace, customer: contact, currency: "INR", provider: "OFFLINE", status: "PENDING", bookingId: submitted.bookingId, items: [{ kind: "BOOKING", description: "Studio booking", amountMinor: submitted.totalMinor }] });
+      await settlePayment(tx, { makerspace, paymentId: payment.id, now: at(0.1) });
+    });
+    const confirmed = await bookingOf(submitted.bookingId);
     expect(confirmed).toMatchObject({ status: "CONFIRMED", awaitingPayment: false });
     expect((await rowsOf(submitted.bookingId)).every((row) => row.blocking)).toBe(true);
     await expect(prisma.$transaction((tx) => confirmPaidBooking(tx, { makerspaceId: fixture.makerspaceId, bookingId: submitted.bookingId }))).rejects.toMatchObject({ code: "NOT_FOUND" });

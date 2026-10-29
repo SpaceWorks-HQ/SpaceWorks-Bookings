@@ -13,6 +13,7 @@ export default defineConfig({
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
+  reporter: [["list"], ["json", { outputFile: "test-results/results.json" }]],
   // The development server compiles each route on first visit, which is slow on CI runners.
   timeout: process.env.CI ? 120_000 : 60_000,
   use: {
@@ -20,6 +21,7 @@ export default defineConfig({
     // separate development app while SpaceWorks Bookings is bound on 127.0.0.1.
     baseURL: testBaseUrl,
     trace: "on-first-retry",
+    screenshot: "on",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

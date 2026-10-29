@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Booking, PaymentPurpose, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { startCheckout } from "@/lib/payments/checkout";
+import { openReservedCheckout, reserveCheckout } from "@/lib/payments/checkout";
 import { loadGateway } from "@/lib/payments/config";
 import type { TaxSnapshot } from "@/lib/payments/tax";
 import { assertCanActOn } from "../access";
@@ -36,7 +36,7 @@ export function paymentPlan(booking: Pick<Booking, "status" | "awaitingPayment" 
   return { amountMinor: balance, purpose: options.rescheduledSincePaid ? "DIFFERENCE" : "BALANCE" };
 }
 
-async function prepare(tx: Tx, input: { makerspaceId: string; bookingId: string; actor: Actor; full?: boolean; now: Date }) {
+async function prepare(tx: Tx, input: { makerspaceId: string; bookingId: string; actor: Actor; full?: boolean; now: Date; returnPath: string }) {
   const booking = await lockBooking(tx, input.makerspaceId, input.bookingId);
   assertCanActOn(booking, input.actor, "payments.record");
   if (booking.status === "REQUESTED") throw invalidState("Payment opens once the makerspace approves your request.");
@@ -55,28 +55,29 @@ async function prepare(tx: Tx, input: { makerspaceId: string; bookingId: string;
     await tx.booking.update({ where: { id: booking.id }, data: { holdExpiresAt: expiresAt } });
   }
   const space = await tx.space.findFirstOrThrow({ where: { id: booking.spaceId, makerspaceId: input.makerspaceId }, select: { name: true } });
-  return { booking, plan, expiresAt, spaceName: space.name, closed: open.filter((row) => row.gatewayOrderId) };
-}
-
-/** Start the checkout; the caller then hands the result to Razorpay Checkout.js or redirects to Stripe. */
-export async function startBookingPayment(input: { makerspaceId: string; bookingId: string; actor: Actor; full?: boolean; returnPath: string; now?: Date }) {
-  const now = input.now ?? new Date();
-  const { booking, plan, expiresAt, spaceName, closed } = await prisma.$transaction((tx) => prepare(tx, { ...input, now }));
-  await expireClosedCheckouts(input.makerspaceId, closed);
   const tax = (booking.priceSnapshot as Prisma.JsonObject | null)?.tax as TaxSnapshot | undefined;
-  return startCheckout({
+  const checkout = await reserveCheckout(tx, {
     makerspaceId: input.makerspaceId,
     customer: { name: booking.contactName, email: booking.contactEmail, stateCode: tax?.supplierState ?? null },
     currency: booking.currency,
-    items: [{ kind: "BOOKING", description: `${spaceName} · ${booking.reference}${plan.purpose === "DEPOSIT" ? " (deposit)" : ""}`, amountMinor: plan.amountMinor }],
+    items: [{ kind: "BOOKING", description: `${space.name} · ${booking.reference}${plan.purpose === "DEPOSIT" ? " (deposit)" : ""}`, amountMinor: plan.amountMinor }],
     bookingId: booking.id,
     purpose: plan.purpose,
     // Booking prices already include tax: split the amount owed instead of adding tax to it.
     taxSnapshot: tax ? { ...tax, inclusive: true } : undefined,
     expiresAt,
-    description: `${spaceName} booking ${booking.reference}`,
+    description: `${space.name} booking ${booking.reference}`,
     returnPath: input.returnPath,
   });
+  return { checkout, closed: open.filter((row) => row.gatewayOrderId) };
+}
+
+/** Start the checkout; the caller then hands the result to Razorpay Checkout.js or redirects to Stripe. */
+export async function startBookingPayment(input: { makerspaceId: string; bookingId: string; actor: Actor; full?: boolean; returnPath: string; now?: Date }) {
+  const now = input.now ?? new Date();
+  const { checkout, closed } = await prisma.$transaction((tx) => prepare(tx, { ...input, now }));
+  await expireClosedCheckouts(input.makerspaceId, closed);
+  return openReservedCheckout(checkout);
 }
 
 /** Stop provider checkouts we closed so they can't be paid any more (best effort; late captures are refunded). */
