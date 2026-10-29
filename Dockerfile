@@ -161,8 +161,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 # Prisma CLI for the migrate role and MIGRATE_ON_START=1 (root-owned, read-only).
 COPY --from=prisma-cli /opt/prisma-cli/node_modules /opt/prisma-cli/node_modules
 COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-# Operator tools (docker/ops: checks and super-admin accounts), root-owned.
-COPY docker/ops ./docker/ops
+# Operator source may retain private checkout modes; its runtime owner must read it.
+COPY --chown=nextjs:nodejs docker/ops ./docker/ops
 COPY --from=ops-modules /opt/ops/node_modules ./docker/ops/node_modules
 
 # Next's standalone trace may include dotenv files when a build is performed

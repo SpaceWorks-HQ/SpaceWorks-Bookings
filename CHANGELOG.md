@@ -7,6 +7,7 @@ to. Pushes to `dev` publish staging images tagged `dev` without a release.
 ## 0.6.0 - 2026-10-30
 
 - Preserve non-root ownership of backend public assets, including restrictive 700 directories and 600 files.
+- Preserve private operator-source ownership and prove non-root access before starting source-built stacks.
 - Resolve repair and manual-finance calendar dates in the makerspace timezone while retaining future-payment guards.
 - Stage private PostgreSQL bootstrap inputs for the server UID without loosening source file permissions.
 - Reuse the reservation transaction for gateway settings so concurrent checkout cannot starve a small database pool.

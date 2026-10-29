@@ -163,5 +163,7 @@ jobs:
           git archive HEAD | tar -xf - -C "$work"
           chmod 600 "$work/deploy/pg_hba.conf"
           chmod 700 "$work/deploy/init-database.sh"
+          chmod 700 "$work/docker/ops"
+          chmod 600 "$work/docker/ops/"*.mjs
           cd "$work"
           SWB_SMOKE_RECOVERY=1 SWB_COMPOSE_BUILD_LAYER=1 SWB_IMAGE_TAG=ci bash scripts/compose-smoke.sh

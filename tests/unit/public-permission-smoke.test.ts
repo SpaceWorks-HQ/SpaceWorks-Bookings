@@ -12,6 +12,8 @@ function fixture(operation: (root: string) => void) {
   const root = mkdtempSync(path.join(tmpdir(), "swb-public-permissions-"));
   try {
     mkdirSync(path.join(root, "public"));
+    mkdirSync(path.join(root, "docker/ops"), { recursive: true });
+    writeFileSync(path.join(root, "docker/ops/check.mjs"), "existing operator tool");
     writeFileSync(path.join(root, "public/existing.txt"), "existing asset");
     operation(root);
   } finally { rmSync(root, { recursive: true, force: true }); }
@@ -30,6 +32,7 @@ describe("restrictive public permission image fixture", () => {
       expect(result.status, result.stderr).toBe(0);
       expect(readdirSync(path.join(root, "public"))).toEqual(["existing.txt"]);
       expect(readFileSync(path.join(root, "public/existing.txt"), "utf8")).toBe("existing asset");
+      expect(readdirSync(path.join(root, "docker/ops"))).toEqual(["check.mjs"]);
     });
   });
 
@@ -39,9 +42,24 @@ describe("restrictive public permission image fixture", () => {
         test "$(stat -c %a "$PUBLIC_PERMISSION_PROBE")" = 700
         test "$(stat -c %a "$PUBLIC_PERMISSION_PROBE/readable.txt")" = 600
         test "$(cat "$PUBLIC_PERMISSION_PROBE/readable.txt")" = 'private-mode public asset'
+        test "$(stat -c %a "$OPS_PERMISSION_PROBE")" = 700
+        test "$(stat -c %a "$OPS_PERMISSION_PROBE/readable.txt")" = 600
+        test "$(cat "$OPS_PERMISSION_PROBE/readable.txt")" = 'private-mode operator asset'
         remove_public_permission_probe`);
       expect(result.status, result.stderr).toBe(0);
       expect(readdirSync(path.join(root, "public"))).toEqual(["existing.txt"]);
+      expect(readdirSync(path.join(root, "docker/ops"))).toEqual(["check.mjs"]);
+      expect(readFileSync(path.join(root, "docker/ops/check.mjs"), "utf8")).toBe("existing operator tool");
+    });
+  });
+
+  it("refuses cleanup of an unrelated operator directory", () => {
+    fixture((root) => {
+      mkdirSync(path.join(root, "docker/ops/unrelated"));
+      writeFileSync(path.join(root, "docker/ops/unrelated/readable.txt"), "keep");
+      const result = run(root, "true", "1", 'OPS_PERMISSION_PROBE="$ROOT/docker/ops/unrelated"; remove_public_permission_probe');
+      expect(result.status).toBe(1);
+      expect(readFileSync(path.join(root, "docker/ops/unrelated/readable.txt"), "utf8")).toBe("keep");
     });
   });
 
