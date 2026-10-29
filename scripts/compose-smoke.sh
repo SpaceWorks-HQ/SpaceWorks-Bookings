@@ -28,10 +28,13 @@ cleanup() {
   "${COMPOSE[@]}" down --volumes --remove-orphans >/dev/null 2>&1 || true
   # Files written by root inside containers are removed by a container too.
   MSYS_NO_PATHCONV=1 docker run --rm -v "$(host_path "$work"):/work" alpine:3 sh -c 'rm -rf /work/* /work/.env' >/dev/null 2>&1 || true
+  remove_public_permission_probe || true
   rm -rf -- "$work"
   exit "$status"
 }
 trap cleanup EXIT
+# shellcheck source=scripts/smoke-public-permissions.sh
+source "$SCRIPT_DIR/smoke-public-permissions.sh"
 
 # The answers setup.sh would collect, written by its own environment writer.
 # shellcheck source=scripts/setup-question-input.sh
@@ -47,7 +50,12 @@ GOOGLE_CLIENT_ID='' GITHUB_CLIENT_ID='' ANSWERS_CONFIRMED=yes
 write_setup_environment
 repository_env_set HTTP_PORT "$port"
 mkdir -p "$work/tls" "$work/backups"
-if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then "${COMPOSE[@]}" build backend; fi
+if [[ "${SWB_COMPOSE_BUILD_LAYER:-0}" == 1 ]]; then
+  prepare_public_permission_probe
+  "${COMPOSE[@]}" build backend || die 'The backend image build failed.'
+  check_public_permission_probe
+fi
+build_web_edge || die 'The bundled web edge build failed.'
 MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --entrypoint sh \
   -v "$SWB_TLS_DIR:/tls" -v "$(host_path "$ROOT/deploy/certificates.sh"):/certificates.sh:ro" \
   "$SWB_BACKEND_IMAGE:$SWB_IMAGE_TAG" /certificates.sh
@@ -55,6 +63,12 @@ MSYS_NO_PATHCONV=1 docker run --rm --network none --user "$(id -u):$(id -g)" --e
 say 'Starting the bundled stack.'
 # A cold start on a busy machine is slow; production uses 300 seconds.
 "${COMPOSE[@]}" up -d --wait --wait-timeout 600
+"${COMPOSE[@]}" exec -T --user postgres db sh -ec '
+  test -r /var/lib/postgresql/bootstrap/pg_hba.conf
+  test -x /docker-entrypoint-initdb.d/10-app-role.sh
+  test "$(stat -c %a /var/lib/postgresql/bootstrap/pg_hba.conf)" = 600
+  test "$(stat -c %a /docker-entrypoint-initdb.d/10-app-role.sh)" = 700
+  printf "Non-root PostgreSQL private bootstrap probe passed.\n"'
 say 'Migrations ran:'
 "${COMPOSE[@]}" logs migrate | grep -E 'migrations|No pending' | tail -n 3
 "${COMPOSE[@]}" run --rm ops
@@ -98,4 +112,7 @@ dump="$(find "$work/backups" -maxdepth 1 -name 'smoke-*.sql.gz' -exec basename {
 [[ -n "$dump" ]] || die 'No database dump was written.'
 SWB_UPDATE_INSTALL_DIR="$ROOT" bash "$SCRIPT_DIR/restore.sh" "backups/$dump" --yes
 "${COMPOSE[@]}" run --rm ops
+if [[ "${SWB_SMOKE_RECOVERY:-0}" == 1 ]]; then
+  CI=true bash "$SCRIPT_DIR/test-vps-recovery.sh"
+fi
 say 'Bundled stack smoke test passed.'

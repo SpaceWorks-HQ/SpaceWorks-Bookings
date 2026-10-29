@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
   agentRules: false,
   allowedDevOrigins,
   experimental: {
+    // Bound page-generation worker fanout on small VPS hosts and container builders.
+    cpus: 2,
     ...(process.env.SWB_DISABLE_BUILD_CACHE === "1" ? { turbopackFileSystemCacheForBuild: false } : {}),
     serverActions: {
       // The default is same-origin only. Configure this explicitly when a

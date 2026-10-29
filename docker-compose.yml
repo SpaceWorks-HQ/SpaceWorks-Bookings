@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: swbook_dev
       POSTGRES_DB: swbook_dev
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - swbook_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -23,12 +23,58 @@ services:
     # BullMQ needs durable keys that are never evicted.
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - swbook_redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  silo:
+    image: pgsty/silo:RELEASE.2026-10-26T00-00-00Z@sha256:7bb2aff6b89efe1cb1303c10fc21d579447434ed06649ac9ec05a5e2dbf30ad7
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: swbook_dev
+      MINIO_ROOT_PASSWORD: swbook_dev_storage
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - swbook_storage:/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  createbuckets:
+    image: pgsty/mc:RELEASE.2026-10-26T00-00-00Z@sha256:ce62c9053c69ce12a527a322345b5ad9f44b5f8a7b8189f82e516f2e3f30f1d8
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        mc mb --ignore-existing local/spaceworks-bookings
+        mc anonymous set none local/spaceworks-bookings
+        mc admin user add local swbook-app swbook_dev_storage_app >/dev/null
+        mc admin policy create local swbook-app /bootstrap/storage-policy.json >/dev/null
+        mc admin policy attach local swbook-app --user swbook-app >/dev/null
+    environment:
+      MC_HOST_local: http://swbook_dev:swbook_dev_storage@silo:9000
+    volumes:
+      - ./deploy/storage-policy.json:/bootstrap/storage-policy.json:ro
+    depends_on:
+      silo: {condition: service_healthy}
+    restart: "no"
+
+  # Captures local messages; never delivers to external recipients.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
 volumes:
   swbook_pgdata:
+  swbook_redisdata:
+  swbook_storage:

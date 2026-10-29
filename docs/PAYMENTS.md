@@ -169,12 +169,16 @@ period, category, way of paying and space; `/api/exports/finance` and `/api/expo
   after it commits: by the action that caused them, else by the `booking-refunds-send` job (every minute). A refund
   is claimed (`sentAt`) before the call; a claim older than 30 minutes without a provider id is looked up with the
   provider by our refund id before it is sent again.
-- **Settling** (`settled.ts`): a HELD booking awaiting payment is confirmed; an EXPIRED hold is confirmed again when
-  every time is still free (else LATE_CAPTURE refund); money for a cancelled or declined booking is refunded; money
+- **Settling** (`settled.ts`): a HELD booking awaiting payment is confirmed only after reviewed settled payments
+  cover the full PAY_NOW amount or the required DEPOSIT, excluding money already committed to refunds.
+  An EXPIRED hold needs the same payment threshold and every time still free (else LATE_CAPTURE refund).
+  Mismatched captures stay held for review; releasing their held document rechecks confirmation without duplicating
+  payment timeline events. Money for a cancelled or declined booking is refunded; money
   beyond the charge is a DUPLICATE refund. Any surprise flags the payment.
 - **No money before approval.** Requests can't be paid; on approval PAY_NOW/DEPOSIT become due within
   `approvalPayWithinHours` (overdue: auto-cancel), pay later by its rule. Starting an attempt closes the booking's
-  older open attempts (Stripe sessions are expired) and stretches a hold to the checkout window (Stripe 31 minutes,
+  older open attempts and reserves its replacement in the same booking transaction. Stripe sessions are expired,
+  including delayed provider responses to superseded attempts. A hold stretches to the checkout window (Stripe 31 minutes,
   Razorpay 16). `booking-checkouts-close` closes attempts of bookings that ended.
 - **Due dates** (`jobs.ts`): reminders at each `paymentReminderHoursBeforeDue` offset, then AUTO_CANCEL (a system
   cancel; a non-refundable deposit is kept) or NOTIFY_STAFF (the customer is told and the booking flagged in the

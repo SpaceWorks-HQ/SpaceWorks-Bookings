@@ -7,6 +7,21 @@ Every environment variable the app, its images and the deployment scripts read. 
 In production the app validates its settings at start (`lib/env.ts`) and refuses to run with a missing secret,
 a plain-text database or Redis connection, or mismatched public origins.
 
+## Local development stack
+
+`docker compose up -d --wait` starts PostgreSQL 16, durable Redis 7, Silo and its private bucket initializer,
+and Mailpit. Every published service binds to `127.0.0.1`. The development template configures Silo at
+`http://127.0.0.1:9000` and unauthenticated capture-only SMTP at `127.0.0.1:1025`; read messages at
+`http://localhost:8025`. These fixtures must never be used in production.
+
+Run `npm run dev:stack` to build and supervise the web app, worker and beat together. Local startup rejects
+remote database/direct, Redis, storage and email targets before migrations or workers can run. The supervisor
+uses `SWB_DEV_WORKER_PORT` (3460) and `SWB_DEV_BEAT_PORT` (3461), stops siblings on failure and drains workers on
+shutdown. The different health ports let both processes coexist on the host; production containers each have their own
+port 3460. Email and chat notifications are committed to the SQL outbox and delivered by the worker; beat
+schedules relaying, booking reminders and reconciliation. `JOBS_INPROCESS` is an optional development fallback,
+not the production job architecture. Stop with `docker compose stop`; volumes preserve database, queue and files.
+
 ## Application
 
 | Variable | Required | Description |
@@ -91,7 +106,8 @@ is the Redis the queue tests use, each run under its own key prefix. `DEMO_PASSW
 | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | generated | Silo administrator. |
 | `S3_APP_PASSWORD` | generated | Secret of the `swbook-app` storage identity, limited to the bucket. |
 | `BACKUP_INTERVAL_HOURS` | `24` | Scheduled database dump and bucket mirror interval. |
-| `SILO_IMAGE_TAG` | pinned | Silo release. |
+| `SILO_IMAGE_TAG` | October 26, 2026 release and multiarch digest | Bundled Silo server release; accepts `tag@sha256:digest` to retain an immutable operator override. |
+| `MC_IMAGE_TAG` | October 26, 2026 release and multiarch digest | Matching standalone `pgsty/mc` for bucket initialization and object backup/restore. |
 
 ## Scripts and images
 

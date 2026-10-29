@@ -44,7 +44,7 @@ describe("compose stacks", () => {
     );
     expect(Object.keys(cloud.services).sort()).toEqual(["backend", "beat", "migrate", "ops", "worker"]);
     expect(bundled.services.minio.image).toMatch(/^pgsty\/silo:/);
-    expect(bundled.services.createbuckets.image).toMatch(/^pgsty\/silo:/);
+    expect(bundled.services.createbuckets.image).toMatch(/^pgsty\/mc:/);
     expect(bundled.services.ops.profiles).toEqual(["tools"]);
   });
 
@@ -54,7 +54,8 @@ describe("compose stacks", () => {
     }
     for (const file of FILES) {
       for (const [name, service] of Object.entries(load(file).services)) {
-        if (service.image?.includes("spaceworks")) expect(service.image, `${file} ${name}`).toContain("spaceworks-bookings-backend");
+        if (name === "caddy" && service.image) expect(service.image).toMatch(/^spaceworks-caddy:/);
+        else if (service.image?.includes("spaceworks")) expect(service.image, `${file} ${name}`).toContain("spaceworks-bookings-backend");
       }
     }
   });

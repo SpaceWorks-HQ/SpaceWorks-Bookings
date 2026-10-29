@@ -18,8 +18,9 @@ What you need first
     Rocky, Arch or openSUSE), macOS, or Windows Git Bash/WSL.
   - Linux: root, or a user with sudo. The installer installs Docker, Docker Compose and
     curl after you confirm. macOS/Windows: Docker Desktop installed and running.
-  - Internet access to github.com and ghcr.io, curl and tar, and 8 GiB free disk
-    (a source build with --ref also needs about 4 GiB of memory).
+  - Internet access to github.com and ghcr.io, curl and tar, and 8 GiB free disk.
+    For bundled Caddy builds, a 4 GiB RAM host with swap is recommended, including
+    published-app installs and upgrades. Source app builds need about 4 GiB available.
   - The web address (a domain whose DNS points here for automatic HTTPS, or a host name
     or IP), the super-admin email and an SMTP relay login.
 

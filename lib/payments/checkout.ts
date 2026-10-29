@@ -2,9 +2,9 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { getRequestOrigin } from "@/lib/publicUrl";
-import { createPayment, MAKERSPACE_FOR_PAYMENTS, PaymentError, type PaymentCustomer } from "./charges";
+import { createPayment, lockPayment, lockPaymentBooking, MAKERSPACE_FOR_PAYMENTS, PaymentError, type PaymentCustomer } from "./charges";
 import type { ChargeItem, TaxSnapshot } from "./tax";
-import type { PaymentPurpose } from "@prisma/client";
+import type { PaymentPurpose, Prisma } from "@prisma/client";
 import { gatewayTakes, loadGateway } from "./config";
 import { GatewayError, type CheckoutResult } from "./gateway";
 import { verifyCheckoutSignature } from "./razorpay";
@@ -14,17 +14,28 @@ import { failPayment, settlePayment } from "./settle";
  * Start an online payment: create the Payment (with its tax lines) first, then the gateway order. A gateway
  * refusal closes the attempt as FAILED, so nothing is left dangling. Phase 2 calls this for a booking.
  */
-export async function startCheckout(args: { makerspaceId: string; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; purpose?: PaymentPurpose | null; taxSnapshot?: TaxSnapshot; expiresAt?: Date; description: string; returnPath: string }): Promise<CheckoutResult & { paymentId: string; amountMinor: number; currency: string }> {
-  const makerspace = await prisma.makerspace.findUniqueOrThrow({ where: { id: args.makerspaceId }, select: MAKERSPACE_FOR_PAYMENTS });
+export type CheckoutInput = { makerspaceId: string; customer: PaymentCustomer; currency: string; items: ChargeItem[]; bookingId?: string | null; purpose?: PaymentPurpose | null; taxSnapshot?: TaxSnapshot; expiresAt?: Date; description: string; returnPath: string };
+
+/** Reserve under the booking lock: closing older attempts and creating this one must commit together. */
+export async function reserveCheckout(tx: Prisma.TransactionClient, args: CheckoutInput) {
+  const makerspace = await tx.makerspace.findUniqueOrThrow({ where: { id: args.makerspaceId }, select: MAKERSPACE_FOR_PAYMENTS });
   if (makerspace.status !== "ACTIVE") throw new PaymentError(`${makerspace.name} isn't taking online payments right now.`);
-  const live = await loadGateway(makerspace.id);
+  // Reuse the reservation connection: a global-client read can exhaust a small pool under concurrent locks.
+  const live = await loadGateway(makerspace.id, tx);
   if (!live) throw new PaymentError("Online payment isn't set up here. Use the other ways to pay.");
   if (!gatewayTakes(live.provider, args.currency)) throw new PaymentError(`Online payment doesn't take ${args.currency}. Use the other ways to pay.`);
 
   const origin = await getRequestOrigin();
-  const payment = await prisma.$transaction((tx) => createPayment(tx, { makerspace, customer: args.customer, currency: args.currency, items: args.items, bookingId: args.bookingId, purpose: args.purpose, taxSnapshot: args.taxSnapshot, provider: live.provider, status: "PENDING" }));
+  const payment = await createPayment(tx, { makerspace, customer: args.customer, currency: args.currency, items: args.items, bookingId: args.bookingId, purpose: args.purpose, taxSnapshot: args.taxSnapshot, provider: live.provider, status: "PENDING" });
+  return { args, makerspace, live, origin, payment };
+}
+
+/** Contact the provider only after reservation commits; SQL locks must never cover a network request. */
+export async function openReservedCheckout(prepared: Awaited<ReturnType<typeof reserveCheckout>>): Promise<CheckoutResult & { paymentId: string; amountMinor: number; currency: string }> {
+  const { args, makerspace, live, origin, payment } = prepared;
+  let result: CheckoutResult;
   try {
-    const result = await live.gateway.createCheckout(live.credentials, {
+    result = await live.gateway.createCheckout(live.credentials, {
       paymentId: payment.id,
       makerspaceId: makerspace.id,
       amountMinor: payment.amountMinor,
@@ -36,13 +47,31 @@ export async function startCheckout(args: { makerspaceId: string; customer: Paym
       cancelUrl: `${origin}${args.returnPath}${args.returnPath.includes("?") ? "&" : "?"}cancelled=1`,
       expiresAt: args.expiresAt,
     });
-    await prisma.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: result.orderId } });
-    return { ...result, paymentId: payment.id, amountMinor: payment.amountMinor, currency: payment.currency };
   } catch (error) {
     await prisma.$transaction((tx) => failPayment(tx, { makerspace, paymentId: payment.id, reason: "The payment provider refused the order." }));
     if (error instanceof GatewayError && !error.retryable) throw new PaymentError("The payment provider couldn't start this payment. Try again later or use the other ways to pay.");
     throw new PaymentError("The payment provider couldn't be reached. Try again in a minute.");
   }
+  const status = await prisma.$transaction(async (tx) => {
+    const bookingId = await lockPaymentBooking(tx, makerspace.id, payment.id);
+    const current = await lockPayment(tx, makerspace.id, payment.id);
+    const booking = bookingId ? await tx.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { status: true } }) : null;
+    const ended = booking && ["EXPIRED", "CANCELLED", "DECLINED"].includes(booking.status);
+    // A webhook can settle before the checkout API returns. Paid rows are immutable.
+    if (current.status !== "PAID" && current.status !== "WAIVED") {
+      await tx.payment.update({ where: { id: payment.id }, data: { gatewayOrderId: result.orderId, ...(ended && current.status === "PENDING" ? { status: "CANCELLED", note: "Closed: the booking ended." } : {}) } });
+    }
+    return ended && current.status === "PENDING" ? "CANCELLED" : current.status;
+  });
+  if (status === "CANCELLED" || status === "FAILED") {
+    if (live.gateway.expireCheckout) await live.gateway.expireCheckout(live.credentials, result.orderId).catch(() => console.error("[payments] expiring a superseded checkout failed"));
+    throw new PaymentError("This payment attempt was closed. Use the latest checkout or start again.");
+  }
+  return { ...result, paymentId: payment.id, amountMinor: payment.amountMinor, currency: payment.currency };
+}
+
+export async function startCheckout(args: CheckoutInput) {
+  return openReservedCheckout(await prisma.$transaction((tx) => reserveCheckout(tx, args)));
 }
 
 /**

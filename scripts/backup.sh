@@ -35,7 +35,16 @@ if [[ "$storage" == 1 && "$(repository_env_value SWB_STORAGE)" != external ]]; t
 fi
 if [[ "$prefix" == manual ]]; then
   archive="$backups/config-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
-  (umask 077; tar -czf "$archive" -C "$ROOT" .env tls)
+  (
+    umask 077
+    config_stage="$(mktemp -d)"
+    trap 'rm -rf -- "$config_stage"' EXIT
+    # A restrictive umask protects the archive, but must not make the public CA
+    # unreadable to non-root Redis/app containers after recovery.
+    cp -p "${SWB_STATIC_ENV_FILE:-$ROOT/.env}" "$config_stage/.env"
+    cp -Rp "${SWB_TLS_DIR:-$ROOT/tls}" "$config_stage/tls"
+    tar -czf "$archive" -C "$config_stage" .env tls
+  )
   say "Settings and certificates: $archive"
 fi
 say 'Backups contain every secret. Copy them off this server, encrypted.'

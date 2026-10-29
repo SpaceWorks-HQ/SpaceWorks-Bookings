@@ -15,8 +15,13 @@ stored. Revoke a key there at any time; a key also stops working while the maker
 | `read` | spaces and their rates, availability, bookings |
 | `write` | creating bookings, cancelling them for the customer, keeping the member-rate list |
 
-Send it as `Authorization: Bearer swb_…`. Writes act as the person who created the key, with the bookings manager's
-booking capabilities and never a rule override: the space's rules apply as for the front desk.
+Send it as `Authorization: Bearer swb_…`. A key has independent, makerspace-owned service authority limited by its
+scopes. Writes are attributed to its creator in the audit trail; this is attribution, not a new interactive login.
+The write scope grants the bookings manager's booking capabilities without rule overrides: the space's rules
+apply as for the front desk. Removing the creator from the team, changing their role or resetting their MFA does
+not revoke this service credential. During staff offboarding, explicitly review and revoke or rotate exposed
+integration keys. Revocation and an inactive makerspace deny requests immediately; a missing creator account
+also makes a key unusable because writes require audit attribution.
 
 Limits per key: 600 reads and 60 writes a minute (plus the platform's per-address limit). Answers are JSON;
 amounts are integer minor units in the booking's currency; times are ISO 8601 in UTC.
