@@ -1,298 +1,173 @@
 # Space Works Bookings production audit — 29–30 October 2026
 
-This audit covers the standalone Bookings app, using Events as the deployment reference. PostgreSQL owns tenant
-data and the outbox; Redis and BullMQ run the worker and beat; Silo supplies S3-compatible storage. Email and chat
-notifications remain worker jobs, as requested. No production database or live payment account was used.
+**Decision:** local production acceptance passed for **0.6.0**. The owner authorised gated publication through
+`dev` and `main`. Actual VM/public-domain/payment-provider checks remain the deployment checklist below.
+This is a tested hardening result, not a claim of zero risk or exhaustive inspection of every possible UI state.
+
+The audit covers the standalone Bookings app, using Events as the deployment reference. PostgreSQL owns tenant
+data and the outbox; Redis and BullMQ run the worker and beat; Silo supplies private S3-compatible storage.
+Email and chat notifications remain worker jobs, as requested. No production database or live payment account
+was used. VERSION, root/frontend manifests and all lockfile version fields agree on **0.6.0**.
 
 ## Coverage and confirmed fixes
 
 | Area inspected | Result |
 | --- | --- |
-| Booking holds, approval, cancellation, expiry and late settlement | Existing booking locks, space allocation locks and exclusion constraints reviewed. Confirmation now requires enough reviewed settled money for PAY_NOW or DEPOSIT. |
-| Payment reservations and gateway concurrency | Closing older attempts and creating their replacement now share the booking transaction. Provider HTTP calls run after commit. A delayed superseded or cancelled checkout is closed and Stripe is asked to expire it. |
-| Underpayments, deposits and mismatched captures | Partial payments stay held until the required threshold is reached. Captures whose documents await review do not automatically confirm or revive a booking. Reviewing a held document rechecks confirmation under the booking lock without a duplicate payment timeline event. |
-| Refund commitments and expired revival | Pending refunds, processed refunds and unresolved failed refund reservations are excluded from funds available to confirm. Expiry cannot turn a partial payment into a free confirmed booking merely because chargeMinor became zero. |
-| Payment/refund lock order | Shared payment locks now take the booking first; refund locks take their payment first. This covers offline confirmation/rejection/cancellation, failed payments and failed refunds whose status triggers write booking totals. Ended checkout cleanup rechecks booking state under the same lock; stale reconciliation uses the shared helper. |
-| Tenant boundaries, roles and MFA | Booking services scope their locks by makerspace. Staff actions resolve membership and capabilities; staff need MFA. Existing staff-action, wrong-tenant, payment guard and lifecycle regressions exercised. |
-| Tenant deletion and audit integrity | Free booking and repair history now receives archive guidance. Deletion rechecks tenant status and manager membership under a parent lock. The deletion audit event commits only with successful deletion. Finance and paid payment records remain retained. |
-| Tenant-selected SMTP, Mattermost and webhook destinations | Coordinator hardened public-address validation, DNS pinning, redirect avoidance and TLS verification. Mixed public/private DNS answers and special-address variants have targeted regressions. |
-| API request bodies | Coordinator added an incremental 64 KiB body limit, including requests without a useful Content-Length header. |
-| Local services | Coordinator aligned the local Compose stack with PostgreSQL, Redis, Silo, private bucket bootstrap and Mailpit. Ports bind to loopback; configuration and README describe the local stack and worker/beat commands. |
-| Test isolation | Fixture teardown now explicitly deletes tenant tables in a disposable database transaction with test-only replica mode. Cleanup errors are no longer swallowed, and disabled FK cascades cannot silently leave tenant fixtures behind. |
+| Booking holds, approval, cancellation, expiry and late settlement | Existing booking locks, allocation locks and exclusion constraints reviewed. Confirmation now requires enough reviewed settled money for PAY_NOW or DEPOSIT. |
+| Payment reservations and gateway concurrency | Closing older attempts and creating their replacement share one booking transaction. Provider HTTP runs after commit. Delayed superseded/cancelled checkouts close and request Stripe expiry. |
+| Partial payments and mismatched captures | Partial payments remain held until the threshold is reached. Documents awaiting review cannot auto-confirm/revive a booking. Reviewing a held document rechecks confirmation under the booking lock without duplicating payment timeline events. |
+| Refund commitments and expired revival | Pending/processed refunds and unresolved failed reservations are excluded from available funds. Expiry cannot turn partial payment into free confirmation when chargeMinor becomes zero. |
+| Payment/refund lock order | Payment locks take the booking first; refund locks take the payment first. Offline transitions, failed payments/refunds, ended checkout cleanup and stale reconciliation use consistent ordering. |
+| Checkout pool starvation | Gateway settings reuse the reservation transaction. Five simultaneous attempts no longer consume five connections while each waits for an unavailable sixth global-client connection. |
+| Tenant boundaries, roles and MFA | Services scope locks by makerspace; staff actions resolve current membership/capabilities and require staff MFA. Wrong-tenant, payment guard and lifecycle regressions passed. Tenant isolation remains application-enforced with composite foreign keys, not PostgreSQL RLS. |
+| API authority and revocation | Keys retain documented makerspace-owned independent scopes; creator identity is audit attribution. Offboarding explicitly revokes/rotates service keys. Revoked keys, insufficient scopes, foreign tenants and all five non-active tenant states reject access. |
+| Tenant deletion and audit integrity | Free booking/repair history receives archive guidance. Deletion rechecks status and manager membership under a parent lock; its audit event commits only on successful deletion. Finance/paid records remain retained. |
+| Financial calendar dates | Repair payouts and manual finance resolve date-only inputs at tenant-local day start. Timestamp compatibility and domain future guards remain. East/west/DST and actual action regressions cover the UTC-boundary failure. |
+| Tenant-selected outbound destinations | Public-address checks, DNS pinning, TLS verification and redirect avoidance protect SMTP, Mattermost and webhooks. Mixed private/public DNS and IPv6/special-address regressions passed. |
+| API request bodies | Incremental 64 KiB limits cover streamed requests and missing/misleading Content-Length. |
+| Test isolation | Disposable fixture cleanup explicitly deletes tenant tables in a test-only replica transaction. Errors are no longer swallowed and disabled FK cascades cannot silently leave tenant fixtures. |
 
-## Expanded Linux and recovery acceptance
+## Stack, installer and operations
 
-The owner subsequently required complete Linux/browser and fresh-install/recovery acceptance before a dev push
-or patch PR. The reproducible run uses a Git-visible snapshot of the current working source, including version
-0.5.1 changes, in an isolated Linux runner with official Node 22 and Chromium. Logs and the source archive hash
-are kept in `../audit-evidence/2026-10-29/bookings`. Final results and exact runtime images are recorded below.
-
-Preparation uncovered and fixed two additional boundaries:
-
-- Source builds now exclude `tls/` and `.spaceworks-*` from their Docker context. This prevents private service
-  keys and the installer's temporary answer/password transport from entering builder layers or caches.
-- Configuration backups now archive the actual `SWB_STATIC_ENV_FILE` and `SWB_TLS_DIR`, with canonical archive
-  names. Disposable acceptance stacks using overrides cannot accidentally archive a checkout's unrelated settings.
-
-The remaining toolchain advisory is now patched with an exact `deepmerge-ts` 8.0.2 override while retaining Prisma
-6.19.3. A lockfile audit reports **zero vulnerabilities**. The isolated migration CLI image carries the same
-override policy. Prisma's installed loader uses the retained named `deepmerge` API for configuration records;
-the completed Linux migration/integration/build checks validated compatibility. The upstream advisory concerns
-recursive JavaScript object graphs, rather than ordinary JSON. See the
-[reviewed advisory](https://github.com/advisories/GHSA-ggr8-5vv4-36mx) and
-[upstream release notes](https://github.com/RebeccaStevens/deepmerge-ts/releases/tag/v8.0.0).
-
-The new guarded `scripts/test-vps-recovery.sh` exercises the real backup/restore scripts, wraps the database,
-private objects and configuration in an age-encrypted off-host bundle, destroys source volumes, recovers into a
-different project with empty PostgreSQL/Silo volumes, and checks relational records, the paid ledger and its
-immutable trigger, original object bytes/privacy, and decryption through the application's actual MFA/payment
-crypto helpers. CI's bundled-stack job opts into this recovery gate. A fixture SMTP relay can additionally prove
-verified STARTTLS worker delivery and deletion of bearer-bearing outbox payloads before and after recovery.
-
-This local acceptance uses fresh Docker projects/configuration/volumes on the existing Linux Docker daemon.
-It does not represent a separate freshly provisioned VM, public DNS/Let's Encrypt issuance, systemd installation,
-or a published release artifact that does not yet contain these working-tree changes.
-
-### Linux quality and database gates completed
-
-The isolated Node 22.23.4 / npm 10.9.9 runner completed these gates against the then-current 0.5.1 audit source (historical acceptance):
-
-| Gate | Recorded result |
+| Area | Confirmed behaviour |
 | --- | --- |
-| Clean lockfile installation and Prisma schema validation | Passed; Prisma 6.19.3 retained with deepmerge-ts 8.0.2. |
-| AGENTS.md / CLAUDE.md drift, complete ESLint and TypeScript | Passed. |
-| Complete unit suite | **986 passed, zero skipped, 111 files passed**, including backup/restore, configuration permissions and conditional installer/edge failure cases. Linux executed installer cases skipped on Windows. |
-| Complete PostgreSQL/Redis integration suite | **184 passed, zero skipped, 34 files passed** on the final source, including the five inactive-tenant API additions. Includes migrations/schema drift, authenticated tenant boundaries, booking/payment/refund races, immutable history and worker/beat health with graceful SIGTERM. |
-| Worker, beat and guarded recovery-probe bundles | Passed. |
-| ShellCheck and release helper tests | Passed; **6 Python tests passed**. |
-| Every CI Compose configuration | Passed: six bundled layer/storage combinations in published-image and source-build modes, plus cloud (**13 configurations**). No Helm charts are present. |
-| All-dependency npm audit | **Zero vulnerabilities at every severity** in both the patched lockfile and installed Linux tree. |
-| Monolith production build and complete browser suite | **21 passed, zero skipped/flaky/retried/failed**, after the Next.js 16.4.2 production build passed compilation, TypeScript and static-page generation using two workers. Every journey captured a screenshot. |
-| Separate backend/frontend builds and complete split browser suite | **21 passed, zero skipped/flaky/retried/failed**. Both production builds and TypeScript passed; frontend dependency traces exclude database engines, mail, Redis and storage clients. Separate action keys and credential isolation were exercised. |
+| Local development | Supervised one-command stack includes PostgreSQL, Redis, Silo, private bucket bootstrap and Mailpit; ports bind to loopback. Worker/beat and service probes are documented. |
+| One-line install and upgrades | Self-contained install/menu, guided source setup, saved host bundle, published-app and source-build branches were reviewed. Failed login/pull/build cannot be hidden by a later successful edge build, including conditional shell callers that disable errexit. |
+| Bundled web edge | Setup/upgrade/smoke build the patched Caddy source locally rather than pulling an unpublished tag. Existing-proxy mode skips that build. Recommend 4 GiB RAM with swap; the observed two-worker edge build peaked at 2.21 GiB. |
+| Private source modes | Backend public and operator sources receive nextjs:nodejs ownership. CI restricts only its disposable archive to 700 directories/600 assets and actual operator files. Non-root image probes run before startup; unique fixture cleanup preserves existing checkout assets. |
+| Private PostgreSQL bootstrap | A root wrapper stages readonly HBA/init inputs under the postgres UID before privilege drop. Source 600/700 modes remain private; server-owned staged HBA/init are readable/executable without world-readable permissions. |
+| Runtime packaging | Both final images remove global npm/npx, retaining Node, native Sharp and isolated Prisma/operator clients. Prisma 6.19.3 retains an exact deepmerge-ts 8.0.2 security override. |
+| Source/build secrets | Docker ignores TLS keys, dotenv files and installer answer transports. Builds use throwaway action keys through BuildKit secrets; installation secrets are supplied at runtime. |
+| Scheduled backups | Explicit checks cover dump creation, nonempty SQL, compression and atomic publication. Failed intervals remove partials, announce failure and preserve previous archives; retention runs only after a successful replacement. |
+| Truncated restore input | Decompression and SQL assembly finish in a private temporary file before transactional psql. A gzip checksum/trailer failure cannot let valid-looking partial SQL commit at EOF; the exit trap removes plaintext. |
+| Restore phases | Stop traffic and both schedulers before the safety dump. After DB commit, restore objects, explicitly migrate, verify app/operator health, then restart schedulers last. Postcommit failure leaves serving offline; precommit rollback can reopen the original app while schedules stay paused. |
+| Fresh-volume bootstrap | Only persistent PostgreSQL/Redis/Silo services use Compose --wait. Bucket init/migrations run explicitly as one-shot commands; an empty target cannot start a mirror scheduler that erases recovered storage. |
+| Configuration archives | Backup uses the actual overridden settings/TLS paths and canonical archive names, preserves certificate modes with `cp -p`/`cp -Rp`, and keeps the outer archive 600. Scoped privileged operations handle root-owned private archives on non-root CI hosts. |
 
-The first Linux integration run passed 177 tests; two webhook fixtures lacked the generated payment encryption
-key that CI normally supplies. The acceptance harness now generates disposable AUTH/CRON/MFA/payment keys, and
-the entire suite passed on rerun. Initial and final logs are both retained in the evidence directory. No
-application guard was relaxed. These results supersede the earlier Windows process-signal failures and the
-earlier unpatched toolchain advisory; live gateway round trips remain outside these synthetic tests.
+Silo and its standalone client are pinned to the October 26 release and immutable multiarch digests in local and
+production Compose. Existing-proxy/external-storage branches passed configuration/behaviour checks; the actual
+native stack exercised bundled edge/local Silo. The public `main` installer and future registry release tags
+still need post-publication verification; current-source acceptance does not establish that an unpublished tag exists.
 
-The supported `ALLOW_PLAIN_HTTP=1` installer mode exposed a separate delivery mismatch: authentication outbox
-handlers rejected their own configured HTTP links in production. The validator now permits only the configured
-HTTP origin when this mode is explicitly enabled (or both CI test guards are enabled), while rejecting URL
-credentials and foreign HTTP hosts/ports. **19 new URL/handler regressions** passed; the full unit suite, lint,
-typecheck and bundles passed again, followed by **14/14 affected authentication/notification integration tests**.
-The real worker SMTP probe now derives its verification link from the installed public origin to exercise this
-mode during installer acceptance. Guidance reviewed: the installed email-best-practices skill's transactional
-email and sending-reliability references; the product's explicitly supported plain-HTTP trial mode is retained.
+## Final 0.6.0 source and verification
 
-Evidence note: the final quality rerun completed every individual gate successfully, then its outer shell
-returned 1 because its external harness was edited while Bash was reading it, changing the continuation offset.
-That harness error is retained in `linux-quality.exit`; it is not an application test failure. The initial full
-quality invocation returned 0, the final unit JSON records 957 passes, and the subsequent affected-integration
-invocation used the stable harness and returned 0. Future long invocations keep their harness immutable.
+Application/runtime source is pinned to **cdc7a67d83f03759d69e0a7a316c7fccdb70cac7**. The frozen archive SHA256 is
+`f8013c9d92f037c97c9567bf1508d1f0a0dbf42b7f1c5ebf896580a988e324e5`.
+An exhaustive comparison against that commit found **987/987 tracked paths present**, zero missing; `.release`
+is the only added path. The final report consolidation changes documentation only, so no application rebuild
+is inferred from a different source revision. External evidence lives in the parent workspace at `audit-evidence/2026-10-29/`; current Bookings logs are in
+`bookings/v060/`. Scan and cross-app proof paths below are relative to that evidence root.
 
-The complete monolith browser run executed all **21 journeys**, including seeded manager/front-desk, team and
-external technician repair, payment/receipt, MFA, public booking/ICS, mobile, approval, check-in and settings
-flows. All passed without skips or retries in 6.3 minutes. The frozen archive SHA-256 was
-`6ae7f2c8296b27a1348b89f418b93040f904019f088b8a9f51ac6d7d38f87eb0`. Full results and screenshots are in
-`audit-evidence/2026-10-29/bookings/linux-browser-monolith-results/`; the summary JSON records zero failures.
-All 22 successful browser screenshots were visually inspected, covering public/mobile booking, paid receipts,
-repair finance, team access, desk check-in and settings. Three additional captures reused the compiled server
-with reduced motion: `visual-stable/landing-desktop.png`, `landing-mobile.png` and `public-room-mobile.png`.
-Each route returned 200 without horizontal overflow. This is representative visual evidence, not a claim that
-every possible application state has been inspected.
-
-The earlier shared Docker daemon outage occurred before Bookings' heavy phases. After authorized engine
-recovery, both hosting layouts validated `experimental.cpus: 2` with two page-generation workers. The complete
-split suite also passed all **21 journeys** in 6.1 minutes against archive SHA-256
-`39881c8941226fd7174f3d953369a7ad2cb9f5db291e99f5cf3b49116436f3dc`; all 22 captured screenshots were reviewed.
-Evidence is in `linux-browser-split-summary.json` and `linux-browser-split-results/`. Final source-image installation
-and encrypted empty-volume recovery subsequently passed as recorded below.
-
-### Truncated backup protection
-
-Review of the shared restore contract uncovered a second failure boundary in Bookings: a truncated gzip can
-emit complete valid SQL and then fail its checksum. Piping that producer directly into transactional psql can
-still let psql commit at EOF before the decompressor failure is observed. `deploy/backup.sh` now finishes
-decompression and SQL assembly in a private temporary file before invoking `psql -X` with ON_ERROR_STOP and
-one transaction; its exit trap removes the temporary plaintext.
-
-Both focused behavioral regressions passed: a valid compressed fixture applies with the transaction flags,
-while a real gzip with its checksum/trailer removed emits no psql invocation. Bash syntax and test lint were
-checked separately. These cases were subsequently included in the complete 986-test unit pass and the actual
-packaged install/encrypted recovery acceptance below.
-
-### Scheduled backup and restore failure phases
-
-Peer review confirmed that POSIX shell `set -e` is disabled inside `database()` when the scheduler calls it
-conditionally. The database backup now explicitly checks dump creation, nonempty SQL, compression and atomic
-publication, removes its uniquely named private intermediates on failure, and runs retention only after a
-successful replacement backup. A failed interval preserves the previous good archives and emits no success.
-
-Restore now pauses serving processes and both bundled backup schedulers before its safety dump, marks the
-database commit boundary, restores objects, explicitly applies current migrations, and verifies serving health
-and operator checks before resuming schedulers. Before commit, failure can restart the original app while backup
-schedules stay paused to protect the recovery source. After commit, file, migration or readiness failure stops
-serving processes again and leaves them offline for repair/retry. The fresh-volume recovery harness starts only
-database/Redis/Silo/bucket/migration dependencies, proves fixture account/object absence, and checks that restore
-removes a target-only table; an empty Silo can no longer erase the recovered source via its mirror scheduler.
-
-Focused behavioral tests cover conditional failed/empty dumps, failed gzip/publication, retention preservation,
-SQL/safety-dump failure recovery, object/migration/readiness/operator failure isolation, successful ordering and
-external-storage service selection. **16/16 focused native regressions passed**, followed by the full Linux
-**973/973 unit pass**, complete lint/typecheck, worker/beat/recovery bundles and all-script ShellCheck. Native
-shell startup exceeded Vitest's default five-second timeout under Windows paging; shell-process regression files
-use a 30-second test timeout. Evidence is in `backup-restore-regressions.json`, `linux-final-units-results.json`,
-`linux-final-lint.log`, `linux-final-typecheck.log` and `linux-final-jobs.log`. Final packaged recovery subsequently
-passed on the hardened images below.
-
-The final restore bootstrap separately starts only persistent PostgreSQL/Redis/Silo services with Compose
-`--wait`; bucket initialization and migrations run as explicit one-shot commands. A completed one-shot service
-cannot make the bootstrap health wait fail or substitute for migrations against a restored database. After this
-correction, all **16/16 focused Linux backup/restore regressions** and changed-script ShellCheck passed again;
-see `linux-final-backup-restore-results.json` and `linux-final-backup-restore.log`.
-
-API keys retain their documented makerspace-owned independent scope; the creator is audit attribution, so staff
-offboarding must explicitly revoke or rotate service keys. Documentation now states this contract. The actual
-PostgreSQL API integration file passed **8/8 tests**, including new read/write rejection for all five non-active
-makerspace states and existing revoked-key, scope and foreign-tenant checks. Evidence is
-`linux-final-api-integrations-results.json`. The subsequent complete final integration run passed **184/184**
-in 58 seconds; its JSON and log are `linux-integration-results.json` and `linux-integration.log`.
-
-### Configuration recovery permissions and runtime images
-
-The subsequent encrypted fresh-volume drill found a real backup defect: staging TLS with `cp -R` under umask 077
-changed the public CA from 644 to 600. Restored non-root Redis could not read it. Staging now preserves original
-permissions with `cp -p` / `cp -Rp`, while the outer archive remains 600. Both real copy/tar regressions passed,
-and an actual restored Redis container changed from a TLS permission failure to healthy TLS/NOAUTH. The complete
-unit suite then passed **975/975**; evidence is `linux-final-units-after-config-results.json` and
-`recovered-redis-fixed-probe.log`. Final encrypted recovery subsequently passed on the hardened images below.
-
-The complete initial recovery then **passed**, using the real scripts: age-encrypted off-host bundle, original
-volumes destroyed, different project with empty PostgreSQL/Redis/Silo, fixture-absence proof, actual SQL/object
-restore, target-only table removal, usable original MFA/payment keys, paid ledger/immutable trigger, original
-private-object bytes and anonymous 403, followed by worker STARTTLS email and all operator checks. Evidence is
-`linux-initial-runtime-after-configfix.log`. This run used the earlier image/service revisions; it does not prove
-the subsequent runtime-tooling removal or October 26 service pins; the final acceptance below repeats those checks.
-
-The shared runtime image scan also found vulnerable global npm tooling inherited from Node's base image. Final
-backend and frontend stages now remove global npm/npx, retaining Node and the isolated Prisma/operator clients.
-Final rebuilt-image scanning, runtime packaging probes and installed recovery acceptance confirmed this change.
-Silo and the standalone `pgsty/mc` client now default to the verified October 26 release with immutable multiarch
-digests in local and production Compose. Historical research notes retain the versions originally surveyed.
-
-The shared Caddy security-build sources are included in setup, upgrades, smoke and the saved host runtime bundle.
-Published-app installs build this edge locally instead of pulling an unpublished tag; existing-proxy installs skip
-it. Explicit failure guards prevent a failed app pull/build from being hidden by a later successful edge build,
-including conditional shell callers that disable errexit. **18/18 focused checks**, changed-file lint/ShellCheck
-and **all 13 Compose configurations** passed, followed by **986/986 complete units**. Evidence is
-`linux-edge-installation-results.json`, `linux-final-deployment-config.log` and
-`linux-final-units-after-edge-results.json`. Bundled-edge installs/upgrades recommend 4 GiB RAM with swap;
-the observed two-worker edge build peaked at 2.21 GiB. Final image scan and hardened-stack results follow.
-
-### Final hardened images and complete recovery — passed
-
-Real current-source `setup.sh --build` and the complete encrypted fresh-volume drill **passed, exit 0**.
-Evidence: `linux-install.log`, `linux-install.exit` and `final-app-image-ids.txt`. The runtime used:
-
-| Artifact | Exact immutable loaded image ID |
+| Gate on final application commit | Result |
 | --- | --- |
-| Backend | `sha256:b42c33e96f03231b5dddb2145d54bd3d56ff98be50dd88916441b69054a68d6e` |
-| Frontend | `sha256:e86798fffe6eb79c1710696c56237abd5a04a01e0be5707993dac0fbb689fcc2` |
-| Shared edge | `sha256:0956bb7459167ed6f47cc9fbb29e2d3ddb452f7ba1b7313f175a1ebd74c91293` |
+| Exact-head GitHub CI | All checks green: Tests run 40956214295; Security run 40956214078. Complete logs and summary retained. |
+| Complete Linux unit suite | **1006 passed, zero skipped, 115 files passed**. |
+| Complete PostgreSQL/Redis/BullMQ integrations | **184 passed, zero skipped, 34 files passed**, including concurrency, tenant/role/MFA, immutable history, migration drift and worker lifecycle checks. |
+| Complete seeded browser suite | **21 passed in 6.0 minutes**, zero failed/skipped/flaky/retried. Exact Paid assertions remain; no timeout/retry masking was added to repair the date bug. |
+| Lint, TypeScript, builds and bundles | All CI gates passed; native frontend/backend Next.js 16.4.2 builds also passed compilation, TypeScript and static generation using two workers. Frontend traces exclude database engines, mail, Redis and storage clients. |
+| Deployment gates | ShellCheck, six Python release-helper tests, AGENTS/CLAUDE drift and 13 Compose configurations passed. No Helm charts are present. |
+| Dependency security | All-dependency npm audit reports zero vulnerabilities. Isolated Prisma override compatibility passed migrations/build/runtime probes. |
+| Actual native install | Real `setup.sh --build` passed on fresh configuration and volumes using the source-built 0.6.0 images. Exact runtime manifests independently report 0.6.0. |
+| Restrictive runtime assets | Actual installed image passed default non-root UID/read probes for public/operator 700/600 assets and actual 600 check/admin tools. PostgreSQL private bootstrap and TLS/least-privilege checks passed. |
+| Native/operator packaging | Node 22.23.4, absent global npm/npx, native Sharp PNG rendering, isolated Prisma CLI's deepmerge-ts 8.0.2 override, health/login and hidden internal-job 404 checks passed. |
+| Worker email before/after restore | Verified STARTTLS relay delivery and deletion of bearer-bearing SQL outbox payloads passed both times. |
+| Encrypted fresh-volume recovery | Real age off-host bundle→destroy original volumes→different empty project→restore original config/keys/data/private files→operator checks and schedulers-last all passed, exit 0. |
 
-Both application image scans report **zero detected findings at every severity**, without suppression; see
-`../image-security/bookings-backend-final/` and `../image-security/bookings-frontend-final-r2/`. Actual runtime
-probes confirmed global npm/npx absence in both images, usable Node 22.23.4, native Sharp PNG rendering and
-the isolated Prisma CLI's deepmerge-ts 8.0.2. Scanner results describe detected packages, not every hidden bundle.
+The recovery fixture proves initial account/object absence, removal of a target-only table, relational records,
+paid ledger and immutable trigger, original MFA/payment-key decryption, original private object bytes and
+anonymous 403. Its deliberately rejected paid-record mutation emits an expected Prisma constraint error that the
+probe asserts. It is not an unhandled application failure.
 
-The real clean installation passed TLS DB/Redis, least-privilege runtime role, migrations, private October Silo,
-worker/beat health, admin creation and edge checks. The age-encrypted off-host bundle then recovered original
-configuration/TLS after destroying source volumes and creating a different project with proven-empty targets.
-Actual SQL/object restore removed a target-only table, recovered original private bytes (anonymous 403), and
-preserved usable original MFA/payment keys, paid ledger and immutable trigger. The intentionally rejected paid
-mutation emits a Prisma constraint error that the probe asserts. Real STARTTLS worker mail and bearer-row
-deletion passed both before and after recovery; operator checks passed before backup schedules resumed.
+Primary evidence: `source-coverage.json`, `pr3-cdc7a67-{tests-passed.log,security-passed.log,ci-summary.json}`,
+`linux-install.log`, `linux-install.exit`, `final-app-image-ids.txt`, `final-installed-image-probes.log` and
+`final-acceptance-summary.json`. The immutable primary harness completed normally. A supplemental frontend
+version probe initially used the root manifest path; the correct workspace manifest probe passed separately.
 
-Independent checks of the exact final edge binary confirmed Go 1.26.10/Caddy 2.11.7/x-net 0.62/Chi 5.4/JOSE v4.1.6,
-standard-module parity, trusted generated-CA HTTPS explicitly negotiating **HTTP/2 = 2**, proxy health, internal
-job 404, sanitized trust headers and absent ACME-server route. Evidence: `../machines/caddy-final/`.
-The unsuppressed edge scan retains **0 critical, 1 high, 2 medium, 1 unknown**, no OS findings: unfixed JOSE v3
-advisories and unmaintained OpenPGP. All identified fixable findings are absent. Raw scan evidence is in
-`../image-security/shared-caddy-final/`; configured-path and binary-symbol limits are in `docker/caddy/README.md`.
-The Go vulnerability database predates the JOSE advisories, so its silence is not proof of safety. No complete
-source callgraph or removal of the vulnerable dependency code is claimed. The coordinator separately retains
-the October Silo MinIO-module identity/parser assessment and raw Silo/mc scans in the combined audit.
+### Exact installed images and residual findings
 
-Base install archive SHA256: `6059eadaca7c3eba985ec9017b106d2a545d562ff267b49aced5b26755295206`.
-It includes uncommitted changes over `175231faa786ac52087e67f72847cd1ca9c5cc85`; `source.json` records provenance.
-Two subsequent test-only Windows Git Bash portability changes were copied into the backend context; its complete
-TypeScript check and **11/11 native fixture cases** passed (`native-edge-fixture-final-results.json`). Final Go
-input hashes are separately retained in `final-edge-source-sha256.txt`. Report/edge README consolidation follows
-runtime acceptance and does not require rebuilding application images. Original failures remain preserved.
+| Artifact | Actual installed immutable image ID |
+| --- | --- |
+| Backend 0.6.0 | `sha256:99b505fb58a34af8ccc67080ee0b3a0ad649b3aa266300a3d81805e4a148d6df` |
+| Frontend 0.6.0 | `sha256:61c14f377ae2201783843af9f75026e3cca07f05313dc2c33df3279c2d49e02f` |
+| Shared edge | `sha256:8ea0f80c5d8957bb672fab414a44fbeea53b764cf5a25f15e804d30c695b0d68` |
 
-This proves clean config/volumes on the existing Docker daemon, not a new VM. Source images were tested before
-publication; future public installer downloads and registry tags remain deployment checks. Actual final runtime
-used bundled edge/local Silo; existing-proxy/external-storage branches passed configuration/behavior checks.
+Both final application images have **zero detected findings at every severity**, unsuppressed. Exact reports:
+`image-security/bookings-060-backend-runtime-final/` and `image-security/bookings-060-frontend-final/`. The preliminary backend
+export 9055 has identical RootFS layers, but the final installed 99b image was scanned independently; its proof
+and both reports are retained. The setup's cached Compose build changed manifest identity without recompiling.
 
-### Deployment staging checklist
+The exact edge also received its own unsuppressed scan: **0 critical, 1 high, 2 medium, 1 unknown**, no OS findings.
+Residual findings are unfixed JOSE v3 advisories and unmaintained OpenPGP; all identified fixable findings are absent.
+`image-security/shared-caddy-bookings-060-final/` retains raw results and RootFS equality to historical 0956.
+Configured ACME-server/JWK/OpenPGP paths are absent; this is a configured-path assessment, not removal of vulnerable
+code or a complete source callgraph. The Go vulnerability DB predates the JOSE advisories, so silence is not proof
+of safety. The coordinator retains the separate Silo MinIO-module identity/parser assessment and raw Silo/mc scans.
 
-The owner accepted clean local-stack validation for this audit. The following deployment-specific checks are
-documented staging work, not an approval blocker or an assertion that a public VM has already been tested.
+Independent proof extracted the actual installed edge binary: Go 1.26.10/Caddy 2.11.7/x-net 0.62/Chi 5.4/JOSE v4.1.6.
+Generated-CA-trusted HTTPS explicitly negotiated **HTTP/2 = 2**; proxy health, trust-header sanitisation, internal
+job 404, absent ACME-server route and stock-module parity passed. Evidence:
+`machines/artifacts/caddy-bookings-060-final/` and `machines/logs/caddy-bookings-060-proof.{log,exit}`.
+
+## Historical acceptance and failures retained
+
+The preceding 0.5.1 audit candidate passed 986 Linux units/111 files and 184 integrations/34 files. Its production
+monolith and separate backend/frontend browser suites each passed 21/21 journeys without skips/flakes/retries;
+all 22 screenshots per layout were visually inspected. Representative captures cover public/mobile booking,
+paid receipts, repair finance, team access, desk check-in and settings. Reduced-motion desktop/mobile landing
+and public-room captures showed 200 responses without horizontal overflow. This does not claim every UI state.
+Evidence remains in `linux-browser-{monolith,split}-results/`, their summary files and `visual-stable/`.
+
+Historical monolith source SHA256: `6ae7f2c8296b27a1348b89f418b93040f904019f088b8a9f51ac6d7d38f87eb0`;
+split SHA256: `39881c8941226fd7174f3d953369a7ad2cb9f5db291e99f5cf3b49116436f3dc`.
+Historical install archive: `6059eadaca7c3eba985ec9017b106d2a545d562ff267b49aced5b26755295206`; its metadata records
+working-tree provenance. Its backend b42c/frontend e867 images and earlier 0956 edge proof are **historical 0.5.1
+acceptance**, not substitutes for the exact 0.6.0 images above. Initial and final raw logs remain available.
+
+Confirmed failure evidence and corrections are retained:
+
+- Native Windows graceful-SIGTERM expectations and resource-pressure DB failures were superseded by Linux passes.
+  Missing disposable payment keys were fixed in the Linux fixture, without relaxing application guards.
+- Truncated gzip, conditional scheduler failures, retention, restore rollback/postcommit isolation and one-shot
+  bootstrap ordering received behavioural regressions and real packaged recovery checks.
+- A TLS backup staging mode regression changed the public CA 644→600; `cp -p`/`cp -Rp` and real recovered Redis checks
+  fixed it. Original failing and passing logs remain. A mutable external Bash harness also once ended incorrectly;
+  later primary harnesses stayed immutable and returned 0. No application success was inferred from that error.
+- First remote PR CI exposed transaction-pool starvation and non-root private-backup archive access. Original
+  `pr3-first-ci-failed.log`, deterministic one-connection red/green checkout tests and privileged archive cases remain.
+- The next CI passed 184 integrations and full recovery but failed payout Paid after 18:30 UTC in Kolkata. Screenshots
+  and the actual future-date alert in `pr3-060-playwright/` proved a product date-conversion error. Old controllers
+  fail three regressions; 20 focused date/action/domain cases passed after the fix, followed by full green CI.
+- Restrictive source 700/600 exposed public, operator and PostgreSQL privilege-drop boundaries. Scoped fixtures,
+  actual non-root image probes and real PostgreSQL TLS/application-role checks prove the corrections without
+  weakening source permissions. Supplemental probe-path mistakes are documented separately from product failures.
+
+The earlier c5ef359 CI passed 1005 units/115 files, 184 integrations and 21 browsers. The final cdc7a67 packaging
+commit adds the operator fixture regression and passed 1006 units plus every remaining gate, as recorded above.
+
+## Deployment staging checklist
+
+The owner accepted clean local-stack validation and authorised gated dev→main publication. These are remaining
+deployment-specific checks, not a claim that a public VM or real provider account has already been tested.
 
 | Check | Acceptance and evidence to retain |
 | --- | --- |
-| Fresh VM baseline | On the intended supported Linux/CPU architecture, verify OS updates, available RAM/disk, Docker/Compose versions, correct UTC/NTP, dedicated install ownership and restart after host reboot. Record versions and successful service/systemd restart. |
-| Firewall and private services | Allow administrative SSH only from approved sources plus public HTTP/HTTPS. From a separate host, verify PostgreSQL, Redis, Silo admin/API and worker-health ports are unreachable publicly. Retain firewall rules and scan results. |
-| Public DNS and TLS | Resolve production A/AAAA records to the intended edge, test both address families actually published, verify trusted certificate chain/hostname/renewal, HTTPS redirects and the configured application/auth origin. Retain DNS and TLS diagnostics without secrets. |
-| Released artifacts | After publication, pull the exact release backend/frontend images on that VM, record immutable digests, run migrations and operator/readiness checks, and verify the previous-release rollback procedure. Local source-image acceptance does not prove a future registry tag exists. |
-| Provider redirects and callbacks | Configure the exact public application URLs in OAuth/payment dashboards; verify return, cancel and signed callback routes, session cookies and forwarded-origin handling through the actual reverse proxy. Retain redacted provider event IDs. |
-| Payment sandbox | With provider-issued sandbox credentials, exercise full/deposit/balance payment, cancellation, late capture, amount/currency mismatch review, refund and failed/refunded retries; match booking/payment/ledger/documents to provider events. Never use live customer charges for this check. |
-| Webhook replay | Replay the same correctly signed sandbox event and an old or tampered signature; verify one settlement/refund/ledger effect, rejection of invalid events, and correct behavior when events arrive out of order or the gateway times out. |
-| Real SMTP | Configure the chosen authenticated TLS relay, verify certificate/STARTTLS enforcement and test transactional mail through the actual worker. Check links use the production origin, expiry and single-use capabilities work, and secrets/tokens stay out of logs. |
-| Sender-domain authentication | Publish the relay's SPF and DKIM records and the domain's DMARC policy/reporting address; verify received Authentication-Results and alignment with the visible From domain. Keep redacted DNS/header evidence and inspect the DMARC reports before tightening policy. |
-| Bounce and complaint operations | Use the relay's documented test destinations/events to verify hard-bounce/complaint suppression, temporary-failure handling and operator alerts. Generic SMTP has no universal provider-feedback webhook in this app; configure provider-side suppression/monitoring and an owned response process before public sending. |
-| Recovery and monitoring | Copy an encrypted backup off the VM, recover original configuration/keys into empty database/object volumes, follow data-first/schedulers-last order, and verify payments/ledger/private files/key decryption plus a worker email after recovery. Check alerts for disk capacity, failed backups, queue stalls and failed jobs. |
+| Fresh VM baseline | Verify supported OS/CPU, updates, RAM/disk, Docker/Compose, UTC/NTP, install ownership and reboot/service or systemd restart. |
+| Firewall/private services | Limit SSH to approved sources and expose only HTTP/HTTPS. From another host prove PostgreSQL, Redis, Silo and worker-health ports are unreachable publicly. |
+| Public DNS/TLS | Verify published A/AAAA addresses, trusted hostname/chain/renewal, HTTPS redirects and application/auth origins. |
+| Released artifacts | Pull exact published backend/frontend releases, record digests, migrate, run readiness/operators and verify prior-release rollback. Local source acceptance does not prove future registry tags. |
+| Provider redirects/callbacks | Configure actual public payment/provider URLs and verify return/cancel/signed callbacks, cookies and proxy-origin handling. Retain redacted event IDs. |
+| Payment sandbox | With provider-issued sandbox credentials test full/deposit/balance, cancellation, late/mismatched capture, refunds and failures; reconcile booking/payment/ledger/documents to provider events. No live customer charges. |
+| Webhook replay | Replay signed duplicates, old/tampered signatures and out-of-order/time-out cases; prove one money/ledger effect and invalid-event rejection. |
+| Real SMTP | Test authenticated verified TLS through the actual worker, production-origin links, expiry/single-use capabilities and secret-free logs. |
+| SPF/DKIM/DMARC | Publish relay records and DMARC reporting/policy; verify received Authentication-Results/From alignment and inspect reports before tightening. |
+| Bounce/complaint operations | Exercise relay test events for suppression, temporary failures and alerts. Generic SMTP has no universal feedback webhook here; configure provider-side suppression/monitoring and an owned response process. |
+| Recovery/monitoring | Copy encrypted backups off the VM; recover original config/keys into empty volumes in data-first/schedulers-last order. Recheck ledger/private files/decryption/email and disk/backup/queue/job alerts. |
 
-Email delivery remains **at least once**: a relay can accept SMTP before a worker crashes ahead of the SQL success
-update, so a retry can duplicate mail. Stable Message-ID values help correlation and relay deduplication but do
-not guarantee exactly-once delivery. Outbox success means relay acceptance, not inbox delivery; provider bounce,
-complaint and suppression monitoring remain necessary. The existing SMTP stack is retained.
+Email remains **at least once**: SMTP may accept before a worker crashes ahead of its SQL success update, so retry
+can duplicate mail. Stable Message-ID helps correlation/deduplication but does not guarantee exactly once.
+Outbox success means relay acceptance, not inbox delivery; provider bounce/complaint suppression remains necessary.
+The existing SMTP stack is retained; no provider migration was introduced.
 
-## Release follow-up - 0.6.0
-
-The owner selected **0.6.0** for publication; VERSION, root/frontend manifests and lockfile workspace versions
-now agree. The functional/image/install/recovery results above belong to the preceding 0.5.1 audit candidate,
-not an already validated 0.6.0 release. Final 0.6.0 CI and image acceptance remain pending.
-
-Independent native-image validation found that backend public assets copied as root can retain private 700/600
-modes from a restrictive checkout umask, causing non-root Next.js startup to fail. The backend COPY now assigns
-nextjs:nodejs ownership, matching the frontend. Source-build CI creates one isolated 700/600 public fixture,
-checks default-user image ownership/read access directly, and then runs the full stack/recovery smoke. Existing
-checkout assets are never chmodded; non-CI/published-image runs do not create this fixture, and cleanup removes
-only its unique generated directory. Focused permission/helper checks are recorded separately below.
-
-The first remote PR CI exposed real connection-pool starvation: five reservation transactions held all five
-connections while gateway settings used the global client and needed a sixth. Gateway reads now reuse the
-reservation transaction. A deliberately one-connection regression fails with the original code and passes all
-three checkout cases with the fix, retaining the five-attempt/one-open/four-cancelled assertions and timeouts.
-Evidence: `060-checkout-pool-red.json` and `060-checkout-pool-green.json`. The same CI found its non-root runner
-could not archive root-owned private container backups. Scoped `as_root` file operations now preserve private
-modes through archive/extraction/comparison/cleanup. The failed CI logs remain in `pr3-first-ci-failed.log`.
-
-Follow-up checks passed: full native TypeScript, changed-file ESLint, all three changed-script ShellChecks,
-**13 focused unit cases** (one POSIX-mode case skipped on Windows) and a separate actual Linux700/600 guard/
-cleanup probe. Privilege/archive cases exercise both root and delegated paths without opening backup modes.
-Final 0.6.0 image and complete CI results remain pending, including the new restrictive-public image probe.
-
-The next CI passed all 184 integrations and full container recovery, then exposed a real payout date bug after
-18:30 UTC: Kolkata's next calendar day was parsed as future UTC midnight. Repair/manual-finance actions now
-resolve date-only inputs at tenant-local day start; timestamp compatibility and domain future guards remain.
-All **20 focused tests passed**, including east/west/DST, actual action wiring and real future rejection; old
-controllers fail three deterministic regressions. Exact Paid browser assertions are unchanged. Evidence:
-`060-financial-date-{red-results,results}.json` and `pr3-060-playwright/` (the screenshot/error alert confirms it).
-
-PostgreSQL had the same private-source ownership boundary: its root wrapper now stages read-only HBA/init
-inputs under the postgres UID before dropping privileges. CI restricts only a disposable source copy to600/700.
-Actual PostgreSQL16 testing passed source-mode preservation, UID reads/init, application-role TLS and plaintext
-rejection (`v060/pg-private-probe.log`); its exact disposable container/volume were removed. ShellCheck passed.
+Native acceptance uses fresh configuration/projects/volumes on the existing Linux Docker daemon, not a separate
+fresh VM, public DNS/Let's Encrypt issuance, systemd host installation or live gateway round trips. Original raw
+failures, source hashes, final image identities and representative screenshots remain retained outside the repo.
